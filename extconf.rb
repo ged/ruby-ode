@@ -2,30 +2,22 @@
 #
 #	extconf.rb - Extension config script for the Ruby ODE binding
 #
-#	See the INSTALL file for instructions on how to use this script.
-#
 #	Author: Michael Granger (with lots of code borrowed from the bdb Ruby
 #				extension's extconf.rb)
 #
-#	Copyright (c) 2001, 2002, The FaerieMUD Consortium. All rights reserved.
+#	Copyright (c) 2001-2003, The FaerieMUD Consortium.
 #
-#	This program is free software; you can redistribute it and/or modify it
-#	under the terms of the GNU Lesser General Public License as published by
-#	the Free Software Foundation; either version 2.1 of the License, or (at
-#	your option) any later version.
-#
-#	This library is distributed in the hope that it will be useful, but
-#	WITHOUT ANY WARRANTY; without even the implied warranty of
-#	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
-#	General Public License for more details.
-#
-#	You should have received a copy of the GNU Lesser General Public License
-#	along with this library (see the file LICENSE.TXT); if not, write to the
-#	Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
-#	02111-1307 USA.
-#
+#   This work is licensed under the Creative Commons Attribution License. To
+#   view a copy of this license, visit
+#   http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+#   Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
 
 require 'mkmf'
+
+if ( (RUBY_VERSION.split(%r{\.}).collect {|n| n.to_i} <=> [1,7,3]) < 0 )
+	$stderr.puts "This extension requires Ruby 1.7.3 or later. You can try to\n" +
+		"  compile it anyway, but it isn't likely to work."
+end
 
 def rule(target, clean = nil)
    wr = "#{target}:
@@ -35,8 +27,8 @@ def rule(target, clean = nil)
 "
    if clean != nil
      # wr << "\t@-rm tmp/* tests/tmp/* 2> /dev/null\n"
-	  wr << "\t@-rm -f mkmf.log src/mkmf.log 2> /dev/null\n"
-	  wr << "\t@-rm -f src/depend 2> /dev/null\n"
+	  wr << "\t@-rm -f mkmf.log ext/mkmf.log 2> /dev/null\n"
+	  wr << "\t@-rm -f ext/depend 2> /dev/null\n"
       wr << "\t@rm Makefile\n" if clean
    end
    wr
@@ -60,8 +52,20 @@ SUBDIRS = #{subdirs.join(' ')}
 #{rule('depend')}
 #{rule('site-install')}
 #{rule('unknown')}
+
+.PHONY: docs localdocs test debugtest
+
 docs:
-	ruby docs/makedocs.rb -v
+	rdoc --all --inline-source --main README --fmt html --op docs/html \
+	--title 'Ruby ODE Binding' \
+	`ruby -I. -r ./utils -e 'puts UtilityFunctions::findRdocableFiles("docs/CATALOG").join(" ")' 2>/dev/null`
+
+localdocs: docs/makedocs.rb
+	docs/makedocs.rb -v
+
+docs/makedocs.rb:
+	$(error Local docs require the RDoc extensions in the CVS version of this module)
+
 
 test: all
 	ruby test.rb
