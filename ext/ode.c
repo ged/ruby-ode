@@ -1,7 +1,7 @@
 /*
  *		ode.c - ODE Ruby Binding
- *		$Id: ode.c,v 1.4 2003/02/04 11:27:49 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:42:59 deveiant>
+ *		$Id: ode.c,v 1.5 2003/02/11 07:15:57 deveiant Exp $
+ *		Time-stamp: <10-Feb-2003 18:37:22 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -338,11 +338,14 @@ void
 Init_ode()
 {
 	static char
-		rcsid[]		= "$Id: ode.c,v 1.4 2003/02/04 11:27:49 deveiant Exp $",
-		revision[]	= "$Revision: 1.4 $";
+		rcsid[]		= "$Id: ode.c,v 1.5 2003/02/11 07:15:57 deveiant Exp $",
+		revision[]	= "$Revision: 1.5 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 	VALUE features	= rb_hash_new();
+
+	if ( RUBY_VERSION_CODE < 173 )
+		fprintf( stderr, "Warning: Ruby version (%s) too small.", RUBY_VERSION );
 
 	ode_debug( "Loading Ruby ODE binding v%s", STR2CSTR(vstr) );
 
