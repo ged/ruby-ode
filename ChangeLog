@@ -1,0 +1,680 @@
+2003-02-11 00:18  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/odeunittest.rb (1.4, RELEASE_0_01):
+
+	- Added workarounds for older version of Test::Unit as the previous aliases
+	  weren't working.
+	
+2003-02-11 00:17  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/ode/Space.rb (1.2, RELEASE_0_01):
+
+	- Fixed license.
+	
+	- Added version-sensitive object id call.
+	
+2003-02-11 00:17  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/ode/Quaternion.rb (1.3, RELEASE_0_01):
+
+	- Added workaround for missing Module#copy_object().
+	
+2003-02-11 00:16  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/extconf.rb (1.1, RELEASE_0_01):
+
+	Initial commit.
+	
+2003-02-11 00:16  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/ode.h (1.5, RELEASE_0_01):
+
+	- Added some missing includes.
+	
+2003-02-11 00:15  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/ode.c (1.5, RELEASE_0_01):
+
+	- Added a warning when compiled against an older version of Ruby.
+	
+2003-02-11 00:15  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/extconf.rb (1.5, RELEASE_0_01):
+
+	- Clarified test for the allocation framework.
+	
+2003-02-11 00:14  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/makesitedocs.rb (1.3, RELEASE_0_01):
+
+	- Added MUES credit to the header.
+	
+2003-02-11 00:14  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/makedocs.rb (1.3, RELEASE_0_01):
+
+	- Fixed default title.
+	
+2003-02-11 00:14  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/COPYRIGHT (1.2, RELEASE_0_01):
+
+	- Fixed licensing statement.
+	
+2003-02-11 00:13  Michael Granger <ged@FaerieMUD.org>
+
+	* test.rb (1.5, RELEASE_0_01):
+
+	- Added workaround for older version of Test::Unit.
+	
+2003-02-11 00:13  Michael Granger <ged@FaerieMUD.org>
+
+	* extconf.rb (1.5, RELEASE_0_01):
+
+	- Added version-check.
+	
+	- Fixed license header.
+	
+	- Added documentation targets.
+	
+2003-02-11 00:12  Michael Granger <ged@FaerieMUD.org>
+
+	* README (1.4, RELEASE_0_01):
+
+	- Added requirements section.
+	
+	- Added API documentation-generation target to the list of commands.
+	
+2003-02-08 01:33  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/joints.c (1.7, RELEASE_0_01):
+
+	- Removed spurious 'L' character that somehow snuck in.
+	
+2003-02-08 01:27  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/joints.c (1.6):
+
+	- Removed references to Math3d classes.
+	
+	- Fixed cruft left over from Math3d workarounds.
+	
+2003-02-08 01:26  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/body.c (1.5, RELEASE_0_01):
+
+	- Added kluge to work around RDoc's inability to parse classes out of more than
+	  one file.
+	
+	- Removed references to Math3d classes.
+	
+2003-02-08 01:25  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/: contact.c (1.3, RELEASE_0_01), geometry.c (1.3,
+	RELEASE_0_01), jointGroup.c (1.5, RELEASE_0_01), joints.c (1.5),
+	mass.c (1.5, RELEASE_0_01), space.c (1.3, RELEASE_0_01), surface.c
+	(1.3, RELEASE_0_01), world.c (1.5, RELEASE_0_01):
+
+	- Added kluge to work around RDoc's inability to parse classes out of more than
+	  one file.
+	
+2003-02-08 01:24  Michael Granger <ged@FaerieMUD.org>
+
+	* examples/test_buggy.rb (1.2, RELEASE_0_01):
+
+	- Moved classes into an Example module to keep them together if they are part of
+	  the docs.
+	
+2003-02-08 01:23  Michael Granger <ged@FaerieMUD.org>
+
+	* utils.rb (1.2, RELEASE_0_01):
+
+	- Synced with the version from the MUES distro.
+	
+2003-02-08 01:23  Michael Granger <ged@FaerieMUD.org>
+
+	* TODO (1.4, RELEASE_0_01):
+
+	- Added GeometryTransform and friends to the list of stuff to do.
+	
+2003-02-08 01:22  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/CATALOG (1.1), makedist.rb (1.1) (utags: RELEASE_0_01):
+
+	Initial commit.
+	
+2003-02-08 01:21  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/: makedocs.rb (1.2), makesitedocs.rb (1.2):
+
+	- Updated for Ruby-ODE preview release.
+	
+2003-02-04 15:05  Michael Granger <ged@FaerieMUD.org>
+
+	* TODO (1.3):
+
+	- Unindented lists so they show up correctly in Rdoc.
+	
+2003-02-04 04:37  Michael Granger <ged@FaerieMUD.org>
+
+	* LICENSE.TXT (1.2):
+
+	- No longer applies.
+	
+2003-02-04 04:36  Michael Granger <ged@FaerieMUD.org>
+
+	* README (1.3):
+
+	- Updated for the preview release.
+	
+2003-02-04 04:32  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/: Body_tests.rb (1.4, RELEASE_0_01), Joint_tests.rb (1.4,
+	RELEASE_0_01), Mass_tests.rb (1.4, RELEASE_0_01), Rotation_tests.rb
+	(1.4, RELEASE_0_01), Surface_tests.rb (1.2, RELEASE_0_01),
+	World_tests.rb (1.4, RELEASE_0_01), odeunittest.rb (1.3):
+
+	- Finished up for the preview release.
+	
+2003-02-04 04:31  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/ode/Rotation.rb (1.2):
+
+	- Renamed to Quaternion.rb.
+	
+2003-02-04 04:30  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/ode/Quaternion.rb (1.2):
+
+	- Removed dependencies on Math3d::Rotation, as it was incredibly difficult to
+	  subclass.
+	
+	- Changed over to the CCL.
+	
+2003-02-04 04:28  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/ode/Contact.rb (1.1, RELEASE_0_01), lib/ode/Matrix.rb (1.1,
+	RELEASE_0_01), lib/ode/Space.rb (1.1), misc/.cvsignore (1.1,
+	RELEASE_0_01), misc/drawstuff.c (1.1, RELEASE_0_01),
+	misc/extconf.rb (1.1, RELEASE_0_01), tests/JointGroup_tests.rb
+	(1.1, RELEASE_0_01):
+
+	Initial commit.
+	
+2003-02-04 04:27  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/geometry.c (1.2), ext/jointGroup.c (1.4), ext/joints.c (1.4),
+	ext/mass.c (1.4), ext/ode.c (1.4), ext/ode.h (1.4), ext/space.c
+	(1.2), ext/surface.c (1.2), ext/world.c (1.4),
+	lib/ode/AngularVelocity.rb (1.2, RELEASE_0_01), lib/ode/Force.rb
+	(1.2, RELEASE_0_01), lib/ode/JointGroup.rb (1.3, RELEASE_0_01),
+	lib/ode/LinearVelocity.rb (1.2, RELEASE_0_01), lib/ode/Position.rb
+	(1.2, RELEASE_0_01), lib/ode/Torque.rb (1.2, RELEASE_0_01),
+	lib/ode/Vector.rb (1.2, RELEASE_0_01):
+
+	- Finished and reworked to use Ruby's new allocation framework.
+	
+	- Changed over to the CCL.
+	
+2003-02-04 04:26  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/extconf.rb (1.4):
+
+	- Added to code to set defines for optional code and the allocation framework.
+	
+2003-02-04 04:25  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/contact.c (1.2):
+
+	- Finished and reworked to use Ruby's new allocation framework.
+	
+	- Added version and rcsid class constants.
+	
+	- Changed over to the CCL.
+	
+2003-02-04 04:24  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/body.c (1.4):
+
+	- Reworked to use Ruby's new allocation framework.
+	
+	- Added version and rcsid class constants.
+	
+2003-02-04 04:22  Michael Granger <ged@FaerieMUD.org>
+
+	* test.rb (1.4):
+
+	- Cleaned up dependencies and $LOAD_PATH-building.
+	
+2003-02-04 04:21  Michael Granger <ged@FaerieMUD.org>
+
+	* extconf.rb (1.4):
+
+	- Added code to skip the misc/ directory until the "drawstuff" code gets
+	  finished.
+	
+2003-02-04 04:20  Michael Granger <ged@FaerieMUD.org>
+
+	* TODO (1.2):
+
+	- Updated for the preview release.
+	
+2003-02-04 04:14  Michael Granger <ged@FaerieMUD.org>
+
+	* experiments/segfault.rb (1.2, RELEASE_0_01):
+
+	- Took another whack at figuring this out, which I finally did thanks to Matz
+	  and Guy Decoux.
+	
+2003-02-04 04:13  Michael Granger <ged@FaerieMUD.org>
+
+	* experiments/: 99tiers.rb (1.1), anchor.c (1.1), collide.rb (1.1),
+	lastfunc.c (1.1), ncurse.rb (1.1), paramJointFptr.rb (1.1),
+	testSpace.rb (1.1) (utags: RELEASE_0_01):
+
+	Initial commit.
+	
+2003-02-04 04:12  Michael Granger <ged@FaerieMUD.org>
+
+	* examples/: test_buggy.rb (1.1), worldCollision.rb (1.1,
+	RELEASE_0_01):
+
+	- Moved out of /experiments and cleaned up for release.
+	
+2003-02-04 04:11  Michael Granger <ged@FaerieMUD.org>
+
+	* experiments/: worldCollision.rb (1.2), test_buggy.rb (1.2):
+
+	- Moved into /examples.
+	
+2002-11-23 16:08  Michael Granger <ged@FaerieMUD.org>
+
+	* README (1.2), ext/body.c (1.3), ext/jointGroup.c (1.3),
+	ext/joints.c (1.3), ext/mass.c (1.3), ext/ode.c (1.3), ext/ode.h
+	(1.3), ext/world.c (1.3), lib/ode/JointGroup.rb (1.2),
+	tests/Body_tests.rb (1.3), tests/Interaction_tests.rb (1.3,
+	RELEASE_0_01), tests/Joint_tests.rb (1.3), tests/Mass_tests.rb
+	(1.3), tests/Rotation_tests.rb (1.3), tests/World_tests.rb (1.3),
+	docs/.cvsignore (1.1, RELEASE_0_01), docs/COPYRIGHT (1.1),
+	docs/makedocs.rb (1.1), docs/makesitedocs.rb (1.1), TODO (1.1):
+
+	- Checkpoint -- still not releasable.
+	
+2002-11-23 16:07  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/ode/AngularVelocity.rb (1.1), lib/ode/Force.rb (1.1),
+	lib/ode/LinearVelocity.rb (1.1), lib/ode/Position.rb (1.1),
+	lib/ode/Quaternion.rb (1.1), lib/ode/Rotation.rb (1.1),
+	lib/ode/Torque.rb (1.1), lib/ode/Vector.rb (1.1), ext/contact.c
+	(1.1), ext/space.c (1.1), ext/surface.c (1.1):
+
+	Initial commit.
+	
+2002-11-23 15:56  Michael Granger <ged@FaerieMUD.org>
+
+	* test.rb (1.3):
+
+	- Tailored to ODE testing.
+	
+	- Added an experimental FXRuby testrunner.
+	
+2002-11-23 15:34  Michael Granger <ged@FaerieMUD.org>
+
+	* extconf.rb (1.3):
+
+	- Fixed docs target.
+	
+2002-11-23 15:33  Michael Granger <ged@FaerieMUD.org>
+
+	* experiments/TEMPLATE.rb.tpl (1.1, RELEASE_0_01),
+	experiments/rotatetest.rb (1.1, RELEASE_0_01),
+	experiments/segfault.rb (1.1), experiments/tary.rb (1.1,
+	RELEASE_0_01), experiments/test_buggy.rb (1.1),
+	experiments/testrot.c (1.1, RELEASE_0_01),
+	experiments/worldCollision.rb (1.1), utils.rb (1.1):
+
+	Initial commit.
+	
+2002-11-23 15:20  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/geometry.c (1.1):
+
+	- Checkpoint -- some accessors still unimplemented.
+	
+2002-11-23 15:18  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/extconf.rb (1.3):
+
+	- Updated to look for optional ODE extensions.
+	
+	- Updated list of tests for recent versions.
+	
+2002-11-23 15:16  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/: position.c (1.3), rotation.c (1.2):
+
+	- Replaced with subclass of Math3d classes.
+	
+2002-11-23 15:16  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/.cvsignore (1.1, RELEASE_0_01):
+
+	Initial commit.
+	
+2002-11-23 15:15  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/Space_tests.rb (1.2, RELEASE_0_01):
+
+	- Fixed leftover cruft after copying from Geometry_tests.rb.
+	
+2002-11-23 14:49  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/: Geometry_tests.rb (1.1, RELEASE_0_01), Space_tests.rb
+	(1.1), Surface_tests.rb (1.1):
+
+	- Initial commit.
+	
+2002-11-23 14:48  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/odeunittest.rb (1.2):
+
+	- Moved into tests/ from base dir.
+	
+2002-11-23 14:44  Michael Granger <ged@FaerieMUD.org>
+
+	* odeunittest.rb (1.2):
+
+	- Moved into tests/.
+	
+2002-11-23 14:43  Michael Granger <ged@FaerieMUD.org>
+
+	* TEMPLATE.c-comment.tpl (1.1), TEMPLATE.rb.tpl (1.1) (utags:
+	RELEASE_0_01):
+
+	Initial commit.
+	
+2002-11-23 14:42  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/: 00_World_tests.rb (1.3), 01_Body_tests.rb (1.3),
+	02_Rotation_tests.rb (1.3), 03_Mass_tests.rb (1.3),
+	04_Joint_tests.rb (1.3), 10_Interaction_tests.rb (1.3):
+
+	- Renamed to numberless versions, as the filename doesn't determine load order
+	  anyway.
+	
+2002-11-15 23:54  Michael Granger <ged@FaerieMUD.org>
+
+	* TEMPLATE.c.tpl (1.2, RELEASE_0_01):
+
+	- Fixed some inconsistancies.
+	
+2002-11-14 20:54  Michael Granger <ged@FaerieMUD.org>
+
+	* TEMPLATE.c.tpl (1.1):
+
+	- Fixed class name in header.
+	
+2002-09-12 03:55  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/: generators/html_generator.rb (1.3),
+	parsers/parse_faeriemud_rb.rb (1.2) (utags: RELEASE_0_02,
+	RELEASE_0_01):
+
+	- Initial stab at the :todo: hack. Not yet working.
+	
+2002-08-29 01:15  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/generators/template/html/mues.rb (1.5,
+	RELEASE_0_01, RELEASE_0_02):
+
+	- Added the <br /> I mistakenly removed with the viewcvs commit back in.
+	
+2002-08-02 14:07  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/generators/template/html/mues.rb (1.4):
+
+	- Added a link to the appropriate URL on cvs.FaerieMUD.org.
+	
+2002-07-07 12:16  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/generators/template/html/css2.rb (1.1,
+	RELEASE_0_01, RELEASE_0_02):
+
+	Initial commit.
+	
+2002-06-25 23:15  Michael Granger <ged@FaerieMUD.org>
+
+	* misc/: rotatetest.rb (1.2), tary.rb (1.2), testrot (1.2),
+	testrot.c (1.2):
+
+	Moved all files to experiments/
+	
+2002-06-04 06:56  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/generators/faeriemud_generator.rb (1.3):
+
+	Renamed to html_generator.rb
+	
+2002-05-28 11:07  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/generators/template/html/mues.rb (1.3):
+
+	- Renamed from faeriemud.rb
+	
+	- Converted to output XHTML.
+	
+	- Added comment header and other nicities in preparation for release.
+	
+2002-05-28 11:06  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/generators/template/html/faeriemud.rb (1.3):
+
+	- Renamed to mues.rb.
+	
+2002-05-15 22:02  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/generators/template/html/: faeriemud.rb (1.2),
+	mues.rb (1.2):
+
+	- Removed break in class header 'Last Updated' label.
+	
+2002-05-15 21:42  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/generators/myhtml_generator.rb (1.3):
+
+	- Renamed to faeriemud_generator.rb in preparation for submitting to PragDave.
+	
+2002-05-15 21:40  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/generators/: faeriemud_generator.rb (1.2),
+	html_generator.rb (1.2), myhtml_generator.rb (1.2):
+
+	- Touched up comments
+	
+	- Added a missing require
+	
+2002-05-15 21:30  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/myparser.rb (1.2):
+
+	- Moved into docs/lib/rdoc/parsers/parse_faeriemud_rb.rb.
+	
+2002-03-30 12:01  Michael Granger <ged@FaerieMUD.org>
+
+	* docs/lib/rdoc/: myparser.rb (1.1),
+	generators/faeriemud_generator.rb (1.1),
+	generators/html_generator.rb (1.1), generators/myhtml_generator.rb
+	(1.1), generators/template/html/faeriemud.rb (1.1),
+	generators/template/html/mues.rb (1.1),
+	parsers/parse_faeriemud_rb.rb (1.1):
+
+	Initial commit.
+	
+2002-03-20 07:26  Michael Granger <ged@FaerieMUD.org>
+
+	* README (1.1):
+
+	Initial commit.
+	
+2002-03-20 07:25  Michael Granger <ged@FaerieMUD.org>
+
+	* tests/: 00_World_tests.rb (1.2), 01_Body_tests.rb (1.2),
+	02_Rotation_tests.rb (1.2), 03_Mass_tests.rb (1.2),
+	04_Joint_tests.rb (1.2), 10_Interaction_tests.rb (1.2),
+	Body_tests.rb (1.2), Interaction_tests.rb (1.2), Joint_tests.rb
+	(1.2), Mass_tests.rb (1.2), Rotation_tests.rb (1.2), World_tests.rb
+	(1.2):
+
+	- Converted to Test::Unit
+	
+	- Added more tests to exercise garbage-collection
+	
+2002-03-20 07:24  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/world.c (1.2):
+
+	- Removed the no-op initialize method.
+	
+	- Added debugging-only gc_mark function.
+	
+2002-03-20 07:22  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/position.c (1.2):
+
+	- Fixed compile errors. Still mostly non-functional.
+	
+2002-03-20 07:22  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/ode.h (1.2):
+
+	- Added debugging function declaration
+	
+	- Added new types for JointGroup and a supporting linked list node.
+	
+	- Added macro to test joint objects for obsoletion.
+	
+	- Removed the unnecessary function prototypes.
+	
+2002-03-20 07:20  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/ode.c (1.2):
+
+	- Added debugging function
+	
+	- Added exception type for use of joints which are marked obsolete (ie., they
+	  were created in a JointGroup that has since been emptied or destroyed).
+	
+2002-03-20 07:18  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/mass.c (1.2):
+
+	- Fixed typo: ode_matrix_to_rArray -> ode_matrix3_to_rArray
+	
+2002-03-20 07:18  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/joints.c (1.2):
+
+	- Fleshed out, added interaction with JointGroups.
+	
+2002-03-20 07:15  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/jointGroup.c (1.2):
+
+	- Fleshed out, reworked with Joint object.
+	
+2002-03-20 07:14  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/extconf.rb (1.2):
+
+	- Added a check for features in >= 0.35
+	
+2002-03-19 23:00  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/body.c (1.2):
+
+	- Added support for dBodyGetForce (ode_body_get_force), dBodyGetTorque
+	  (ode_body_get_torque).
+	
+2002-03-19 22:57  Michael Granger <ged@FaerieMUD.org>
+
+	* lib/ode/JointGroup.rb (1.1):
+
+	Initial commit.
+	
+2002-03-19 22:56  Michael Granger <ged@FaerieMUD.org>
+
+	* test.rb (1.2):
+
+	- Converted to use Test::Unit
+	
+2002-03-19 22:55  Michael Granger <ged@FaerieMUD.org>
+
+	* extconf.rb (1.2):
+
+	- Changed makefile section to use RDoc instead of RD.
+	
+	- Added 'debugtest' target for recompiling and running the test suite in
+	  debugging mode.
+	
+2002-03-19 22:28  Michael Granger <ged@FaerieMUD.org>
+
+	* odeunittest.rb (1.1), tests/odeunittest.rb (1.1):
+
+	Initial commit.
+	
+2002-03-19 22:28  Michael Granger <ged@FaerieMUD.org>
+
+	* Makefile (1.2):
+
+	- Removed auto-generated file.
+	
+2002-03-18 10:56  Michael Granger <ged@FaerieMUD.org>
+
+	* ext/Makefile (1.2):
+
+	Removed auto-generated file.
+	
+2002-03-18 10:33  Michael Granger <ged@FaerieMUD.org>
+
+	* experiments/: generatedRdoc.rb (1.1), jointcrash.rb (1.1) (utags:
+	RELEASE_0_01):
+
+	Initial commit.
+	
+2001-12-27 18:10  Michael Granger <ged@FaerieMUD.org>
+
+	* LICENSE.TXT (1.1.1.1), Makefile (1.1.1.1), extconf.rb (1.1.1.1),
+	test.rb (1.1.1.1), ext/Makefile (1.1.1.1), ext/body.c (1.1.1.1),
+	ext/extconf.rb (1.1.1.1), ext/jointGroup.c (1.1.1.1), ext/joints.c
+	(1.1.1.1), ext/mass.c (1.1.1.1), ext/ode.c (1.1.1.1), ext/ode.h
+	(1.1.1.1), ext/position.c (1.1.1.1), ext/rotation.c (1.1.1.1),
+	ext/world.c (1.1.1.1), misc/rotatetest.rb (1.1.1.1), misc/tary.rb
+	(1.1.1.1), misc/testrot (1.1.1.1), misc/testrot.c (1.1.1.1),
+	tests/00_World_tests.rb (1.1.1.1), tests/01_Body_tests.rb
+	(1.1.1.1), tests/02_Rotation_tests.rb (1.1.1.1),
+	tests/03_Mass_tests.rb (1.1.1.1), tests/04_Joint_tests.rb
+	(1.1.1.1), tests/10_Interaction_tests.rb (1.1.1.1),
+	tests/Body_tests.rb (1.1.1.1), tests/Interaction_tests.rb
+	(1.1.1.1), tests/Joint_tests.rb (1.1.1.1), tests/Mass_tests.rb
+	(1.1.1.1), tests/Rotation_tests.rb (1.1.1.1), tests/World_tests.rb
+	(1.1.1.1) (utags: ALPHA_1_1):
+
+	Initial release
+	
+2001-12-27 18:10  Michael Granger <ged@FaerieMUD.org>
+
+	* LICENSE.TXT (1.1), Makefile (1.1), extconf.rb (1.1), test.rb
+	(1.1), ext/Makefile (1.1), ext/body.c (1.1), ext/extconf.rb (1.1),
+	ext/jointGroup.c (1.1), ext/joints.c (1.1), ext/mass.c (1.1),
+	ext/ode.c (1.1), ext/ode.h (1.1), ext/position.c (1.1),
+	ext/rotation.c (1.1), ext/world.c (1.1), misc/rotatetest.rb (1.1),
+	misc/tary.rb (1.1), misc/testrot (1.1), misc/testrot.c (1.1),
+	tests/00_World_tests.rb (1.1), tests/01_Body_tests.rb (1.1),
+	tests/02_Rotation_tests.rb (1.1), tests/03_Mass_tests.rb (1.1),
+	tests/04_Joint_tests.rb (1.1), tests/10_Interaction_tests.rb (1.1),
+	tests/Body_tests.rb (1.1), tests/Interaction_tests.rb (1.1),
+	tests/Joint_tests.rb (1.1), tests/Mass_tests.rb (1.1),
+	tests/Rotation_tests.rb (1.1), tests/World_tests.rb (1.1):
+
+	Initial revision
+	
