@@ -1,7 +1,9 @@
 #!/usr/bin/ruby
 #
 #	Ruby-ODE Local RDoc Documentation Generation Script
-#	$Id: makesitedocs.rb,v 1.2 2003/02/08 08:21:56 deveiant Exp $
+#	$Id: makesitedocs.rb,v 1.3 2003/02/11 07:14:44 deveiant Exp $
+#
+#	Borrowed from the MUES project.
 #
 #	Copyright (c) 2001-2003 The FaerieMUD Consortium.
 #
