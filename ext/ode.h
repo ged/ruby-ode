@@ -1,7 +1,7 @@
 /*
  *		ode.h - ODE Ruby Binding - Header file
- *		$Id: ode.h,v 1.4 2003/02/04 11:27:49 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:43:06 deveiant>
+ *		$Id: ode.h,v 1.5 2003/02/11 07:16:21 deveiant Exp $
+ *		Time-stamp: <10-Feb-2003 18:10:55 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -20,9 +20,11 @@
 #define _R_ODE_H 1
 
 #include <stdlib.h>
+#include <stdio.h>
 
 #include <ruby.h>
 #include <intern.h>				/* For rb_dbl2big() */
+#include <version.h>			/* Check version for alloc framework */
 
 #include <ode/ode.h>
 
