@@ -19,7 +19,7 @@
 # 
 # == Version
 #
-#  $Id: odeunittest.rb,v 1.3 2003/02/04 11:32:51 deveiant Exp $
+#  $Id: odeunittest.rb,v 1.4 2003/02/11 07:18:23 deveiant Exp $
 # 
 
 basedir = File::dirname(File::dirname( __FILE__ ))
@@ -134,7 +134,12 @@ module ODE
 				self.send( sblock )
 			}
 		end
-		alias_method :set_up, :setup
+
+
+		### Backward-compatibility method for older versions of Test::Unit
+		def set_up( *args )
+			setup( *args )
+		end
 
 
 		### Run dynamically-added teardown methods
@@ -143,7 +148,12 @@ module ODE
 				self.send( tblock )
 			}
 		end
-		alias_method :tear_down, :teardown
+
+
+		### Backward-compatibility method for older version of Test::Unit
+		def tear_down( *args )
+			teardown( *args )
+		end
 
 
 		### Instance alias for the like-named class method.
