@@ -30,7 +30,7 @@
 # 
 # == Version
 #
-#  $Id: Vector.rb,v 1.2 2003/02/04 11:28:45 deveiant Exp $
+#  $Id: Vector.rb,v 1.3 2003/02/18 01:45:34 deveiant Exp $
 # 
 
 require 'ode/Quaternion'
@@ -44,8 +44,8 @@ module ODE
 		include Enumerable
 
 		### Class constants
-		Version = /([\d\.]+)/.match( %q{$Revision: 1.2 $} )[1]
-		Rcsid = %q$Id: Vector.rb,v 1.2 2003/02/04 11:28:45 deveiant Exp $
+		Version = /([\d\.]+)/.match( %q{$Revision: 1.3 $} )[1]
+		Rcsid = %q$Id: Vector.rb,v 1.3 2003/02/18 01:45:34 deveiant Exp $
 
 		X = 0; Y = 1; Z = 2
 
@@ -300,6 +300,23 @@ module ODE
 			return self.to_ary == otherObj.to_ary
 		end
 
+
+		### Similarity tests -- returns true if the receiver and
+		### <tt>otherObj</tt> are of the same class, and each element of the
+		### receiver is within 1e-10 of the corresponding element of the
+		### <tt>otherObj</tt>.
+		def similarTo?( otherObj )
+			return false unless otherObj.is_a?( self.class )
+			otherAry = otherObj.to_ary
+			rval = true
+			self.to_ary.each_with_index {|elem,i|
+				if (elem - otherAry[i]).abs > 1e-10
+					rval = false
+					break
+				end
+			}
+			return rval
+		end
 
 	end # class Vector
 
