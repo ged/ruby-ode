@@ -1,7 +1,7 @@
 /*
  *		ode.c - ODE Ruby Binding
- *		$Id: ode.c,v 1.5 2003/02/11 07:15:57 deveiant Exp $
- *		Time-stamp: <10-Feb-2003 18:37:22 deveiant>
+ *		$Id: ode.c,v 1.6 2003/02/18 01:38:11 deveiant Exp $
+ *		Time-stamp: <17-Feb-2003 17:26:04 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -63,6 +63,7 @@ VALUE ode_cOdeGeometryBox;
 VALUE ode_cOdeGeometryPlane;
 VALUE ode_cOdeGeometryCapCyl;
 VALUE ode_cOdeGeometryCylinder;	/* Optional ODE extension */
+VALUE ode_cOdeGeometryRay;
 VALUE ode_cOdeGeometryTransform;
 VALUE ode_cOdeGeometryTransformGroup; /* Optional ODE extension */
 VALUE ode_cOdeSpace;
@@ -338,8 +339,8 @@ void
 Init_ode()
 {
 	static char
-		rcsid[]		= "$Id: ode.c,v 1.5 2003/02/11 07:15:57 deveiant Exp $",
-		revision[]	= "$Revision: 1.5 $";
+		rcsid[]		= "$Id: ode.c,v 1.6 2003/02/18 01:38:11 deveiant Exp $",
+		revision[]	= "$Revision: 1.6 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 	VALUE features	= rb_hash_new();
@@ -456,6 +457,7 @@ Init_ode()
 	ode_cOdeGeometryBox		= rb_define_class_under( ode_cOdeGeometry, "Box", ode_cOdePlaceable );
 	ode_cOdeGeometryCapCyl	= rb_define_class_under( ode_cOdeGeometry, "CappedCylinder", ode_cOdePlaceable );
 	ode_cOdeGeometryCylinder = rb_define_class_under( ode_cOdeGeometry, "Cylinder", ode_cOdePlaceable );
+	ode_cOdeGeometryRay		= rb_define_class_under( ode_cOdeGeometry, "Ray", ode_cOdePlaceable );
 
 	ode_cOdeGeometryTransform = rb_define_class_under( ode_cOdeGeometry, "Transform", ode_cOdeGeometry );
 	ode_cOdeGeometryTransformGroup = rb_define_class_under( ode_cOdeGeometry, "TransformGroup", ode_cOdeGeometry );

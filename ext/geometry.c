@@ -1,7 +1,7 @@
 /*
  *		geometry.c - ODE Ruby Binding - ODE::Geometry class
- *		$Id: geometry.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 15:12:05 deveiant>
+ *		$Id: geometry.c,v 1.4 2003/02/18 01:38:00 deveiant Exp $
+ *		Time-stamp: <17-Feb-2003 17:36:39 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -1631,6 +1631,198 @@ ode_geometry_cylinder_length_eq( self, newLength )
 
 
 
+/* --- ODE::Geometry::Ray ------------------------------ */
+
+static VALUE ode_geometry_ray_start_point_eq( VALUE, VALUE );
+static VALUE ode_geometry_ray_direction_point_eq( VALUE, VALUE );
+
+
+/*
+ * ODE::Geometry::Ray#initialize( length[, space[, start, direction]] )
+ * --
+ * Create a new Ray object of the specified +length+ and insert it into the
+ * specified +space+, if non-nil. If the optional +start+ and +direction+
+ * arguments are given, use them to set the ray's start position and direction.
+ */
+static VALUE
+ode_geometry_ray_init( argc, argv, self )
+	 int argc;
+	 VALUE *argv, self;
+{
+	VALUE			length, start, direction, spaceObj;
+	dSpaceID		space = 0;
+	ode_GEOMETRY	*geometry = 0;
+
+	debugMsg(( "Calling super()" ));
+	rb_call_super( 0, 0 );
+	debugMsg(( "Back from super()" ));
+
+	/* Fetch the ode_GEOMETRY pointer */
+	geometry = get_geom(self);
+	if ( !geometry ) rb_bug( "Superclass's initialize didn't return a valid Geometry." );
+	debugMsg(( "Ray::initialize: Geometry is <%p>", geometry ));
+	
+	debugMsg(( "Ray::initialize: Scanning arguments." ));
+	rb_scan_args( argc, argv, "13", &length, &spaceObj, &start, &direction );
+
+	/* If a container space was specified get the dSpaceID for it */
+	if ( RTEST(spaceObj) ) {
+		SetContainer( spaceObj, space, geometry );
+	}
+
+	/* Make sure the length is a positive non-zero number */
+	CheckPositiveNonZeroNumber( NUM2DBL(length), "length" );
+
+	/* Create the ray */
+	debugMsg(( "Creating new Ray geometry." ));
+	geometry->id = (dGeomID)dCreateRay( space,
+										(dReal)NUM2DBL(length) );
+
+	/* Set the ode_GEOMETRY pointer as the data pointer of the dGeomID */
+	dGeomSetData( geometry->id, geometry );
+
+	/* Set start point and/or direction if they are non-nil */
+	if (RTEST( start )) ode_geometry_ray_start_point_eq( self, start );
+	if (RTEST( direction )) ode_geometry_ray_direction_point_eq( self, direction );
+
+	return self;
+}
+
+
+/*
+ * ODE::Geometry::Ray#length
+ * --
+ * 
+ */
+static VALUE
+ode_geometry_ray_length( self )
+	 VALUE self;
+{
+	ode_GEOMETRY	*geometry = get_geom( self );
+	return rb_float_new( dGeomRayGetLength(geometry->id) );
+}
+
+
+/*
+ * ODE::Geometry::Ray#length=
+ * --
+ * 
+ */
+static VALUE
+ode_geometry_ray_length_eq( self, length )
+	 VALUE self, length;
+{
+	ode_GEOMETRY	*geometry = get_geom( self );
+
+	CheckPositiveNonZeroNumber( NUM2DBL(length), "length" );
+	dGeomRaySetLength( geometry->id, (dReal)NUM2DBL(length) );
+
+	return ode_geometry_ray_length( self );
+}
+
+
+/*
+ * ODE::Geometry::Ray#startPoint
+ * --
+ * 
+ */
+static VALUE
+ode_geometry_ray_start_point( self )
+	 VALUE self;
+{
+	ode_GEOMETRY	*geometry = get_geom( self );
+	dVector3		start, dir;
+	VALUE			pos;
+
+	dGeomRayGet( geometry->id, start, dir );
+	Vec3ToOdePosition( start, pos );
+	
+	return pos;
+}
+
+
+/*
+ * ODE::Geometry::Ray#startPoint=
+ * --
+ * 
+ */
+static VALUE
+ode_geometry_ray_start_point_eq( self, point )
+	 VALUE self, point;
+{
+	ode_GEOMETRY	*geometry = get_geom( self );
+	VALUE			pointAry;
+	dVector3		start, dir;
+
+	pointAry = ode_obj_to_ary3( point, "start point" );
+
+	dGeomRayGet( geometry->id, start, dir );
+	dGeomRaySet( geometry->id,
+				 (dReal)NUM2DBL( *(RARRAY(pointAry)->ptr) ),
+				 (dReal)NUM2DBL( *(RARRAY(pointAry)->ptr + 1) ),
+				 (dReal)NUM2DBL( *(RARRAY(pointAry)->ptr + 2) ),
+				 dir[0],
+				 dir[1],
+				 dir[2] );
+
+	/* It no longer matters (as of the latest Ruby-1.8) what gets returned here,
+	   so just return nil */
+	return Qnil;
+}
+
+
+/*
+ * ODE::Geometry::Ray#directionPoint
+ * --
+ * 
+ */
+static VALUE
+ode_geometry_ray_direction_point( self )
+	 VALUE self;
+{
+	ode_GEOMETRY	*geometry = get_geom( self );
+	dVector3		start, dir;
+	VALUE			pos;
+
+	dGeomRayGet( geometry->id, start, dir );
+	Vec3ToOdePosition( dir, pos );
+	
+	return pos;
+}
+
+
+/*
+ * ODE::Geometry::Ray#directionPoint=
+ * --
+ * 
+ */
+static VALUE
+ode_geometry_ray_direction_point_eq( self, point )
+	 VALUE self, point;
+{
+	ode_GEOMETRY	*geometry = get_geom( self );
+	VALUE			pointAry;
+	dVector3		start, dir;
+
+	pointAry = ode_obj_to_ary3( point, "direction point" );
+
+	dGeomRayGet( geometry->id, start, dir );
+	dGeomRaySet( geometry->id,
+				 start[0],
+				 start[1],
+				 start[2],
+				 (dReal)NUM2DBL( *(RARRAY(pointAry)->ptr) ),
+				 (dReal)NUM2DBL( *(RARRAY(pointAry)->ptr + 1) ),
+				 (dReal)NUM2DBL( *(RARRAY(pointAry)->ptr + 2) ) );
+
+	/* It no longer matters (as of the latest Ruby-1.8) what gets returned here,
+	   so just return nil */
+	return Qnil;
+}
+
+
+
+
 /* --------------------------------------------------
  * Initialize
  * -------------------------------------------------- */
@@ -1638,8 +1830,8 @@ ode_geometry_cylinder_length_eq( self, newLength )
 void ode_init_geometry()
 {
 	static char
-		rcsid[]		= "$Id: geometry.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $",
-		revision[]	= "$Revision: 1.3 $";
+		rcsid[]		= "$Id: geometry.c,v 1.4 2003/02/18 01:38:00 deveiant Exp $",
+		revision[]	= "$Revision: 1.4 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 
@@ -1653,6 +1845,7 @@ void ode_init_geometry()
 	ode_cOdeGeometrySphere	= rb_define_class_under( ode_cOdeGeometry, "Sphere", ode_cOdePlaceable );
 	ode_cOdeGeometryBox		= rb_define_class_under( ode_cOdeGeometry, "Box", ode_cOdePlaceable );
 	ode_cOdeGeometryCapCyl	= rb_define_class_under( ode_cOdeGeometry, "CappedCylinder", ode_cOdePlaceable );
+	ode_cOdeGeometryRay		= rb_define_class_under( ode_cOdeGeometry, "Ray", ode_cOdeRay );
 	ode_cOdeGeometryCylinder = rb_define_class_under( ode_cOdeGeometry, "Cylinder", ode_cOdePlaceable );
 
 	ode_cOdeGeometryTransform = rb_define_class_under( ode_cOdeGeometry, "Transform", ode_cOdeGeometry );
@@ -1782,5 +1975,21 @@ void ode_init_geometry()
 	rb_define_method( ode_cOdeGeometryCylinder, "length=", ode_geometry_cylinder_length_eq, 1 );
 #endif
 
+	/* ODE::Geometry::Ray */
+	rb_define_method( ode_cOdeGeometryRay, "initialize", ode_geometry_ray_init, -1 );
+	rb_enable_super ( ode_cOdeGeometryRay, "initialize" );
+
+	rb_define_method( ode_cOdeGeometryRay, "length", ode_geometry_ray_length, 0 );
+	rb_define_method( ode_cOdeGeometryRay, "length=", ode_geometry_ray_length_eq, 1 );
+	rb_define_method( ode_cOdeGeometryRay, "startPoint", ode_geometry_ray_start_point, 0 );
+	rb_define_alias ( ode_cOdeGeometryRay, "start_point", "startPoint" );
+	rb_define_method( ode_cOdeGeometryRay, "startPoint=", ode_geometry_ray_start_point_eq, -2 );
+	rb_define_alias ( ode_cOdeGeometryRay, "start_point=", "startPoint=" );
+	rb_define_method( ode_cOdeGeometryRay, "directionPoint", ode_geometry_ray_direction_point, 0 );
+	rb_define_alias ( ode_cOdeGeometryRay, "direction_point", "direction_point" );
+	rb_define_method( ode_cOdeGeometryRay, "directionPoint=", ode_geometry_ray_direction_point_eq, -2 );
+	rb_define_alias ( ode_cOdeGeometryRay, "direction_point=", "directionPoint=" );
+	
+	
 }
 

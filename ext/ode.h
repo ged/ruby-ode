@@ -1,7 +1,7 @@
 /*
  *		ode.h - ODE Ruby Binding - Header file
- *		$Id: ode.h,v 1.5 2003/02/11 07:16:21 deveiant Exp $
- *		Time-stamp: <10-Feb-2003 18:10:55 deveiant>
+ *		$Id: ode.h,v 1.6 2003/02/18 01:38:20 deveiant Exp $
+ *		Time-stamp: <17-Feb-2003 17:25:24 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -107,6 +107,7 @@ extern VALUE ode_cOdeGeometryBox;
 extern VALUE ode_cOdeGeometryPlane;
 extern VALUE ode_cOdeGeometryCapCyl;
 extern VALUE ode_cOdeGeometryCylinder; /* Optional ODE extension */
+extern VALUE ode_cOdeGeometryRay;
 extern VALUE ode_cOdeGeometryTransform;
 extern VALUE ode_cOdeGeometryTransformGroup; /* Optional ODE extension */
 extern VALUE ode_cOdeSpace;
