@@ -8,11 +8,11 @@ class Surface_test < ODE::TestCase
 	Tolerance = ODE::Precision == 'dDOUBLE' ? 1e-10 : 1e-5
 
 	# Test unit struct -- makes passing test data around a bit more readble.
-	FlagUnit = Struct::new( "FlagUnit", :op, :input, :result, :predicate )
+	SurfaceFlagUnit = Struct::new( "SurfaceFlagUnit", :op, :input, :result, :predicate )
 
-	# Test data for flag/option accessors (Mapped into FlagUnit objects)
-	FlagTests = {
-		# Flag/accessor (:op)
+	# Test data for flag/option accessors (Mapped into SurfaceFlagUnit objects)
+	SurfaceFlagTests = {
+		# SurfaceFlag/accessor (:op)
 			# :input,				:result,				:predicate
 		:bounce => [
 			[ 0.0,					0.0,					true ],
@@ -28,7 +28,7 @@ class Surface_test < ODE::TestCase
 			[ nil,					nil,					false ],
 			[ "foo",				TypeError,				false ],
 			[ ["foo"],				TypeError,				false ],
-			[ Proc::new {"foo"},	TypeError,				false ],
+			[ :foo,					TypeError,				false ],
 			[ $stderr,				TypeError,				false ],
 		],
 
@@ -51,7 +51,7 @@ class Surface_test < ODE::TestCase
 			[ nil,					TypeError,				nil ],
 			[ "foo",				TypeError,				nil ],
 			[ ["foo"],				TypeError,				nil ],
-			[ Proc::new {"foo"},	TypeError,				nil ],
+			[ :foo,					TypeError,				nil ],
 			[ $stderr,				TypeError,				nil ],
 		],
 
@@ -68,7 +68,7 @@ class Surface_test < ODE::TestCase
 			[ nil,					nil,					false ],
 			[ "foo",				TypeError,				false ],
 			[ ["foo"],				TypeError,				false ],
-			[ Proc::new {"foo"},	TypeError,				false ],
+			[ :foo,					TypeError,				false ],
 			[ $stderr,				TypeError,				false ],
 		],
 
@@ -85,7 +85,7 @@ class Surface_test < ODE::TestCase
 			[ nil,					nil,					false ],
 			[ "foo",				TypeError,				false ],
 			[ ["foo"],				TypeError,				false ],
-			[ Proc::new {"foo"},	TypeError,				false ],
+			[ :foo,					TypeError,				false ],
 			[ $stderr,				TypeError,				false ],
 		],
 
@@ -102,7 +102,7 @@ class Surface_test < ODE::TestCase
 			[ nil,					nil,					false ],
 			[ "foo",				TypeError,				false ],
 			[ ["foo"],				TypeError,				false ],
-			[ Proc::new {"foo"},	TypeError,				false ],
+			[ :foo,					TypeError,				false ],
 			[ $stderr,				TypeError,				false ],
 		],
 
@@ -119,7 +119,7 @@ class Surface_test < ODE::TestCase
 			[ nil,					nil,					false ],
 			[ "foo",				TypeError,				false ],
 			[ ["foo"],				TypeError,				false ],
-			[ Proc::new {"foo"},	TypeError,				false ],
+			[ :foo,					TypeError,				false ],
 			[ $stderr,				TypeError,				false ],
 		],
 
@@ -136,7 +136,7 @@ class Surface_test < ODE::TestCase
 			[ nil,					nil,					false ],
 			[ "foo",				TypeError,				false ],
 			[ ["foo"],				TypeError,				false ],
-			[ Proc::new {"foo"},	TypeError,				false ],
+			[ :foo,					TypeError,				false ],
 			[ $stderr,				TypeError,				false ],
 		],
 
@@ -153,7 +153,7 @@ class Surface_test < ODE::TestCase
 			[ nil,					nil,					false ],
 			[ "foo",				TypeError,				false ],
 			[ ["foo"],				TypeError,				false ],
-			[ Proc::new {"foo"},	TypeError,				false ],
+			[ :foo,					TypeError,				false ],
 			[ $stderr,				TypeError,				false ],
 		],
 		
@@ -173,19 +173,19 @@ class Surface_test < ODE::TestCase
 			[ nil,					nil,					false ],
 			[ "foo",				TypeError,				false ],
 			[ ["foo"],				TypeError,				false ],
-			[ Proc::new {"foo"},	TypeError,				false ],
+			[ :foo,					TypeError,				false ],
 			[ $stderr,				TypeError,				false ],
 		],
 
 	}
 
 	# Auto-generate test methods for each op
-	FlagTests.keys.each_with_index {|opname, i|
+	SurfaceFlagTests.keys.each_with_index {|opname, i|
 		methodName = "test_%d_%s" % [ i+10, opname.to_s ]
 
 		eval <<-"EOCODE"
 		def #{methodName}
-			unit = FlagTests[:#{opname}]
+			unit = SurfaceFlagTests[:#{opname}]
 			testHeader "Testing flag accessor for '#{opname}'."
 			runFlagTest( :#{opname}, unit )
 		end
@@ -194,7 +194,6 @@ class Surface_test < ODE::TestCase
 
 		
 	def runFlagTest( op, unit )
-		mnote()
 		config = {}
 
 		# Generate symbols for the get/set/predicate methods for this flag
@@ -228,7 +227,7 @@ class Surface_test < ODE::TestCase
 
 		# Now map all the test values into FlagUnit struct objects and
 		# iterate over them.
-		unit.collect {|ary| FlagUnit::new(op, *ary)}.each_with_index {|test, i|
+		unit.collect {|ary| SurfaceFlagUnit::new(op, *ary)}.each_with_index {|test, i|
 			config[:pretest].call( test ) if config.key?( :pretest )
 			expectedReturn = nil
 
@@ -239,23 +238,10 @@ class Surface_test < ODE::TestCase
 					! (oldtest[1].kind_of?( Class ) && oldtest[1] < Exception)
 				}[1]
 				debugMsg "Testing with expected return of '#{expectedReturn.inspect}'"
-				mnote()
 			end
 
-			mnote()
-			debugMsg "Test op = #{test.op.inspect}"
-			mnote()
-			debugMsg "Test input is a '%s'" % test.input.class.name
-			debugMsg "Test input = #{test.input.inspect}"
-			mnote()
-			debugMsg "Test result = #{test.result.inspect}"
-			mnote()
-			debugMsg "Test predicate = #{test.predicate.inspect}"
-			mnote()
 			debugMsg "Calling runTest with #{test.inspect}"
-			mnote()
 			runTest( test, getter, setter, predicate, expectedReturn )
-			mnote()
 
 			config[:posttest].call( test ) if config.key?( :posttest )
 		}
@@ -265,7 +251,6 @@ class Surface_test < ODE::TestCase
 	### If the expected result is a Float, test it with a tolerance, else test
 	### it for equality.
 	def assertSimilar( expected, actual, errmsg=nil )
-		mnote()
 		if expected != ODE::Infinity && expected.kind_of?( Float )
 			assert_in_delta expected, actual, Tolerance, errmsg
 		else
@@ -276,7 +261,6 @@ class Surface_test < ODE::TestCase
 
 	### Run get/set/predicate tests for the given test struct.
 	def runTest( test, getter, setter, predicate, expectedReturn=nil )
-		mnote()
 		debugMsg "Running tests for #{test.inspect}"
 		
 		if setter
@@ -300,7 +284,6 @@ class Surface_test < ODE::TestCase
 	### Run the 'set' accessor part of a test using the specified setter method
 	### and test specification struct.
 	def runSetterTests( test, setter )
-		mnote()
 		debugMsg "Running setter tests for method #{setter.inspect} for #{test.inspect}"
 		rval = nil
 
@@ -326,7 +309,6 @@ class Surface_test < ODE::TestCase
 	### the return value should be the value it contains instead of the test's
 	### .result member.
 	def runGetterTests( test, getter, expectedReturn=nil )
-		mnote()
 		debugMsg "Running getter tests method #{getter.inspect} for #{test.inspect}"
 		rval = nil
 
@@ -345,7 +327,6 @@ class Surface_test < ODE::TestCase
 	### Run the predicate part of a test using the specified predicate method
 	### and test specification struct.
 	def runPredicateTests( test, predicate )
-		mnote()
 		debugMsg "Running predicate tests with method #{predicate.inspect} for #{test.inspect}"
 		rval = nil
 
@@ -360,13 +341,16 @@ class Surface_test < ODE::TestCase
 	#################################################################
 	###	S E T U P / T E A R D O W N   M E T H O D S
 	#################################################################
-	def set_up
+	def setup 
 		@surface = ODE::Surface::new
 	end
+	alias_method :set_up, :setup
 
-	def tear_down
+	def teardown 
 		@surface = nil
 	end
+	alias_method :tear_down, :teardown
+
 
 	attr_reader :surface
 

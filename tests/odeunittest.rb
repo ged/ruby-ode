@@ -6,19 +6,20 @@
 # 
 #   
 # 
-# == Author
+# == Authors
 # 
-# Michael Granger <ged@FaerieMUD.org>
+# * Michael Granger <ged@FaerieMUD.org>
 # 
-# Copyright (c) 2002 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2002, 2003 The FaerieMUD Consortium.
 # 
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
+# This work is licensed under the Creative Commons Attribution License. To
+# view a copy of this license, visit
+# http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+# Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
 # 
 # == Version
 #
-#  $Id: odeunittest.rb,v 1.2 2002/11/23 21:48:56 deveiant Exp $
+#  $Id: odeunittest.rb,v 1.3 2003/02/04 11:32:51 deveiant Exp $
 # 
 
 basedir = File::dirname(File::dirname( __FILE__ ))
@@ -30,6 +31,8 @@ require "ode"
 ### Test case class
 module ODE
 	class TestCase < Test::Unit::TestCase
+
+		@@methodCounter = 0
 
 		# Set some ANSI escape code constants (Shamelessly stolen from Perl's
 		# Term::ANSIColor by Russ Allbery <rra@stanford.edu> and Zenin <zenin@best.com>
@@ -58,6 +61,21 @@ module ODE
 		ErasePreviousLine = "\033[A\033[K"
 
 
+		### Inheritance callback -- adds @setupMethods and @teardownMethods ivars
+		### and accessors to the inheriting class.
+		def self.inherited( klass )
+			klass.module_eval {
+				@setupMethods = []
+				@teardownMethods = []
+
+				class << self
+					attr_accessor :setupMethods
+					attr_accessor :teardownMethods
+				end
+			}
+		end
+
+
 		### Returns a String containing the specified ANSI escapes suitable for
 		### inclusion in another string. The <tt>attributes</tt> should be one
 		### or more of the keys of AnsiAttributes.
@@ -75,34 +93,83 @@ module ODE
 		### <tt>STDERR</tt> if <tt>$DEBUG</tt> is set.
 		def self.debugMsg( *msgs )
 			return unless $DEBUG
-			$stderr.puts "%sDEBUG>>> %s %s" %
+			self.message "%sDEBUG>>> %s %s" %
 				[ ansiCode('dark', 'white'), msgs.join(''), ansiCode('reset') ]
-			$stderr.flush
 		end
 
 
 		### Output the specified <tt>msgs</tt> joined together to
 		### <tt>STDOUT</tt>.
-		def message( *msgs )
+		def self.message( *msgs )
 			$stderr.puts msgs.join('')
 			$stderr.flush
 		end
+
+
+		### Add a setup block for the current testcase
+		def self.addSetupBlock( &block )
+			@@methodCounter += 1
+			newMethodName = "setup_#{@@methodCounter}".intern
+			define_method( newMethodName, &block )
+			self.setupMethods.push newMethodName
+		end
+
+			
+		### Add a teardown block for the current testcase
+		def self.addTeardownBlock( &block )
+			@@methodCounter += 1
+			newMethodName = "teardown_#{@@methodCounter}".intern
+			define_method( newMethodName, &block )
+			self.teardownMethods.unshift newMethodName
+		end
+
+
+		#############################################################
+		###	I N S T A N C E   M E T H O D S
+		#############################################################
+
+		### Run dynamically-added setup methods
+		def setup( *args )
+			self.class.setupMethods.each {|sblock|
+				self.send( sblock )
+			}
+		end
+		alias_method :set_up, :setup
+
+
+		### Run dynamically-added teardown methods
+		def teardown( *args )
+			self.class.teardownMethods.each {|tblock|
+				self.send( tblock )
+			}
+		end
+		alias_method :tear_down, :teardown
+
+
+		### Instance alias for the like-named class method.
+		def message( *msgs )
+			self.class.message( *msgs )
+		end
+
 
 		### Instance-alias for the like-named class method
 		def ansiCode( *attributes )
 			self.class.ansiCode( *attributes )
 		end
 
+
 		### Instance alias for the like-named class method
 		def debugMsg( *msgs )
 			self.class.debugMsg( *msgs )
 		end
+
 
 		### Replace the previous line with the specified <tt>msgs</tt>.
 		def replaceMessage( *msgs )
 			$stderr.print ErasePreviousLine
 			message( *msg )
 		end
+
 
 		### Output a separator line made up of <tt>length</tt> of the specified
 		### <tt>char</tt>.
@@ -127,48 +194,11 @@ module ODE
 			GC.start
 		end
 
+
 		### Output the name of the test as it's running if in verbose mode.
 		def run( result )
 			$stderr.puts self.name if $VERBOSE || $DEBUG
 			super
-		end
-
-
-		### Additional assertion methods
-
-		### Passes if <tt>actual</tt> matches the given <tt>regexp</tt>.
-		def assert_match( regexp, actual, message=nil )
-			_wrap_assertion {
-				assert(regexp.kind_of?(Regexp), "The first parameter to assert_matches should be a Regexp.")
-				full_message = build_message(message, actual, regexp) {
-					| arg1, arg2 |
-					"Expected <#{arg1}> to match #{arg2.inspect}"
-				}
-				assert_block(full_message) {
-					regexp.match( actual )
-				}
-			}
-		end
-
-
-
-		### This was copied from test/unit.rb because I can't call it from
-		### here. Grrr... one shouldn't make methods useful to subclassers
-		### private.
-
-		def _wrap_assertion # :nodoc:
-			@_assertion_wrapped ||= false
-			if (!@_assertion_wrapped)
-				@_assertion_wrapped = true
-				begin
-					add_assertion
-					return yield
-				ensure
-					@_assertion_wrapped = false
-				end
-			else    
-				return yield
-			end
 		end
 
 	end # module TestCase

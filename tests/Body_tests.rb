@@ -9,14 +9,16 @@ class BodyTestCase < ODE::TestCase
 	Y = 1
 	Z = 2
 
-	def set_up
+	def setup
 		@world = ODE::World.new
 		@body = @world.createBody
 	end
+	alias_method :set_up, :setup
 
-	def tear_down
+	def teardown
 		@world = nil
 	end
+	alias_method :tear_down, :teardown
 
 	# dBodyID dBodyCreate (dWorldID);
 	def test_00_create
@@ -60,12 +62,12 @@ class BodyTestCase < ODE::TestCase
 		rotation = nil
 
 		assert_nothing_raised { rotation = @body.rotation } 
-		assert_instance_of ODE::Rotation, rotation
+		assert_instance_of ODE::Quaternion, rotation
 	end
 
 	# void dBodySetRotation   (dBodyID, const dMatrix3 R);
 	def test_04_rotation_eq
-		rotation = ODE::Rotation::new
+		rotation = ODE::Quaternion::new
 
 		assert_nothing_raised { @body.rotation = rotation }
 	end
@@ -90,8 +92,8 @@ class BodyTestCase < ODE::TestCase
 		assert_in_delta( @body.linearVelocity[Y], 10.0, 0.001 ) 
 		assert_in_delta( @body.linearVelocity[Z], 100.0, 0.001 ) 
 
-		assert_raises( NoMethodError ) { @body.linearVelocity = "broken" } 
-		assert_raises( NoMethodError ) { @body.linearVelocity = 1 } 
+		assert_raises( TypeError ) { @body.linearVelocity = "broken" } 
+		assert_raises( TypeError ) { @body.linearVelocity = 1 } 
 	end
 
 	# const dReal * dBodyGetAngularVel (dBodyID);
@@ -112,8 +114,8 @@ class BodyTestCase < ODE::TestCase
 		assert_in_delta( @body.angularVelocity[Y], 10.0, 0.001 ) 
 		assert_in_delta( @body.angularVelocity[Z], 100.0, 0.001 ) 
 
-		assert_raises( NoMethodError ) { @body.angularVelocity = "broken" } 
-		assert_raises( NoMethodError ) { @body.angularVelocity = 1 } 
+		assert_raises( TypeError ) { @body.angularVelocity = "broken" } 
+		assert_raises( TypeError ) { @body.angularVelocity = 1 } 
 	end
 
 	# void dBodySetQuaternion (dBodyID, const dQuaternion q);
