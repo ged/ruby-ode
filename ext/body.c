@@ -1,26 +1,17 @@
 /*
  *		body.c - ODE Ruby Binding - Body Class
- *		$Id: body.c,v 1.3 2002/11/23 23:08:45 deveiant Exp $
+ *		$Id: body.c,v 1.4 2003/02/04 11:24:56 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 03:45:23 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2001, 2002 The FaerieMUD Consortium. All rights reserved.
+ *		Copyright (c) 2001, 2002, 2003 The FaerieMUD Consortium.
  *
- *		This library is free software; you can redistribute it and/or modify it
- *		under the terms of the GNU Lesser General Public License as published by
- *		the Free Software Foundation; either version 2.1 of the License, or (at
- *		your option) any later version.
- *
- *		This library is distributed in the hope that it will be useful, but
- *		WITHOUT ANY WARRANTY; without even the implied warranty of
- *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
- *		General Public License for more details.
- *
- *		You should have received a copy of the GNU Lesser General Public License
- *		along with this library (see the file LICENSE.TXT); if not, write to the
- *		Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- *		02111-1307 USA.
+ *		This work is licensed under the Creative Commons Attribution License. To
+ *		view a copy of this license, visit
+ *		http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+ *		Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
  *
  */
 
@@ -36,8 +27,6 @@
  * Macros and constants
  * -------------------------------------------------- */
 
-#define IsBody( obj ) rb_obj_is_kind_of( (obj), ode_cOdeBody )
-
 
 
 /* --------------------------------------------------
@@ -52,8 +41,9 @@ ode_body_alloc()
 {
 	ode_BODY *ptr = ALLOC( ode_BODY );
 
-	ptr->id = NULL;
-	ptr->world = Qnil;
+	ptr->id		= NULL;
+	ptr->world	= Qnil;
+	ptr->mass	= Qnil;
 
 	debugMsg(( "Initialized ode_BODY <%p>", ptr ));
 	return ptr;
@@ -76,6 +66,7 @@ ode_body_gc_mark( ptr )
 
 		/* Mark the world the body belongs to */
 		rb_gc_mark( ptr->world );
+		rb_gc_mark( ptr->mass );
 
 		/* If this body has any attached joints, mark those as well */
 		if (( jointCount = dBodyGetNumJoints(ptr->id) )) {
@@ -92,8 +83,8 @@ ode_body_gc_mark( ptr )
 				debugMsg(( "Getting joint struct." ));
 				jointStruct = (ode_JOINT *)dJointGetData( jointId );
 
-				debugMsg(( "Marking joint <%p>", jointStruct->joint ));
-				rb_gc_mark( jointStruct->joint );
+				debugMsg(( "Marking joint <%p>", jointStruct->object ));
+				rb_gc_mark( jointStruct->object );
 			}
 		} else {
 			debugMsg(( "No attached Joints." ));
@@ -129,6 +120,7 @@ ode_body_gc_free( ptr )
 
 		ptr->object = Qnil;
 		ptr->world  = Qnil;
+		ptr->mass	= Qnil;
 		ptr->id		= NULL;
 
 		debugMsg(( "Freeing ode_BODY <%p>", ptr ));
@@ -256,15 +248,14 @@ ode_body_init( self, world )
  * Get the position of the body as an ODE::Position object.
  */
 static VALUE
-ode_body_position( self, args )
-	 VALUE self, args;
+ode_body_position( self )
+	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	dReal		*position;
 
 	/* Get the body struct and fetch its current position */
-	GetBody( self, bodyStruct );
-	position = (dReal *)dBodyGetPosition( bodyStruct->id );
+	position = (dReal *)dBodyGetPosition( ptr->id );
 
 	/* Create a new Position object with our x, y, and z */
 	return rb_funcall( ode_cOdePosition, rb_intern("new"), 3,
@@ -285,7 +276,7 @@ static VALUE
 ode_body_position_eq( self, position )
 	 VALUE self, position;
 {
-	ode_BODY	*body;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		posArray;
 
 	/* Normalize the position into an array */
@@ -296,8 +287,7 @@ ode_body_position_eq( self, position )
 		
 
 	/* Fetch the body struct */
-	GetBody( self, body );
-	dBodySetPosition( body->id,
+	dBodySetPosition( ptr->id,
 					  (dReal)NUM2DBL(rb_ary_entry( posArray, 0 )),
 					  (dReal)NUM2DBL(rb_ary_entry( posArray, 1 )),
 					  (dReal)NUM2DBL(rb_ary_entry( posArray, 2 )) );
@@ -309,27 +299,26 @@ ode_body_position_eq( self, position )
 /*
  * rotation()
  * --
- * Return the body's rotation as an ODE::Rotation object.
+ * Return the body's rotation as an ODE::Quaternion object.
  */
 static VALUE
-ode_body_rotation( self, args )
-	 VALUE self, args;
+ode_body_rotation( self )
+	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	dReal		*quat;
-	VALUE		x, y, z, angle;
+	VALUE		args[4];
 
 	/* Fetch the body struct and the quaternion for it. */
-	GetBody( self, bodyStruct );
-	quat = (dReal *)dBodyGetQuaternion( bodyStruct->id );
+	quat = (dReal *)dBodyGetQuaternion( ptr->id );
 
-	x = rb_float_new( *(quat  ) );
-	y = rb_float_new( *(quat+1) );
-	z = rb_float_new( *(quat+2) );
-	angle = rb_float_new( *(quat+3) );
+	args[0] = rb_float_new( *(quat  ) );
+	args[1] = rb_float_new( *(quat+1) );
+	args[2] = rb_float_new( *(quat+2) );
+	args[3] = rb_float_new( *(quat+3) );
 	
-	/* Create a new ODE::Rotation object from the quaternion and return it */
-	return rb_funcall( ode_cOdeRotation, rb_intern("new"), 4, x, y, z, angle );
+	/* Create a new ODE::Quaternion object from the quaternion and return it */
+	return rb_class_new_instance( 4, args, ode_cOdeQuaternion );
 }
 
 
@@ -338,7 +327,7 @@ ode_body_rotation( self, args )
  * --
  * Set the body's orientation to the specified <tt>rotation</tt>, which can be
  * any object which returns an Array of four numeric values when <tt>to_ary</tt>
- * is called on it such as an ODE::Rotation object, a Math3d::Vector4, or an
+ * is called on it such as an ODE::Quaternion object, a Math3d::Vector4, or an
  * Array with four numeric values.
  */
 static VALUE
@@ -346,8 +335,9 @@ ode_body_rotation_eq( self, rotation )
 	 VALUE self, rotation;
 {
 	VALUE		ary;
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	dQuaternion	quat;
+	dMatrix3	R;
 	int			i;
 
 	/* Call to_ary on whatever we got, and make sure it's an Array with four elements. */
@@ -359,10 +349,10 @@ ode_body_rotation_eq( self, rotation )
 	/* Copy the values in the array into the quaternion */
 	for ( i = 0 ; i <= 3 ; i++ )
 		quat[i] = NUM2DBL( *(RARRAY(ary)->ptr + i) );
+	dQtoR( quat, R );
   
 	/* Get the body and set its rotation */
-	GetBody( self, bodyStruct );
-	dBodySetRotation( bodyStruct->id, quat );
+	dBodySetRotation( ptr->id, R );
 
 	return Qtrue;
 }
@@ -371,21 +361,20 @@ ode_body_rotation_eq( self, rotation )
 /*
  * quaternion()
  * --
- * Get the quaternion of the body as an ODE::Rotation object.
+ * Get the quaternion of the body as an ODE::Quaternion object.
  */
 static VALUE
-ode_body_quaternion( self, args )
-	 VALUE self, args;
+ode_body_quaternion( self )
+	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	dReal		*quaternion;
 
 	/* Get the body struct and fetch its current quaternion */
-	GetBody( self, bodyStruct );
-	quaternion = (dReal *)dBodyGetQuaternion( bodyStruct->id );
+	quaternion = (dReal *)dBodyGetQuaternion( ptr->id );
 
 	/* Create a new Quaternion object with our x, y, and z */
-	return rb_funcall( ode_cOdeRotation, rb_intern("new"), 4,
+	return rb_funcall( ode_cOdeQuaternion, rb_intern("new"), 4,
 					   rb_float_new(*(quaternion)),
 					   rb_float_new(*(quaternion + 1)),
 					   rb_float_new(*(quaternion + 2)),
@@ -433,15 +422,14 @@ ode_body_quaternion_eq( self, quaternion )
  * vector).
  */
 static VALUE
-ode_body_linearVelocity( self, args )
-	 VALUE self, args;
+ode_body_linearVelocity( self )
+	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	dReal		*velocityVector;
 
 	/* Get the body struct and the velocity vector */
-	GetBody( self, bodyStruct );
-	velocityVector = (dReal *)dBodyGetLinearVel( bodyStruct->id );
+	velocityVector = (dReal *)dBodyGetLinearVel( ptr->id );
 
 	/* Return a new 3-element Ruby array with the vector values */
 	return rb_funcall( ode_cOdeLinearVelocity, rb_intern("new"), 3,
@@ -463,7 +451,7 @@ ode_body_linearVelocity_eq( self, linearVelocity )
 	 VALUE self, linearVelocity;
 {
 	VALUE		ary;
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 
  	/* Normalize the velocity into an array */
 	if ( RARRAY(linearVelocity)->len == 1 ) 
@@ -472,8 +460,7 @@ ode_body_linearVelocity_eq( self, linearVelocity )
 		ary = ode_obj_to_ary3( linearVelocity, "linear velocity" );
 
 	/* Get the body struct and set the vector with the values from the array */
-	GetBody( self, bodyStruct );
-	dBodySetLinearVel( bodyStruct->id,
+	dBodySetLinearVel( ptr->id,
 					   NUM2DBL(*(RARRAY(ary)->ptr    )), 
 					   NUM2DBL(*(RARRAY(ary)->ptr + 1)), 
 					   NUM2DBL(*(RARRAY(ary)->ptr + 2)) );
@@ -488,15 +475,14 @@ ode_body_linearVelocity_eq( self, linearVelocity )
  * Get the body's angular velocity as a 3-element Array vector.
  */
 static VALUE
-ode_body_angularVelocity( self, args )
-	 VALUE self, args;
+ode_body_angularVelocity( self )
+	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	dReal		*velocityVector;
 
 	/* Get the body struct and the velocity vector */
-	GetBody( self, bodyStruct );
-	velocityVector = (dReal *)dBodyGetAngularVel( bodyStruct->id );
+	velocityVector = (dReal *)dBodyGetAngularVel( ptr->id );
 
 	/* Return a new 3-element Ruby array with the vector values */
 	return rb_funcall( ode_cOdeAngularVelocity, rb_intern("new"), 3,
@@ -518,7 +504,7 @@ ode_body_angularVelocity_eq( self, angularVelocity )
 	 VALUE self, angularVelocity;
 {
 	VALUE		ary;
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 
 	/* Normalize the position into an array */
 	if ( RARRAY(angularVelocity)->len == 1 )
@@ -527,8 +513,7 @@ ode_body_angularVelocity_eq( self, angularVelocity )
 		ary = ode_obj_to_ary3( angularVelocity, "angular velocity" );
 
 	/* Get the body struct and set the vector with the values from the array */
-	GetBody( self, bodyStruct );
-	dBodySetAngularVel( bodyStruct->id,
+	dBodySetAngularVel( ptr->id,
 						(dReal) NUM2DBL(*(RARRAY(ary)->ptr  )), 
 						(dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)), 
 						(dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)) );
@@ -547,14 +532,20 @@ static VALUE
 ode_body_mass( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
-	dMass		*mass = 0;
+	ode_BODY	*ptr = get_body( self );
 
-	/* Get the body and mass structs from the object */
-	GetBody( self, bodyStruct );
-	dBodyGetMass( bodyStruct->id, mass );
+	/* If there isn't already a mass object associated with this body, create
+	   one that encapsulates the mass part of the body struct. */
+	if ( !RTEST(ptr->mass) ) {
+		dMass	mass;
+		
+		dMassSetSphere( &mass, 1.0, 1.0 );
+		dBodySetMass( ptr->id, &mass );
+		ptr->mass = rb_class_new_instance( 0, 0, ode_cOdeMass );
+		ode_mass_set_body( ptr->mass, self );
+	}
 
-	return ode_mass_new_from_body( mass );
+	return ptr->mass;
 }
 
 
@@ -567,24 +558,16 @@ static VALUE
 ode_body_mass_eq( self, massObj )
 	 VALUE self, massObj;
 {
-	ode_BODY	*bodyStruct;
-	dMass		*mass;
+	ode_BODY	*ptr = get_body( self );
+	ode_MASS	*massStruct;
+	dMass		mass;
 
-	/* Make sure the argument is an ODE::Mass object or subclass, raising an 
-	   error if it isn't */
-	if ( ! rb_obj_is_kind_of(massObj, ode_cOdeMass) )
-		rb_raise( rb_eTypeError, "Expected ODE::Mass object, not a '%s'.",
-				  STR2CSTR(rb_funcall( rb_funcall(massObj,rb_intern("type"),0), rb_intern("name"), 0 )) );
+	/* Copy the values of the mass object into the body's own mass struct */
+	massStruct = ode_get_mass( massObj );
+	dBodySetMass( ptr->id, &mass );
 
-	/* Get the mass struct from the object and the body struct from the body 
-	   object */
-	GetMass( massObj, mass );
-	GetBody( self, bodyStruct );
-
-	/* Set the mass of the body */
-	dBodySetMass( bodyStruct->id, mass );
-
-	return Qtrue;
+	/* Return the body's own mass object */
+	return ode_body_mass( self );
 }
 
 
@@ -598,10 +581,9 @@ static VALUE
 ode_body_enable( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 
-	GetBody( self, bodyStruct );
-	dBodyEnable( bodyStruct->id );
+	dBodyEnable( ptr->id );
 
 	return Qtrue;
 }
@@ -618,10 +600,9 @@ static VALUE
 ode_body_disable( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 
-	GetBody( self, bodyStruct );
-	dBodyDisable( bodyStruct->id );
+	dBodyDisable( ptr->id );
 
 	return Qtrue;
 }
@@ -637,10 +618,9 @@ static VALUE
 ode_body_enabled_p( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 
-	GetBody( self, bodyStruct );
-	if ( dBodyIsEnabled(bodyStruct->id) )
+	if ( dBodyIsEnabled(ptr->id) )
 		return Qtrue;
 	else
 		return Qfalse;
@@ -657,11 +637,10 @@ static VALUE
 ode_body_finite_rotation_mode( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	int			mode;
 
-	GetBody( self, bodyStruct );
-	mode = dBodyGetFiniteRotationMode( bodyStruct->id );
+	mode = dBodyGetFiniteRotationMode( ptr->id );
 
 	return INT2FIX( mode );
 }
@@ -673,13 +652,13 @@ ode_body_finite_rotation_mode( self )
  * Set the body's finite rotation mode, which controls the way a body's
  * orientation is updated at each time step. The mode argument can be:
  *
- *  [ODE::Rotation::INFINITESIMAL]
+ *  [ODE::ROTATION_INFINITESIMAL]
  *    An ``infitesimal'' orientation update is used. This is fast to compute,
  *    but it can occasionally cause inaccuracies for bodies that are rotating at
  *    high speed, especially when those bodies are joined to other bodies. This
  *    is the default for every new body that is created.
  *
- *  [ODE::Rotation::FINITE]
+ *  [ODE::ROTATION_FINITE]
  *    A ``finite'' orientation update is used. This is more costly to compute,
  *    but will be more accurate for high speed rotations. Note however that high
  *    speed rotations can result in many types of error in a simulation, and
@@ -690,15 +669,14 @@ static VALUE
 ode_body_finite_rotation_mode_eq( self, modeArg )
 	 VALUE self, modeArg;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	int			mode;
 
 	mode = NUM2INT( modeArg );
 	if ( mode < 0 || mode > 1 )
 		rb_raise( rb_eArgError, "Illegal mode." );
 
-	GetBody( self, bodyStruct );
-	dBodySetFiniteRotationMode( bodyStruct->id, mode );
+	dBodySetFiniteRotationMode( ptr->id, mode );
 
 	return modeArg;
 }
@@ -713,11 +691,10 @@ static VALUE
 ode_body_finite_rotation_axis( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	dVector3	axis;
 
-	GetBody( self, bodyStruct );
-	dBodyGetFiniteRotationAxis( bodyStruct->id, (dReal *)axis );
+	dBodyGetFiniteRotationAxis( ptr->id, (dReal *)axis );
 
 	return ode_vector3_to_rArray( axis );
 }
@@ -747,7 +724,7 @@ static VALUE
 ode_body_finite_rotation_axis_eq( self, axis )
 	 VALUE self, axis;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 
  	/* Normalize the axis into an array */
@@ -756,8 +733,7 @@ ode_body_finite_rotation_axis_eq( self, axis )
 	else
 		ary = ode_obj_to_ary3( axis, "finite rotation axis" );
 
-	GetBody( self, bodyStruct );
-	dBodySetFiniteRotationAxis( bodyStruct->id,
+	dBodySetFiniteRotationAxis( ptr->id,
 								(dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 								(dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 								(dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)) );
@@ -778,7 +754,7 @@ static VALUE
 ode_body_add_force( self, forceVector )
 	 VALUE self, forceVector;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 
  	/* Normalize the velocity into an array */
@@ -787,8 +763,7 @@ ode_body_add_force( self, forceVector )
 	else
 		ary = ode_obj_to_ary3( forceVector, "force vector" );
 
-	GetBody( self, bodyStruct );
-	dBodyAddForce( bodyStruct->id,
+	dBodyAddForce( ptr->id,
 				   (dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 				   (dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 				   (dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)) );
@@ -807,11 +782,10 @@ static VALUE
 ode_body_get_force( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	const dReal	*fvec;
 
-	GetBody( self, bodyStruct );
-	fvec = dBodyGetForce( bodyStruct->id );
+	fvec = dBodyGetForce( ptr->id );
 
 	/* Create and return a new ODE::Force object with the value of the force 
 	   vector. */
@@ -834,7 +808,7 @@ static VALUE
 ode_body_set_force( self, forceVector )
 	 VALUE self, forceVector;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 
  	/* Normalize the velocity into an array */
@@ -843,8 +817,7 @@ ode_body_set_force( self, forceVector )
 	else
 		ary = ode_obj_to_ary3( forceVector, "force vector" );
 
-	GetBody( self, bodyStruct );
-	dBodySetForce( bodyStruct->id,
+	dBodySetForce( ptr->id,
 				   (dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 				   (dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 				   (dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)) );
@@ -865,14 +838,13 @@ static VALUE
 ode_body_add_torque( self, torqueVector )
 	 VALUE self, torqueVector;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 
  	/* Normalize the velocity into an array */
 	ary = ode_obj_to_ary3( rb_funcall(torqueVector, rb_intern("flatten"), 0, 0), "torque vector" );
 
-	GetBody( self, bodyStruct );
-	dBodyAddTorque( bodyStruct->id,
+	dBodyAddTorque( ptr->id,
 					(dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 					(dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 					(dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)) );
@@ -891,11 +863,10 @@ static VALUE
 ode_body_get_torque( self )
 	VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	const dReal	*tvec;
 
-	GetBody( self, bodyStruct );
-	tvec = dBodyGetTorque( bodyStruct->id );
+	tvec = dBodyGetTorque( ptr->id );
 
 	/* Create and return a new ODE::Torque object with the values of the torque 
 	   vector. */
@@ -918,7 +889,7 @@ static VALUE
 ode_body_set_torque( self, torqueVector )
 	 VALUE self, torqueVector;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 
  	/* Normalize the velocity into an array */
@@ -927,8 +898,7 @@ ode_body_set_torque( self, torqueVector )
 	else
 		ary = ode_obj_to_ary3( torqueVector, "torque vector" );
 
-	GetBody( self, bodyStruct );
-	dBodySetTorque( bodyStruct->id,
+	dBodySetTorque( ptr->id,
 					(dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 					(dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 					(dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)) );
@@ -950,7 +920,7 @@ ode_body_set_torque( self, torqueVector )
 static VALUE
 ode_body_get_rel_point_pos( self, point )
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 	dVector3	position;
 
@@ -959,8 +929,7 @@ ode_body_get_rel_point_pos( self, point )
 	else
 		ary = ode_obj_to_ary3( point, "relative point" );
 
-	GetBody( self, bodyStruct );
-	dBodyGetRelPointPos( bodyStruct->id,
+	dBodyGetRelPointPos( ptr->id,
 						 (dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 						 (dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 						 (dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)),
@@ -986,7 +955,7 @@ ode_body_get_rel_point_pos( self, point )
 static VALUE
 ode_body_get_pos_rel_point( self, point )
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 	dVector3	position;
 
@@ -995,8 +964,7 @@ ode_body_get_pos_rel_point( self, point )
 	else
 		ary = ode_obj_to_ary3( point, "relative point" );
 
-	GetBody( self, bodyStruct );
-	dBodyGetPosRelPoint( bodyStruct->id,
+	dBodyGetPosRelPoint( ptr->id,
 						 (dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 						 (dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 						 (dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)),
@@ -1022,14 +990,13 @@ ode_body_get_pos_rel_point( self, point )
 static VALUE
 ode_body_get_rel_point_vel( self, point )
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 	dVector3	velocity;
 
 	ary = ode_obj_to_ary3( rb_funcall(point, rb_intern("flatten"), 0, 0), "relative point" );
 
-	GetBody( self, bodyStruct );
-	dBodyGetRelPointVel( bodyStruct->id,
+	dBodyGetRelPointVel( ptr->id,
 						 (dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 						 (dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 						 (dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)),
@@ -1056,14 +1023,13 @@ ode_body_get_rel_point_vel( self, point )
 static VALUE
 ode_body_get_point_vel( self, point )
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 	dVector3	velocity;
 
 	ary = ode_obj_to_ary3( rb_funcall(point, rb_intern("flatten"), 0, 0), "point" );
 
-	GetBody( self, bodyStruct );
-	dBodyGetPointVel( bodyStruct->id,
+	dBodyGetPointVel( ptr->id,
 					  (dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 					  (dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 					  (dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)),
@@ -1090,7 +1056,7 @@ static VALUE
 ode_body_add_rel_force( self, forceVector )
 	 VALUE self, forceVector;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 
  	/* Normalize the velocity into an array */
@@ -1099,8 +1065,7 @@ ode_body_add_rel_force( self, forceVector )
 	else
 		ary = ode_obj_to_ary3( forceVector, "force vector" );
 
-	GetBody( self, bodyStruct );
-	dBodyAddRelForce( bodyStruct->id,
+	dBodyAddRelForce( ptr->id,
 					  (dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 					  (dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 					  (dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)) );
@@ -1118,7 +1083,7 @@ static VALUE
 ode_body_add_rel_torque( self, forceVector )
 	 VALUE self, forceVector;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 
 	/* Normalize the force vector */
@@ -1128,8 +1093,7 @@ ode_body_add_rel_torque( self, forceVector )
 		ary = ode_obj_to_ary3( forceVector, "force vector" );
 
 	/* Get the body struct and add the arguments as a force vector */
-	GetBody( self, bodyStruct );
-	dBodyAddRelTorque( bodyStruct->id,
+	dBodyAddRelTorque( ptr->id,
 					   (dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 					   (dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 					   (dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)) );
@@ -1152,7 +1116,7 @@ static VALUE
 ode_body_add_force_at_pos( self, forceVector, position )
 	 VALUE self, forceVector, position;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		fary, pary;
 
  	/* Normalize the velocity and position into arrays */
@@ -1161,8 +1125,7 @@ ode_body_add_force_at_pos( self, forceVector, position )
 
 	/* Get the body struct and add the arguments as a force vector and a position 
 	   vector */
-	GetBody( self, bodyStruct );
-	dBodyAddForceAtPos( bodyStruct->id,
+	dBodyAddForceAtPos( ptr->id,
 						(dReal) NUM2DBL(*(RARRAY(fary)->ptr  )),
 						(dReal) NUM2DBL(*(RARRAY(fary)->ptr+1)),
 						(dReal) NUM2DBL(*(RARRAY(fary)->ptr+2)),
@@ -1188,7 +1151,7 @@ static VALUE
 ode_body_add_force_at_rel_pos( self, forceVector, position )
 	 VALUE self, forceVector, position;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		fary, pary;
 
  	/* Normalize the velocity and position into arrays */
@@ -1197,8 +1160,7 @@ ode_body_add_force_at_rel_pos( self, forceVector, position )
 
 	/* Get the body struct and add the arguments as a force vector and a
 	   position vector */
-	GetBody( self, bodyStruct );
-	dBodyAddForceAtRelPos( bodyStruct->id,
+	dBodyAddForceAtRelPos( ptr->id,
 						   (dReal) NUM2DBL(*(RARRAY(fary)->ptr  )),
 						   (dReal) NUM2DBL(*(RARRAY(fary)->ptr+1)),
 						   (dReal) NUM2DBL(*(RARRAY(fary)->ptr+2)),
@@ -1224,7 +1186,7 @@ static VALUE
 ode_body_add_rel_force_at_pos( self, forceVector, position )
 	 VALUE self, forceVector, position;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		fary, pary;
 
  	/* Normalize the velocity and position into arrays */
@@ -1233,8 +1195,7 @@ ode_body_add_rel_force_at_pos( self, forceVector, position )
 
 	/* Get the body struct and add the arguments as a force vector and a position 
 	   vector */
-	GetBody( self, bodyStruct );
-	dBodyAddRelForceAtPos( bodyStruct->id,
+	dBodyAddRelForceAtPos( ptr->id,
 						   (dReal) NUM2DBL(*(RARRAY(fary)->ptr  )),
 						   (dReal) NUM2DBL(*(RARRAY(fary)->ptr+1)),
 						   (dReal) NUM2DBL(*(RARRAY(fary)->ptr+2)),
@@ -1260,7 +1221,7 @@ static VALUE
 ode_body_add_rel_force_at_rel_pos( self, forceVector, position )
 	 VALUE self, forceVector, position;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		fary, pary;
 
  	/* Normalize the velocity and position into arrays */
@@ -1269,8 +1230,7 @@ ode_body_add_rel_force_at_rel_pos( self, forceVector, position )
 
 	/* Get the body struct and add the arguments as a force vector and a
 	   position vector */
-	GetBody( self, bodyStruct );
-	dBodyAddRelForceAtRelPos( bodyStruct->id,
+	dBodyAddRelForceAtRelPos( ptr->id,
 							  (dReal) NUM2DBL(*(RARRAY(fary)->ptr  )),
 							  (dReal) NUM2DBL(*(RARRAY(fary)->ptr+1)),
 							  (dReal) NUM2DBL(*(RARRAY(fary)->ptr+2)),
@@ -1293,7 +1253,7 @@ ode_body_add_rel_force_at_rel_pos( self, forceVector, position )
 static VALUE
 ode_body_vec_to_world( self, vector )
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 	dVector3	newVector;
 
@@ -1302,8 +1262,7 @@ ode_body_vec_to_world( self, vector )
 	else
 		ary = ode_obj_to_ary3( vector, "body-relative vector" );
 	
-	GetBody( self, bodyStruct );
-	dBodyVectorToWorld( bodyStruct->id,
+	dBodyVectorToWorld( ptr->id,
 						(dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 						(dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 						(dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)),
@@ -1327,7 +1286,7 @@ ode_body_vec_to_world( self, vector )
 static VALUE
 ode_body_vec_from_world( self, vector )
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	VALUE		ary;
 	dVector3	newVector;
 
@@ -1336,8 +1295,7 @@ ode_body_vec_from_world( self, vector )
 	else
 		ary = ode_obj_to_ary3( vector, "body-relative vector" );
 
-	GetBody( self, bodyStruct );
-	dBodyVectorFromWorld( bodyStruct->id,
+	dBodyVectorFromWorld( ptr->id,
 						  (dReal) NUM2DBL(*(RARRAY(ary)->ptr  )),
 						  (dReal) NUM2DBL(*(RARRAY(ary)->ptr+1)),
 						  (dReal) NUM2DBL(*(RARRAY(ary)->ptr+2)),
@@ -1385,11 +1343,10 @@ static VALUE
 ode_body_get_num_joints( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	int			jointCount;
 
-	GetBody( self, bodyStruct );
-	jointCount = dBodyGetNumJoints( bodyStruct->id );
+	jointCount = dBodyGetNumJoints( ptr->id );
 
 	return INT2NUM( jointCount );
 }
@@ -1405,22 +1362,21 @@ static VALUE
 ode_body_get_joint( self, index )
 	 VALUE self, index;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	dJointID	joint;
 	ode_JOINT	*jointStruct;
 	int			i, jointCount;
 
 	i = NUM2INT( index );
-	GetBody( self, bodyStruct );
-	jointCount = dBodyGetNumJoints( bodyStruct->id );
+	jointCount = dBodyGetNumJoints( ptr->id );
 
 	if ( i > jointCount - 1 )
 		rb_raise( rb_eIndexError, "body has no joint %d", i );
 
-	joint = dBodyGetJoint( bodyStruct->id, i );
+	joint = dBodyGetJoint( ptr->id, i );
 	jointStruct = (ode_JOINT *)dJointGetData( (dJointID)joint );
 
-	return jointStruct->joint;
+	return jointStruct->object;
 }
 
 
@@ -1434,21 +1390,20 @@ static VALUE
 ode_body_joints( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	int			i, jointCount;
 	VALUE		jointAry;
 	ode_JOINT	*jointStruct;
 	dJointID	joint;
 	
-	GetBody( self, bodyStruct );
-	jointCount = dBodyGetNumJoints( bodyStruct->id );
+	jointCount = dBodyGetNumJoints( ptr->id );
 
 	/* Create an array of the joints attached to this body. */
 	jointAry = rb_ary_new2( (long)jointCount );
 	for ( i = 0 ; i < jointCount ; i++ ) {
-		joint = dBodyGetJoint( bodyStruct->id, i );
+		joint = dBodyGetJoint( ptr->id, i );
 		jointStruct = (ode_JOINT *)dJointGetData( (dJointID)joint );
-		rb_ary_store( jointAry, i, jointStruct->joint );
+		rb_ary_store( jointAry, i, jointStruct->object );
 	}
 
 	return jointAry;
@@ -1464,11 +1419,10 @@ static VALUE
 ode_body_gravity_mode_p( self )
 	 VALUE self;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	int			mode;
 	
-	GetBody( self, bodyStruct );
-	mode = dBodyGetGravityMode( bodyStruct->id );
+	mode = dBodyGetGravityMode( ptr->id );
 
 	return mode ? Qtrue : Qfalse;
 }
@@ -1484,10 +1438,9 @@ static VALUE
 ode_body_gravity_mode_eq( self, flag )
 	 VALUE self, flag;
 {
-	ode_BODY	*bodyStruct;
+	ode_BODY	*ptr = get_body( self );
 	
-	GetBody( self, bodyStruct );
-	dBodySetGravityMode( bodyStruct->id, RTEST(flag) ? 1 : 0 );
+	dBodySetGravityMode( ptr->id, RTEST(flag) ? 1 : 0 );
 
 	return RTEST(flag) ? Qtrue : Qfalse;
 }
@@ -1499,7 +1452,25 @@ ode_body_gravity_mode_eq( self, flag )
 void
 ode_init_body(void)
 {
+	static char
+		rcsid[]		= "$Id: body.c,v 1.4 2003/02/04 11:24:56 deveiant Exp $",
+		revision[]	= "$Revision: 1.4 $";
+
+	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
+
+	/* Constants */
+	rb_obj_freeze( vstr );
+	rb_define_const( ode_cOdeBody, "Version", vstr );
+	vstr = rb_str_new2( rcsid );
+	rb_obj_freeze( vstr );
+	rb_define_const( ode_cOdeBody, "Rcsid", vstr );
+
+	/* Allocator */
+#ifdef NEW_ALLOC
+	rb_define_alloc_func( ode_cOdeBody, ode_body_s_alloc );
+#else
 	rb_define_singleton_method( ode_cOdeBody, "allocate", ode_body_s_alloc, 0 );
+#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeBody, "initialize", ode_body_init, 1 );
@@ -1524,7 +1495,7 @@ ode_init_body(void)
 
 	/* Mass and force */
 	rb_define_method( ode_cOdeBody, "mass", ode_body_mass, 0 );
-	rb_define_method( ode_cOdeBody, "mass=", ode_body_mass_eq, -2 );
+	rb_define_method( ode_cOdeBody, "mass=", ode_body_mass_eq, 1 );
 
 	rb_define_method( ode_cOdeBody, "addForce", ode_body_add_force, -2 );
 	rb_define_method( ode_cOdeBody, "addTorque", ode_body_add_torque, -2 );
