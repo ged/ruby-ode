@@ -55,11 +55,15 @@ end
 $CFLAGS << ' -DdDOUBLE'
 $CFLAGS << ' -DBUILD_MODE=debug'
 $CFLAGS << ' -DPLATFORM=linux'
+$CFLAGS << ' -Wall'
+$CFLAGS << ' -DDEBUG'
 
 # Make sure we have the ODE library and header available
 have_library( "ode", "dWorldCreate" ) or
 	abort( "Can't find the ode library." )
 have_library_no_append( "ode", "dBodyAddForceAtPos" ) or
+	abort( "Can't find a recent enough version of the ode library." )
+have_library_no_append( "ode", "dBodyGetForce" ) or
 	abort( "Can't find a recent enough version of the ode library." )
 have_header( "ode/ode.h" ) or
 	abort( "Can't find the ode/ode.h header." )
