@@ -1,4 +1,18 @@
 #!/usr/bin/ruby
+#
+# $Id: extconf.rb,v 1.4 2003/02/04 11:26:24 deveiant Exp $
+# Time-stamp: <04-Feb-2003 03:45:03 deveiant>
+#
+# Authors:
+#   # Michael Granger <ged@FaerieMUD.org>
+#
+# Copyright (c) 2002, 2003 The FaerieMUD Consortium.
+#
+# This work is licensed under the Creative Commons Attribution License. To
+# view a copy of this license, visit
+# http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+# Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
+#
 
 require "mkmf"
 dir_config( "ode" )
@@ -70,9 +84,30 @@ have_library_no_append( "ode", "dSpaceCollide2" ) or
 have_header( "ode/ode.h" ) or
 	abort( "Can't find the ode/ode.h header." )
 
+# Test for dGeomEnable (which hasn't as of this writing, been implemented yet,
+# AFAICT).
+if have_library_no_append( "ode", "dGeomEnable" )
+	$CFLAGS << ' -DHAVE_DGEOMENABLE'
+else
+	puts "  Excluding geom.enable/disable (not yet in libode)"
+end
+
 # Test for optional features (stuff in the contrib/ directory)
-have_header( "ode/dCylinder.h" )
-have_header( "ode/GeomTransformGroup.h" )
+if have_library_no_append( "ode", "dCreateGeomTransformGroup" )
+	puts "  Enabling optional Geometry Transform Group extension"
+	$CFLAGS << " -DHAVE_GEOM_TRANSFORM_GROUP"
+end
+
+if have_library_no_append( "ode", "dCreateCylinder" )
+	puts "  Enabling optional Cylinder geometry class extension"
+	$CFLAGS << " -DHAVE_CYLINDER_GEOM"
+end
+
+# Test for which allocation model to use
+if have_library_no_append( "ruby", "rb_define_alloc_func" )
+	puts "  (New allocation framework -- Ruby >= 1.8.x?)"
+	$CFLAGS << " -DNEW_ALLOC"
+end
 
 # Write the Makefile
 create_makefile( "ode" )
