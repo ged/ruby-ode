@@ -1,7 +1,7 @@
-L/*
+/*
  *		joints.c - ODE Ruby Binding - Joint Classes
- *		$Id: joints.c,v 1.6 2003/02/08 08:27:54 deveiant Exp $
- *		Time-stamp: <08-Feb-2003 01:27:30 deveiant>
+ *		$Id: joints.c,v 1.7 2003/02/08 08:33:22 deveiant Exp $
+ *		Time-stamp: <08-Feb-2003 01:32:54 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -15,9 +15,7 @@ L/*
  *
  */
 
-#include <ruby.h>
 #include <ode/ode.h>
-
 #include "ode.h"
 
 
@@ -2173,8 +2171,8 @@ void
 ode_init_joints( void )
 {
 	static char
-		rcsid[]		= "$Id: joints.c,v 1.6 2003/02/08 08:27:54 deveiant Exp $",
-		revision[]	= "$Revision: 1.6 $";
+		rcsid[]		= "$Id: joints.c,v 1.7 2003/02/08 08:33:22 deveiant Exp $",
+		revision[]	= "$Revision: 1.7 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 
