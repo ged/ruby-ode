@@ -1,6 +1,6 @@
 /*
  *		body.c - ODE Ruby Binding - Body Class
- *		$Id: body.c,v 1.1 2001/12/28 01:10:42 deveiant Exp $
+ *		$Id: body.c,v 1.2 2002/03/20 06:00:04 deveiant Exp $
  *
  *		Author: Michael Granger <ged@FaerieMUD.org>
  *		Copyright (c) 2001 The FaerieMUD Consortium. All rights reserved.
@@ -35,19 +35,14 @@ VALUE ode_cOdeMass;
 VALUE ode_cOdeRotation;
 
 
+// Forward Declarations
+static void ode_body_gc_mark( ode_BODY * );
+static void ode_body_gc_free( ode_BODY * );
+
 
 /* --------------------------------------------------
  * Class Methods
  * -------------------------------------------------- */
-
-/* ODE::World.createBody() */
-VALUE
-ode_world_body_create( self )
-	 VALUE self;
-{
-  return ode_body_new( ode_cOdeBody, self );
-}
-
 
 /* ODE::Body.new( worldObj ) */
 VALUE
@@ -69,7 +64,8 @@ ode_body_new( self, world )
   // Create the body struct and set its members
   bodyStruct = ALLOC( ode_BODY );
   bodyStruct->id = bodyId;
-  bodyStruct->world = self;
+  bodyStruct->world = world;
+  debugMsg(( "Created Body <%p> in World <%p>.", bodyStruct, worldId ));
 
   // Now wrap the body in a ruby object and call initialize() on it
   body = Data_Wrap_Struct( ode_cOdeBody, ode_body_gc_mark, ode_body_gc_free, bodyStruct );
@@ -77,6 +73,20 @@ ode_body_new( self, world )
 
   return body;
 }
+
+/*
+ * ODE::World::createBody()
+ * --
+ * Factory method: Create a new body object in the World object it is called on.
+ */
+VALUE
+ode_world_body_create( self )
+	 VALUE self;
+{
+  debugMsg(( "createBody: Calling Body constructor." ));
+  return ode_body_new( ode_cOdeBody, self );
+}
+
 
 
 /* --------------------------------------------------
@@ -93,21 +103,23 @@ ode_body_init( self )
 
 
 /* GC Mark function */
-void
+static void
 ode_body_gc_mark( bodyStruct )
 	 ode_BODY *bodyStruct;
 {
   // Mark the world object that we belong to
+  debugMsg(( "Marking Body <%p>", bodyStruct ));
   if ( bodyStruct->world ) rb_gc_mark( bodyStruct->world );
 }
 
 
 /* GC Free function */
-void
+static void
 ode_body_gc_free( bodyStruct )
 	 ode_BODY *bodyStruct;
 {
   // Tell the world we belong to that we're going away and free the body struct
+  debugMsg(( "Destroying Body <%p>", bodyStruct ));
   dBodyDestroy( bodyStruct->id );
   free( bodyStruct );
   bodyStruct = NULL;
@@ -292,8 +304,8 @@ ode_body_mass( self, massObj )
 	 VALUE self, massObj;
 {
   ode_BODY	*bodyStruct;
-  dMass		*mass;
-  dMass		*newMass;
+  dMass		*mass = 0;
+  dMass		*newMass = 0;
 
   // Get the body and mass structs from the object
   GetBody( self, bodyStruct );
@@ -311,7 +323,7 @@ ode_body_mass( self, massObj )
 }
 
 
-/* mass=() */
+/* mass=( aMass ) */
 VALUE
 ode_body_mass_eq( self, massObj )
 	 VALUE self, massObj;
@@ -355,6 +367,28 @@ ode_body_add_force( self, fx, fy, fz )
 }
 
 
+/* getForce()*/
+VALUE
+ode_body_get_force( self )
+	 VALUE self;
+{
+  ode_BODY		*bodyStruct;
+  const dReal	*fvec;
+  VALUE			forceVector;
+
+  // Get the body struct and add the arguments as a force vector
+  GetBody( self, bodyStruct );
+  fvec = dBodyGetForce( bodyStruct->id );
+
+  forceVector = rb_ary_new3( 3,
+							 rb_float_new((double)*(fvec)),
+							 rb_float_new((double)*(fvec+1)),
+							 rb_float_new((double)*(fvec+2)) );
+
+  return forceVector;
+}
+
+
 /* addTorque( fx, fy, fz )*/
 VALUE
 ode_body_add_torque( self, fx, fy, fz )
@@ -370,6 +404,28 @@ ode_body_add_torque( self, fx, fy, fz )
 				  NUM2DBL(fz) );
 
   return Qtrue;
+}
+
+
+/* getTorque()*/
+VALUE
+ode_body_get_torque( self )
+	 VALUE self;
+{
+  ode_BODY		*bodyStruct;
+  const dReal	*tvec;
+  VALUE			torqueVector;
+
+  // Get the body struct and add the arguments as a force vector
+  GetBody( self, bodyStruct );
+  tvec = dBodyGetTorque( bodyStruct->id );
+
+  torqueVector = rb_ary_new3( 3,
+							  rb_float_new((double)*(tvec)),
+							  rb_float_new((double)*(tvec+1)),
+							  rb_float_new((double)*(tvec+2)) );
+
+  return torqueVector;
 }
 
 
@@ -508,13 +564,17 @@ ode_init_body(void)
   rb_define_method( ode_cOdeBody, "mass=", ode_body_mass_eq, 1 );
 
   rb_define_method( ode_cOdeBody, "addForce", ode_body_add_force, 3 );
+  rb_define_method( ode_cOdeBody, "getForce", ode_body_get_force, 0 );
   rb_define_method( ode_cOdeBody, "addTorque", ode_body_add_torque, 3 );
+  rb_define_method( ode_cOdeBody, "getTorque", ode_body_get_torque, 0 );
   rb_define_method( ode_cOdeBody, "addRelForce", ode_body_add_rel_force, 3 );
   rb_define_method( ode_cOdeBody, "addRelTorque", ode_body_add_rel_torque, 3 );
   rb_define_method( ode_cOdeBody, "addForceAtPosition", ode_body_add_force_at_pos, 6 );
   rb_define_method( ode_cOdeBody, "addRelForceAtPosition", ode_body_add_rel_force_at_pos, 6 );
   rb_define_method( ode_cOdeBody, "addRelForceAtRelPosition", ode_body_add_rel_force_at_rel_pos, 6 );
 
+//  rb_define_method( ode_cOdeBody, "getNumberOfJoints", ode_body_get_num_joints, 0 );
+//  rb_define_method( ode_cOdeBody, "getJoint", ode_body_get_joint, 1 );
 }
 
 
