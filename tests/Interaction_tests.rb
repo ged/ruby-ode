@@ -1,15 +1,9 @@
 #!/usr/bin/ruby
 
-if File.directory? "src"
-	$:.unshift "src"
-elsif File.directory? "../src"
-	$:.unshift "../src"
-end
+$LOAD_PATH.unshift File::dirname(__FILE__)
+require "odeunittest"
 
-require "test/unit"
-require "ode"
-
-class Interaction_test < Test::Unit::TestCase
+class Interaction_tests < ODE::TestCase
 
 	def test_00_world_scope
 		body = nil
@@ -23,11 +17,9 @@ class Interaction_test < Test::Unit::TestCase
 	end
 
 	def test_01_simple
+		assert true
 	end
 
 end
 
-if $0 == __FILE__
-    Walkit::Cli_script.new.select([Interaction_test], $*.shift)
-end
 

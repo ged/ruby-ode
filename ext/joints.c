@@ -1,9 +1,11 @@
 /*
  *		joints.c - ODE Ruby Binding - Joint Classes
- *		$Id: joints.c,v 1.2 2002/03/20 14:18:04 deveiant Exp $
+ *		$Id: joints.c,v 1.3 2002/11/23 23:08:45 deveiant Exp $
  *
- *		Author: Michael Granger <ged@FaerieMUD.org>
- *		Copyright (c) 2001 The FaerieMUD Consortium. All rights reserved.
+ *		Authors:
+ *		  * Michael Granger <ged@FaerieMUD.org>
+ *
+ *		Copyright (c) 2001, 2002 The FaerieMUD Consortium. All rights reserved.
  *
  *		This library is free software; you can redistribute it and/or modify it
  *		under the terms of the GNU Lesser General Public License as published by
@@ -27,45 +29,33 @@
 
 #include "ode.h"
 
-VALUE ode_cOdeJoint;
 
-VALUE ode_cOdeBallJoint;
-VALUE ode_cOdeHingeJoint;
-VALUE ode_cOdeHinge2Joint;
-VALUE ode_cOdeSliderJoint;
-VALUE ode_cOdeFixedJoint;
-
-VALUE ode_cOdeContactJoint;
+/* Globals */
+static VALUE body1Sym;
+static VALUE body2Sym;
+static VALUE torqueSym;
+static VALUE forceSym;
 
 
 // Forward declarations
 static void ode_joint_gc_mark( ode_JOINT * );
 static void ode_joint_gc_free( ode_JOINT * );
-
+static VALUE ode_joint_get_feedback_hash( ode_JOINT * );
+static VALUE ode_joint_make_bfhash();
 
 /* 
  * ODE::Joint::new
  * --
  # Raises an error, as ODE::Joint is an abstract class.
- */
-VALUE
+*/
+static VALUE
 ode_joint_abstract_class( argc, argv, self )
 	 int	argc;
 	 VALUE	*argv;
 	 VALUE	self;
 {
-  rb_raise( rb_eRuntimeError, "Cannot instantiate abstract class %s.", rb_class2name(self) );
+	rb_raise( rb_eRuntimeError, "Cannot instantiate abstract class %s.", rb_class2name(self) );
 }
-
-
-/* ODE::World.createJoint( [jointGroup] ) */
-
-/* VALUE */
-/* ode_world_joint_create( self ) */
-/* 	 VALUE self; */
-/* { */
-/*   return  */
-/* } */
 
 
 /*
@@ -73,78 +63,87 @@ ode_joint_abstract_class( argc, argv, self )
  * constructor. It passes in its arguments and pointer to the the ODE native
  * constructor function.
  */
-VALUE
+static VALUE
 ode_joint_new( argc, argv, self, constructor )
 	 int		argc;
 	 VALUE		*argv;
 	 VALUE		self;
 	 dJointID	(*constructor)( dWorldID, dJointGroupID );
 {
-  dJointID			id;
-  dWorldID			worldId;
-  dJointGroupID		jointGroupId;
-  ode_JOINTGROUP	*jointGroupStruct;
-  ode_JOINT			*jointStruct;
-  VALUE				world, jointGroup, joint;
+	dWorldID		worldId;
+	dJointGroupID	jointGroupId;
+	ode_JOINTGROUP	*jointGroupStruct;
+	ode_JOINT		*jointStruct;
+	VALUE			world, jointGroup;
 
-  debugMsg(( "Creating a new Joint: checking args." ));
+	debugMsg(( "Creating a new Joint: checking args." ));
 
-  // Check arguments
-  if ( argc < 1 || argc > 2 )
-	rb_raise( rb_eArgError, "Wrong # of arguments (%d for 1 or 2)", argc );
-  if ( ! rb_obj_is_kind_of(*argv, ode_cOdeWorld) )
-	rb_raise( rb_eTypeError, "no implicit conversion from %s", rb_class2name(CLASS_OF( *argv )) );
-  if ( argc == 2 && ! rb_obj_is_kind_of(*(argv+1), ode_cOdeJointGroup) )
-	rb_raise( rb_eTypeError, "no implicit conversion from %s", rb_class2name(CLASS_OF( *(argv+1) )) );
+	// Check arguments
+	if ( argc < 1 || argc > 2 )
+		rb_raise( rb_eArgError, "Wrong # of arguments (%d for 1)", argc );
+	if ( ! rb_obj_is_kind_of(argv[0], ode_cOdeWorld) )
+		rb_raise( rb_eTypeError,
+				  "no implicit conversion to ODE::World from %s",
+				  rb_class2name(CLASS_OF( argv[0] )) );
+	if ( argc == 2 && ! rb_obj_is_kind_of(argv[1], ode_cOdeJointGroup) )
+		rb_raise( rb_eTypeError,
+				  "no implicit conversion to ODE:JointGroup from %s",
+				  rb_class2name(CLASS_OF( argv[1] )) );
 
-  debugMsg(( "Creating a new Joint: fetching World." ));
+	debugMsg(( "Creating a new Joint: fetching World." ));
 
-  // Fetch the world object and its id
-  world = *argv;
-  GetWorld( world, worldId );
+	// Fetch the world object and its id
+	world = *argv;
+	GetWorld( world, worldId );
 
-  debugMsg(( "Creating a new Joint: fetching the JointGroup." ));
+	debugMsg(( "Creating a new Joint: fetching the JointGroup." ));
 
-  // Fetch the jointGroup and its id, if one was given
-  if ( argc == 2 ) {
-	jointGroup = *(argv+1);
-	GetJointGroup( jointGroup, jointGroupStruct );
-	jointGroupId = jointGroupStruct->id;
-	debugMsg(( "Got a JointGroup for new Joint: <%p>", jointGroupStruct ));
-  }
-  else {
-	jointGroup = 0;
-	jointGroupId = 0;
-	debugMsg(( "No JointGroup for new Joint" ));
-  }
+	// Fetch the jointGroup and its id, if one was given
+	if ( argc == 2 && RTEST(argv[1]) ) {
+		jointGroup = argv[1];
+		GetJointGroup( jointGroup, jointGroupStruct );
+		jointGroupId = jointGroupStruct->id;
+		debugMsg(( "Got a JointGroup for new Joint: <%p>", jointGroupStruct ));
+	}
+	else {
+		jointGroup = Qnil;
+		jointGroupId = 0;
+		debugMsg(( "No JointGroup for new Joint" ));
+	}
 
-  // Create the actual joint by calling the real constructor
-  id = (*constructor)( worldId, jointGroupId );
+		// Allocate a joint struct and set its members
+	debugMsg(( "Creating a new Joint: ALLOCing and setting struct members." ));
+	jointStruct = ALLOC( ode_JOINT );
+	jointStruct->world		= world;
+	jointStruct->id			= 0;
+	jointStruct->body1		= Qnil;
+	jointStruct->body2		= Qnil;
+	jointStruct->jointGroup = jointGroup;
+	jointStruct->fbhash		= Qnil;
+	jointStruct->feedback	= NULL;
+	jointStruct->contact	= Qnil;
 
-  // Allocate a joint struct and set its members
-  debugMsg(( "Creating a new Joint: ALLOCing and setting struct members." ));
-  jointStruct = ALLOC( ode_JOINT );
-  jointStruct->world = world;
-  jointStruct->id = id;
-  jointStruct->body1 = 0;
-  jointStruct->body2 = 0;
-  jointStruct->surface = 0;
-  jointStruct->jointGroup = jointGroup;
+	// Create the actual joint by calling the class-specific constructor and set
+	// it in the struct
+	jointStruct->id = (*constructor)( worldId, jointGroupId );
+	debugMsg(( "Created Joint <%p> (id = <%p>)", jointStruct, jointStruct->id ));
 
-  debugMsg(( "Created Joint <%p> (id = <%p>)", jointStruct, id ));
+	// Wrap it in a Ruby object, call initialize() on it, and return it
+	debugMsg(( "Creating a new Joint: Wrapping the struct." ));
+	jointStruct->joint = Data_Wrap_Struct( self, ode_joint_gc_mark, ode_joint_gc_free, jointStruct );
+	dJointSetData( jointStruct->id, jointStruct );
 
-  // Wrap it in a Ruby object, call initialize() on it, and return it
-  debugMsg(( "Creating a new Joint: Wrapping the struct." ));
-  joint = Data_Wrap_Struct( self, ode_joint_gc_mark, ode_joint_gc_free, jointStruct );
+	// Register with the Ruby part of the JointGroup, if the joint is a member
+	if ( jointGroupId ) {
+		debugMsg(( "Creating a new Joint: Registering joint with jointGroup." ));
+		ode_jointGroup_register_joint( jointGroup, jointStruct->joint );
+	}
 
-  // Register with the Ruby part of the JointGroup, if the joint is a member
-  debugMsg(( "Creating a new Joint: Registering joint with jointGroup." ));
-  if ( jointGroup )
-	ode_jointGroup_register_joint( jointGroup, joint );
+	debugMsg(( "Creating a new Joint: Calling initialize." ));
+	rb_iv_set( jointStruct->joint, "@obsolete", Qfalse );
+	rb_obj_call_init( jointStruct->joint, 0, 0 );
 
-  debugMsg(( "Creating a new Joint: Calling initialize." ));
-  rb_obj_call_init( joint, 0, 0 );
-  return joint;
+	return jointStruct->joint;
 }
 
 /*
@@ -154,14 +153,15 @@ static void
 ode_joint_gc_mark( jointStruct )
 	 ode_JOINT	*jointStruct;
 {
-  debugMsg(( "Marking Joint <%p>", jointStruct ));
+	debugMsg(( "Marking Joint <%p>", jointStruct ));
 
-  // Mark the objects behind any of the struct members which are set
-  if ( jointStruct->jointGroup ) rb_gc_mark( jointStruct->jointGroup );
-  if ( jointStruct->world ) rb_gc_mark( jointStruct->world );
-  if ( jointStruct->body1 ) rb_gc_mark( jointStruct->body1 );
-  if ( jointStruct->body2 ) rb_gc_mark( jointStruct->body2 );
-  if ( jointStruct->surface ) rb_gc_mark( jointStruct->surface );
+	// Mark the objects behind any of the struct members which are set
+	if ( jointStruct->jointGroup )	rb_gc_mark( jointStruct->jointGroup );
+	if ( jointStruct->world )		rb_gc_mark( jointStruct->world );
+	if ( jointStruct->body1 )		rb_gc_mark( jointStruct->body1 );
+	if ( jointStruct->body2 )		rb_gc_mark( jointStruct->body2 );
+	if ( jointStruct->contact )		rb_gc_mark( jointStruct->contact );
+	if ( jointStruct->fbhash )		rb_gc_mark( jointStruct->fbhash );
 }
 
 
@@ -172,27 +172,33 @@ static void
 ode_joint_gc_free( jointStruct )
 	 ode_JOINT	*jointStruct;
 {
-  debugMsg(( "Destroying Joint <%p> (id = <%p>)", jointStruct, jointStruct->id ));
+	debugMsg(( "Destroying Joint <%p> (id = <%p>)", jointStruct, jointStruct->id ));
 
-  // If this joint wasn't in a jointGroup, we have to destroy it ourselves.
-  if ( ! jointStruct->jointGroup )
-	dJointDestroy( jointStruct->id );
+	// If this joint wasn't in a jointGroup, we have to destroy it ourselves.
+	if ( ! jointStruct->jointGroup )
+		dJointDestroy( jointStruct->id );
 
-  debugMsg(( "Clearing Joint struct <%p>", jointStruct ));
+	debugMsg(( "Clearing Joint struct <%p>", jointStruct ));
 
-  // Clear out the struct members
-  jointStruct->jointGroup = 0;
-  jointStruct->id = NULL;
-  jointStruct->world = 0;
-  jointStruct->body1 = 0;
-  jointStruct->body2 = 0;
-  jointStruct->surface = 0;
+	// Clear out the struct members
+	jointStruct->id			= NULL;
+	jointStruct->joint		= 0;
+	jointStruct->jointGroup	= 0;
+	jointStruct->world		= 0;
+	jointStruct->body1		= 0;
+	jointStruct->body2		= 0;
+	jointStruct->contact	= 0;
+	jointStruct->fbhash		= 0;
 
-  debugMsg(( "Freeing Joint struct <%p>", jointStruct ));
+	if ( jointStruct->feedback )
+		free( jointStruct->feedback );
+	jointStruct->feedback	= 0;
 
-  // Free the struct and reset the reference
-  free( jointStruct );
-  jointStruct = NULL;
+	debugMsg(( "Freeing Joint struct <%p>", jointStruct ));
+
+	// Free the struct and reset the reference
+	free( jointStruct );
+	jointStruct = NULL;
 }
 
 
@@ -209,77 +215,75 @@ ode_contactJoint_new( argc, argv, self )
 	 VALUE		*argv;
 	 VALUE		self;
 {
-  dJointID			id;
-  dWorldID			worldId;
-  dJointGroupID		jointGroupId;
-  dContact			contact;
-  ode_JOINTGROUP	*jointGroupStruct;
-  ode_JOINT			*jointStruct;
-  VALUE				world, jointGroup, joint;
+	dWorldID		worldId;
+	dJointGroupID	jointGroupId;
+	ode_JOINT		*jointStruct;
+	VALUE			world, jointGroup, contact;
+	dContact		*contactStruct;
 
-  debugMsg(( "Creating a new ContactJoint: checking args." ));
 
-  // Check arguments
-  if ( argc < 1 || argc > 2 )
-	rb_raise( rb_eArgError, "Wrong # of arguments (%d for 1 or 2)", argc );
-  if ( ! rb_obj_is_kind_of(*argv, ode_cOdeWorld) )
-	rb_raise( rb_eTypeError, "no implicit conversion from %s", rb_class2name(CLASS_OF( *argv )) );
-  if ( argc == 2 && ! rb_obj_is_kind_of(*(argv+1), ode_cOdeJointGroup) )
-	rb_raise( rb_eTypeError, "no implicit conversion from %s", rb_class2name(CLASS_OF( *(argv+1) )) );
+	// Read in the arguments
+	debugMsg(( "Creating a new ContactJoint: checking args." ));
+	if ( rb_scan_args(argc, argv, "21", &world, &contact, &jointGroup ) == 3 )
+		CheckKindOf( jointGroup, ode_cOdeJointGroup );
 
-  debugMsg(( "Creating a new ContactJoint: fetching World." ));
+	CheckKindOf( world, ode_cOdeWorld );
+	CheckKindOf( contact, ode_cOdeContact );
 
-  // Fetch the world object and its id
-  world = *argv;
-  GetWorld( world, worldId );
+	// Fetch the world object's dWorldId
+	debugMsg(( "Creating a new ContactJoint: fetching dWorldId." ));
+	GetWorld( world, worldId );
 
-  debugMsg(( "Creating a new ContactJoint: fetching the JointGroup." ));
+	// Fetch the dContact from the contact object
+	debugMsg(( "Creating a new ContactJoint: fetching dContact" ));
+	GetContact( contact, contactStruct );
 
-  // Fetch the jointGroup and its id, if one was given
-  if ( argc == 2 ) {
-	jointGroup = *(argv+1);
-	GetJointGroup( jointGroup, jointGroupStruct );
-	jointGroupId = jointGroupStruct->id;
-	debugMsg(( "Got a JointGroup for new ContactJoint: <%p>", jointGroupStruct ));
-  }
-  else {
-	jointGroup = 0;
-	jointGroupId = 0;
-	debugMsg(( "No JointGroup for new ContactJoint" ));
-  }
+	// Fetch the jointGroup and its id, if one was given
+	debugMsg(( "Creating a new ContactJoint: fetching the JointGroup." ));
+	if ( RTEST(jointGroup) ) {
+		ode_JOINTGROUP	*jointGroupStruct;
 
-  // For now, just create a default surface. Later this will need to grab
-  // parameters from somewhere...
-  contact.surface.mode = 0;
-  contact.surface.mu = dInfinity;
+		GetJointGroup( jointGroup, jointGroupStruct );
+		jointGroupId = jointGroupStruct->id;
+		debugMsg(( "Got a JointGroup for new ContactJoint: <%p>", jointGroupStruct ));
+	}
+	else {
+		jointGroupId = 0;
+		debugMsg(( "No JointGroup for new ContactJoint" ));
+	}
 
-  // Allocate a joint struct and set its members
-  id = dJointCreateContact( worldId, jointGroupId, &contact );
+	// Allocate a joint struct and set its members
+	debugMsg(( "Creating a new ContactJoint: ALLOCing and setting struct members." ));
+	jointStruct = ALLOC( ode_JOINT );
+	jointStruct->world		= world;
+	jointStruct->body1		= Qnil;
+	jointStruct->body2		= Qnil;
+	jointStruct->jointGroup = jointGroup;
+	jointStruct->fbhash		= Qnil;
+	jointStruct->feedback	= NULL;
+	jointStruct->contact	= contact;
 
-  // Allocate a joint struct and set its members
-  debugMsg(( "Creating a new ContactJoint: ALLOCing and setting struct members." ));
-  jointStruct = ALLOC( ode_JOINT );
-  jointStruct->world = world;
-  jointStruct->id = id;
-  jointStruct->body1 = 0;
-  jointStruct->body2 = 0;
-  jointStruct->jointGroup = jointGroup;
-  jointStruct->surface = 0; // Eventually, set this to the ODE::Surface object
+	// Create the actual joint by calling the class-specific constructor and set
+	// it in the struct
+	jointStruct->id = dJointCreateContact( worldId, jointGroupId, contactStruct );
+	debugMsg(( "Created ContactJoint <%p> (id = <%p>)", jointStruct, jointStruct->id ));
 
-  debugMsg(( "Created ContactJoint <%p> (id = <%p>)", jointStruct, id ));
+	// Wrap it in a Ruby object, call initialize() on it, and return it
+	debugMsg(( "Creating a new ContactJoint: Wrapping the struct." ));
+	jointStruct->joint = Data_Wrap_Struct( self, ode_joint_gc_mark, ode_joint_gc_free, jointStruct );
+	dJointSetData( jointStruct->id, jointStruct );
 
-  // Wrap it in a Ruby object, call initialize() on it, and return it
-  debugMsg(( "Creating a new ContactJoint: Wrapping the struct." ));
-  joint = Data_Wrap_Struct( self, ode_joint_gc_mark, ode_joint_gc_free, jointStruct );
+	// Register with the Ruby part of the JointGroup, if the joint is a member
+	if ( jointGroupId ) {
+		debugMsg(( "Creating a new ContactJoint: Registering joint with jointGroup." ));
+		ode_jointGroup_register_joint( jointGroup, jointStruct->joint );
+	}
 
-  // Register with the Ruby part of the JointGroup, if the joint is a member
-  debugMsg(( "Creating a new ContactJoint: Registering joint with jointGroup." ));
-  if ( jointGroup )
-	ode_jointGroup_register_joint( jointGroup, joint );
+	debugMsg(( "Creating a new ContactJoint: Calling initialize." ));
+	rb_iv_set( jointStruct->joint, "@obsolete", Qfalse );
+	rb_obj_call_init( jointStruct->joint, 0, 0 );
 
-  debugMsg(( "Creating a new ContactJoint: Calling initialize." ));
-  rb_obj_call_init( joint, 0, 0 );
-  return joint;
+	return jointStruct->joint;
 }
 
 
@@ -290,7 +294,7 @@ ode_ballJoint_new( argc, argv, self )
 	 VALUE	*argv;
 	 VALUE	self;
 {
-  return ode_joint_new( argc, argv, self, dJointCreateBall );
+	return ode_joint_new( argc, argv, self, dJointCreateBall );
 }
 
 /* HingeJoint constructor */
@@ -300,7 +304,7 @@ ode_hingeJoint_new( argc, argv, self )
 	 VALUE	*argv;
 	 VALUE	self;
 {
-  return ode_joint_new( argc, argv, self, dJointCreateHinge );
+	return ode_joint_new( argc, argv, self, dJointCreateHinge );
 }
 
 /* Hinge2Joint constructor */
@@ -310,7 +314,7 @@ ode_hinge2Joint_new( argc, argv, self )
 	 VALUE	*argv;
 	 VALUE	self;
 {
-  return ode_joint_new( argc, argv, self, dJointCreateHinge2 );
+	return ode_joint_new( argc, argv, self, dJointCreateHinge2 );
 }
 
 /* SliderJoint constructor */
@@ -320,7 +324,7 @@ ode_sliderJoint_new( argc, argv, self )
 	 VALUE	*argv;
 	 VALUE	self;
 {
-  return ode_joint_new( argc, argv, self, dJointCreateSlider );
+	return ode_joint_new( argc, argv, self, dJointCreateSlider );
 }
 
 /* FixedJoint constructor */
@@ -330,7 +334,29 @@ ode_fixedJoint_new( argc, argv, self )
 	 VALUE	*argv;
 	 VALUE	self;
 {
-  return ode_joint_new( argc, argv, self, dJointCreateFixed );
+	return ode_joint_new( argc, argv, self, dJointCreateFixed );
+}
+
+
+/* UniversalJoint constructor */
+VALUE
+ode_universalJoint_new( argc, argv, self )
+	 int	argc;
+	 VALUE	*argv;
+	 VALUE	self;
+{
+	return ode_joint_new( argc, argv, self, dJointCreateUniversal );
+}
+
+
+/* AngularMotorJoint constructor */
+VALUE
+ode_aMotorJoint_new( argc, argv, self )
+	 int	argc;
+	 VALUE	*argv;
+	 VALUE	self;
+{
+	return ode_joint_new( argc, argv, self, dJointCreateAMotor );
 }
 
 
@@ -354,21 +380,21 @@ VALUE
 ode_joint_attach( self, body1, body2 )
 	 VALUE self, body1, body2;
 {
-  ode_JOINT	*jointStruct;
-  ode_BODY	*body1Struct, *body2Struct;
+	ode_JOINT	*jointStruct;
+	ode_BODY	*body1Struct, *body2Struct;
 
-  CheckForObsoleteJoint( self );
-  GetJoint( self, jointStruct );
-  GetBody( body1, body1Struct );
-  GetBody( body2, body2Struct );
+	CheckForObsoleteJoint( self );
+	GetJoint( self, jointStruct );
+	GetBody( body1, body1Struct );
+	GetBody( body2, body2Struct );
 
-  // :TODO: Perhaps add callbacks into any bodies being detached?
+	// :TODO: Perhaps add callbacks into any bodies being detached?
 
-  dJointAttach( jointStruct->id, body1Struct->id, body2Struct->id );
-  jointStruct->body1 = body1;
-  jointStruct->body2 = body2;
+	dJointAttach( jointStruct->id, body1Struct->id, body2Struct->id );
+	jointStruct->body1 = body1;
+	jointStruct->body2 = body2;
 
-  return Qtrue;
+	return Qtrue;
 }
 
 
@@ -382,15 +408,15 @@ VALUE
 ode_joint_attached_bodies( self )
 	 VALUE self;
 {
-  ode_JOINT	*jointStruct;
+	ode_JOINT	*jointStruct;
 
-  CheckForObsoleteJoint( self );
-  GetJoint( self, jointStruct );
+	CheckForObsoleteJoint( self );
+	GetJoint( self, jointStruct );
 
-  if ( jointStruct->body1 )
-	return rb_ary_new3( 2, jointStruct->body1, jointStruct->body2 );
-  else
-	return rb_ary_new2( 0 );
+	if ( jointStruct->body1 )
+		return rb_ary_new3( 2, jointStruct->body1, jointStruct->body2 );
+	else
+		return rb_ary_new2( 0 );
 }
 
 
@@ -404,7 +430,7 @@ VALUE
 ode_joint_obsolete_p( self )
 	 VALUE self;
 {
-  return RTEST(rb_iv_get( self, "@obsolete" )) ? Qtrue : Qfalse;
+	return RTEST(rb_iv_get( self, "@obsolete" )) ? Qtrue : Qfalse;
 }
 
 
@@ -419,54 +445,212 @@ VALUE
 ode_joint_make_obsolete( self )
 	 VALUE	self;
 {
-  VALUE rv;
-  rv = rb_iv_set( self, "@obsolete", Qtrue );
-  OBJ_FREEZE( self );
+	VALUE rv;
+	rv = rb_iv_set( self, "@obsolete", Qtrue );
+	OBJ_FREEZE( self );
 
-  return rv;
+	return rv;
+}
+
+
+/*
+ * ODE::Joint#feedback
+ * --
+ * Get the feedback hash for the receiving joint. This hash will be updated
+ * every time step with the torque and force applied to the attached bodies if
+ * feedback is enabled for the receiving joint. If feedback is not enabled, the
+ * hash will be empty.
+ */
+VALUE
+ode_joint_get_feedback( self )
+	 VALUE	self;
+{
+	VALUE		fbhash;
+	ode_JOINT	*jointStruct;
+
+	CheckForObsoleteJoint( self );
+	GetJoint( self, jointStruct );
+	if ( ! jointStruct->feedback ) return Qnil;
+
+	fbhash = ode_joint_get_feedback_hash( (ode_JOINT *)jointStruct );
+
+	// If the feedback struct is being populated, update the hash with its data.
+	if ( jointStruct->feedback ) {
+		VALUE b1hash, b2hash;
+		VALUE b1Force, b2Force, b1Torque, b2Torque;
+
+		b1hash = rb_hash_aref( fbhash, body1Sym );
+		b2hash = rb_hash_aref( fbhash, body2Sym );
+
+		b1Force  = rb_hash_aref( b1hash, forceSym );
+		b1Torque = rb_hash_aref( b1hash, torqueSym );
+		b2Force  = rb_hash_aref( b2hash, forceSym );
+		b2Torque = rb_hash_aref( b2hash, torqueSym );
+
+		SetOdeVectorFromVec3( jointStruct->feedback->f1, b1Force );
+		SetOdeVectorFromVec3( jointStruct->feedback->t1, b1Torque );
+		SetOdeVectorFromVec3( jointStruct->feedback->f2, b2Force );
+		SetOdeVectorFromVec3( jointStruct->feedback->t2, b2Torque );
+	}
+
+	return fbhash;
+}
+
+
+/*
+ * ODE::Joint#feedbackEnabled?
+ * --
+ * Returns <tt>true</tt> if feedback is turned on for this joint.
+ */
+VALUE
+ode_joint_feedback_enabled_p( self )
+	 VALUE self;
+{
+	ode_JOINT	*jointStruct;
+
+	CheckForObsoleteJoint( self );
+	GetJoint( self, jointStruct );
+	
+	if ( jointStruct->feedback )
+		return Qtrue;
+	else
+		return Qfalse;
+}
+
+
+/*
+ * ODE::Joint#feedbackEnabled=( value )
+ * --
+ * Enable/disable feedback for this joint. If <tt>value</tt> is true, feedback
+ * will be enabled for the next world step. Returns the previous 
+ */
+VALUE
+ode_joint_feedback_enabled( self, value )
+	 VALUE self, value;
+{
+	ode_JOINT	*jointStruct;
+	VALUE		rval;
+
+	CheckForObsoleteJoint( self );
+	GetJoint( self, jointStruct );
+	
+	// If feedback is being turned on, allocate a new feedback struct and set it
+	// in the joint as well as our own struct.
+	if ( RTEST(value) ) {
+		if ( ! jointStruct->feedback ) {
+			jointStruct->feedback = ALLOC( dJointFeedback );
+			dJointSetFeedback( jointStruct->id, jointStruct->feedback );
+		}
+
+		rval = Qfalse;
+	}
+
+	// Otherwise, unset the feedback struct and free it
+	else {
+		if ( jointStruct->feedback ) {
+			dJointSetFeedback( jointStruct->id, 0 );
+			free( jointStruct->feedback );
+			jointStruct->feedback = 0;
+		}
+
+		rval = Qtrue;
+	}
+
+	return rval;
+}
+
+
+/*
+ *	Fetch the cached feedback hash from the joint, or create and cache a new
+ *	one.
+ */
+static VALUE
+ode_joint_get_feedback_hash( jointStruct )
+	 ode_JOINT	*jointStruct;
+{
+	VALUE		fbhash;
+
+	// Make the toplevel hash if it's net yet defined, or just get it if it is
+	// defined.
+	if ( jointStruct->fbhash == Qnil ) {
+
+		fbhash = rb_hash_new();
+		jointStruct->fbhash = fbhash;
+
+		rb_hash_aset( fbhash, body1Sym, ode_joint_make_bfhash() );
+		rb_hash_aset( fbhash, body2Sym, ode_joint_make_bfhash() );
+	} else {
+		fbhash = jointStruct->fbhash;
+	}
+
+	return fbhash;
+}
+
+
+/*
+ * Create and return a new Hash with :force => ODE::Force, and :torque =>
+ * ODE::Torque pairs.
+ */
+static VALUE
+ode_joint_make_bfhash()
+{
+	VALUE bfhash;
+
+	bfhash = rb_hash_new();
+	rb_hash_aset( bfhash, forceSym,  rb_class_new_instance(0, 0, ode_cOdeForce) );
+	rb_hash_aset( bfhash, torqueSym, rb_class_new_instance(0, 0, ode_cOdeTorque) );
+
+	return bfhash;
 }
 
 
 
-/* joint initializer */
+/*
+ * Initializer for ODE::Joint and subclasses 
+*/
 void
 ode_init_joints( void )
 {
-  // ODE::Joint class (abstract)
-  ode_cOdeJoint = rb_define_class_under( ode_mOde, "Joint", rb_cObject );
-  rb_define_singleton_method( ode_cOdeJoint, "new", ode_joint_abstract_class, -1 );
-  rb_define_method( ode_cOdeJoint, "attach", ode_joint_attach, 2 );
-  rb_define_method( ode_cOdeJoint, "attachedBodies", ode_joint_attached_bodies, 0 );
-  rb_define_method( ode_cOdeJoint, "obsolete?", ode_joint_obsolete_p, 0 );
-  rb_define_method( ode_cOdeJoint, "makeObsolete", ode_joint_make_obsolete, 0 );
+	// Define the symbol constants for the keys of the feedback hash
+	body1Sym	= ID2SYM(rb_intern("body1"));
+	body2Sym	= ID2SYM(rb_intern("body2"));
+	torqueSym	= ID2SYM(rb_intern("torque"));
+	forceSym	= ID2SYM(rb_intern("force"));
 
-  // ODE::BallJoint class
-  ode_cOdeBallJoint = rb_define_class_under( ode_mOde, "BallJoint", ode_cOdeJoint );
-  rb_define_singleton_method( ode_cOdeBallJoint, "new", ode_ballJoint_new, -1 );
+	// ODE::Joint class (abstract)
+	rb_define_singleton_method( ode_cOdeJoint, "new", ode_joint_abstract_class, -1 );
+	rb_define_method( ode_cOdeJoint, "attach", ode_joint_attach, 2 );
+	rb_define_method( ode_cOdeJoint, "attachedBodies", ode_joint_attached_bodies, 0 );
+	rb_define_method( ode_cOdeJoint, "obsolete?", ode_joint_obsolete_p, 0 );
+	rb_define_method( ode_cOdeJoint, "makeObsolete", ode_joint_make_obsolete, 0 );
+	rb_define_method( ode_cOdeJoint, "feedback", ode_joint_get_feedback, 0 );
+	rb_define_method( ode_cOdeJoint, "feedback=", ode_joint_feedback_enabled, 1 );
+	rb_define_alias ( ode_cOdeJoint, "feedback_enabled=", "feedback=" );
+	rb_define_method( ode_cOdeJoint, "feedback?", ode_joint_feedback_enabled_p, 0 );
+	rb_define_alias ( ode_cOdeJoint, "feedback_enabled?", "feedback?" );
 
-  // ODE::HingeJoint class
-  ode_cOdeHingeJoint = rb_define_class_under( ode_mOde, "HingeJoint", ode_cOdeJoint );
-  rb_define_singleton_method( ode_cOdeHingeJoint, "new", ode_hingeJoint_new, -1 );
+	// ODE::BallJoint class
+	rb_define_singleton_method( ode_cOdeBallJoint, "new", ode_ballJoint_new, -1 );
 
-  // ODE::Hinge2Joint class
-  ode_cOdeHinge2Joint = rb_define_class_under( ode_mOde, "Hinge2Joint", ode_cOdeJoint );
-  rb_define_singleton_method( ode_cOdeHinge2Joint, "new", ode_hinge2Joint_new, -1 );
+	// ODE::HingeJoint class
+	rb_define_singleton_method( ode_cOdeHingeJoint, "new", ode_hingeJoint_new, -1 );
 
-  // ODE::SliderJoint class
-  ode_cOdeSliderJoint = rb_define_class_under( ode_mOde, "SliderJoint", ode_cOdeJoint );
-  rb_define_singleton_method( ode_cOdeSliderJoint, "new", ode_sliderJoint_new, -1 );
+	// ODE::Hinge2Joint class
+	rb_define_singleton_method( ode_cOdeHinge2Joint, "new", ode_hinge2Joint_new, -1 );
 
-  // ODE::FixedJoint class
-  ode_cOdeFixedJoint = rb_define_class_under( ode_mOde, "FixedJoint", ode_cOdeJoint );
-  rb_define_singleton_method( ode_cOdeFixedJoint, "new", ode_fixedJoint_new, -1 );
+	// ODE::SliderJoint class
+	rb_define_singleton_method( ode_cOdeSliderJoint, "new", ode_sliderJoint_new, -1 );
 
+	// ODE::FixedJoint class
+	rb_define_singleton_method( ode_cOdeFixedJoint, "new", ode_fixedJoint_new, -1 );
 
-  // ODE::Surface
-  
+	// ODE::UniversalJoint class
+	rb_define_singleton_method( ode_cOdeUniversalJoint, "new", ode_universalJoint_new, -1 );
 
-  // ODE::ContactJoint class
-  //ode_cOdeContactJoint = rb_define_class_under( ode_mOde, "ContactJoint", ode_cOdeJoint );
-  //rb_define_singleton_method( ode_cOdeContactJoint, "new", ode_contactJoint_new, -1 );
+	// ODE::AngularMotorJoint class
+	rb_define_singleton_method( ode_cOdeAMotorJoint, "new", ode_aMotorJoint_new, -1 );
 
+	// ODE::ContactJoint class
+	rb_define_singleton_method( ode_cOdeContactJoint, "new", ode_contactJoint_new, -1 );
 }
 

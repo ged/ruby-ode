@@ -1,0 +1,36 @@
+-*- rdoc -*-
+
+= Ruby-ODE To-do List
+
+== Stuff that's done
+
+* ODE::World
+
+* ODE::Body
+
+* ODE::JointGroup
+
+* ODE::Joint
+
+  * ODE::BallJoint
+  * ODE::HingeJoint
+  * ODE::Hinge2Joint
+  * ODE::SliderJoint
+  * ODE::FixedJoint
+  * ODE::ContactJoint
+
+* ODE::Mass
+
+* ODE::Position
+
+* ODE::Rotation
+
+== Stuff that still needs doing
+
+* ODE::Space
+
+* ODE::Geometry
+
+* ODE::Contact
+
+

@@ -1,15 +1,9 @@
 #!/usr/bin/ruby
 
-if File.directory? "src"
-	$:.unshift "src"
-elsif File.directory? "../src"
-	$:.unshift "../src"
-end
+$LOAD_PATH.unshift File::dirname(__FILE__)
+require "odeunittest"
 
-require "test/unit"
-require "ode"
-
-class World_test < Test::Unit::TestCase
+class World_test < ODE::TestCase
 
 	def set_up
 		@world = ODE::World.new
@@ -27,37 +21,37 @@ class World_test < Test::Unit::TestCase
 		gravity = nil
 
 		assert_nothing_raised { gravity = @world.gravity } 
-		assert_instance_of( Array, gravity ) 
-		assert_in_delta( gravity[0], 0.0, 0.01 ) 
-		assert_in_delta( gravity[1], 0.0, 0.01 ) 
-		assert_in_delta( gravity[2], 0.0, 0.01 ) 
+		assert_instance_of( ODE::Vector, gravity ) 
+		assert_in_delta( gravity.x, 0.0, 0.01 ) 
+		assert_in_delta( gravity.y, 0.0, 0.01 ) 
+		assert_in_delta( gravity.z, 0.0, 0.01 ) 
 	end
 
 	def test_02_gravity_set
 		assert_nothing_raised { @world.gravity = [1.0,1.0,1.0] }
-		assert_in_delta( @world.gravity[0], 1.0, 0.001 )
-		assert_in_delta( @world.gravity[1], 1.0, 0.001 )
-		assert_in_delta( @world.gravity[2], 1.0, 0.001 )
+		assert_in_delta( @world.gravity.x, 1.0, 0.001 )
+		assert_in_delta( @world.gravity.y, 1.0, 0.001 )
+		assert_in_delta( @world.gravity.z, 1.0, 0.001 )
 
 		assert_nothing_raised { @world.gravity = [1,1,1] }
-		assert_in_delta( @world.gravity[0], 1.0, 0.001 )
-		assert_in_delta( @world.gravity[1], 1.0, 0.001 )
-		assert_in_delta( @world.gravity[2], 1.0, 0.001 )
+		assert_in_delta( @world.gravity.x, 1.0, 0.001 )
+		assert_in_delta( @world.gravity.y, 1.0, 0.001 )
+		assert_in_delta( @world.gravity.z, 1.0, 0.001 )
 
 		assert_nothing_raised { @world.gravity = [-0.2,-1.0,4.0] }
-		assert_in_delta( @world.gravity[0], -0.2, 0.001 )
-		assert_in_delta( @world.gravity[1], -1.0, 0.001 )
-		assert_in_delta( @world.gravity[2],  4.0, 0.001 )
+		assert_in_delta( @world.gravity.x, -0.2, 0.001 )
+		assert_in_delta( @world.gravity.y, -1.0, 0.001 )
+		assert_in_delta( @world.gravity.z,  4.0, 0.001 )
 
 		assert_nothing_raised { @world.gravity = 0,1,2 }
-		assert_in_delta( @world.gravity[0], 0.0, 0.001 )
-		assert_in_delta( @world.gravity[1], 1.0, 0.001 )
-		assert_in_delta( @world.gravity[2], 2.0, 0.001 )
+		assert_in_delta( @world.gravity.x, 0.0, 0.001 )
+		assert_in_delta( @world.gravity.y, 1.0, 0.001 )
+		assert_in_delta( @world.gravity.z, 2.0, 0.001 )
 
-		assert_raises( TypeError ) { @world.gravity = 0,1 }
+		assert_raises( ArgumentError ) { @world.gravity = 0,1 }
 
-		assert_raises( TypeError ) { @world.gravity = {'x' => 1} } 
-		assert_raises( TypeError ) { @world.gravity = "none" } 
+		assert_raises( NoMethodError ) { @world.gravity = {'x' => 1} } 
+		assert_raises( NoMethodError ) { @world.gravity = "none" } 
 	end
 
 	def test_03_erp_get

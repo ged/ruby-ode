@@ -27,7 +27,7 @@
 # 
 # == Version
 #
-#  $Id: JointGroup.rb,v 1.1 2002/03/20 05:57:06 deveiant Exp $
+#  $Id: JointGroup.rb,v 1.2 2002/11/23 23:08:45 deveiant Exp $
 # 
 
 
@@ -37,17 +37,17 @@ module ODE
 	class JointGroup
 
 		### Class constants
-		Version = /([\d\.]+)/.match( %q$Revision: 1.1 $ )[1]
-		Rcsid = %q$Id: JointGroup.rb,v 1.1 2002/03/20 05:57:06 deveiant Exp $
+		Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
+		Rcsid = %q$Id: JointGroup.rb,v 1.2 2002/11/23 23:08:45 deveiant Exp $
 
 		### Create a new ODE::JointGroup object. If the <tt>world</tt> and
 		### <tt>jointClass</tt> arguments are given, the JointGroup can act as a
 		### factory for creating and adding new joints to the group via
 		### #createJoint.
 		def initialize( jointClass=nil, world=nil )
-			raise TypeError, "No implicit conversion of #{jointClass.type.name} to Class" unless
+			raise TypeError, "No implicit conversion of #{jointClass.class.name} to Class" unless
 				(jointClass.nil? || jointClass.kind_of?( Class ))
-			raise TypeError, "No implicit conversion of #{world.type.name} to ODE::World" unless
+			raise TypeError, "No implicit conversion of #{world.class.name} to ODE::World" unless
 				(world.nil? || world.kind_of?( ODE::World ))
 
 			@factoryClass = jointClass

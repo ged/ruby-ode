@@ -42,7 +42,7 @@ instructions on checking out the CVS version.
 
 == Legal
 
-Ruby-ODE is Open Source Software which is Copyright (c) 2001,2002 by The
+Ruby-ODE is Open Source Software which is Copyright (c) 2001, 2002 by The
 FaerieMUD Consortium.
 
 You may use, modify, and/or redistribute this software under the terms of either
@@ -57,7 +57,7 @@ INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND
 FITNESS FOR A PARTICULAR PURPOSE.
 
 
-			  $Id: README,v 1.1 2002/03/20 14:26:05 deveiant Exp $
+			  $Id: README,v 1.2 2002/11/23 23:08:45 deveiant Exp $
 
 
 

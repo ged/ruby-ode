@@ -1,9 +1,11 @@
 /*
  *		jointGroup.c - ODE Ruby Binding - JointGroup Class
- *		$Id: jointGroup.c,v 1.2 2002/03/20 14:15:48 deveiant Exp $
+ *		$Id: jointGroup.c,v 1.3 2002/11/23 23:08:45 deveiant Exp $
  *
- *		Author: Michael Granger <ged@FaerieMUD.org>
- *		Copyright (c) 2001 The FaerieMUD Consortium. All rights reserved.
+ *		Authors:
+ *		  * Michael Granger <ged@FaerieMUD.org>
+ *
+ *		Copyright (c) 2001, 2002 The FaerieMUD Consortium. All rights reserved.
  *
  *		This library is free software; you can redistribute it and/or modify it
  *		under the terms of the GNU Lesser General Public License as published by
@@ -27,7 +29,6 @@
 
 #include "ode.h"
 
-VALUE ode_cOdeJointGroup;
 
 // Forward declarations
 static void ode_jointGroup_gc_mark( ode_JOINTGROUP * );
@@ -312,8 +313,6 @@ ode_jointGroup_register_joint( jointGroup, joint )
 void
 ode_init_jointGroup(void)
 {
-  ode_cOdeJointGroup = rb_define_class_under( ode_mOde, "JointGroup", rb_cObject );
-
   rb_define_singleton_method( ode_cOdeJointGroup, "new", ode_jointGroup_new, -1 );
   rb_define_method( ode_cOdeJointGroup, "empty", ode_jointGroup_empty, 0 );
   rb_define_method( ode_cOdeJointGroup, "empty?", ode_jointGroup_empty_p, 0 );

@@ -1,15 +1,9 @@
 #!/usr/bin/ruby
 
-if File.directory? "src"
-	$:.unshift "src"
-elsif File.directory? "../src"
-	$:.unshift "../src"
-end
+$LOAD_PATH.unshift File::dirname(__FILE__)
+require "odeunittest"
 
-require "test/unit"
-require "ode"
-
-class Mass_test < Test::Unit::TestCase
+class Mass_test < ODE::TestCase
 
 	X = 1
 	Y = 2
@@ -100,28 +94,19 @@ class Mass_test < Test::Unit::TestCase
 
 	def test_06_translate
 		mass = ODE::Mass.new( *@@MassArray )
-		assert_raises( TypeError ) {
-			mass.translate( "bob","dick","jane" )
-		}
-		assert_raises( ArgumentError ) {
-			mass.translate( 1 )
-		}
+		assert_raises( TypeError ) { mass.translate( "bob","dick","jane" ) }
+		assert_raises( ArgumentError ) { mass.translate( 1 ) }
 
 		assert_nothing_raised {mass.translate( 0.2,0.3,0.1 )}
 	end
 
 	def test_07_rotate
 		mass = ODE::Mass.new( *@@MassArray )
-		rotation = ODE::Rotation.new( 1.2, 2.3, 0.8 )
+		rotation = ODE::Rotation::new( 61.2, 2.3, 0.8, 23 )
 
-		assert_raises( TypeError ) {
-			mass.rotate( "bob" )
-		}
-		assert_raises( ArgumentError ) {
-			mass.translate()
-		}
+		assert_raises( TypeError ) { mass.rotate( "bob" ) }
+		assert_raises( ArgumentError ) { mass.translate() }
 
-
-		assert_nothing_raised{ mass.rotate( rotation ) }
+		assert_nothing_raised { mass.rotate( rotation ) }
 	end
 end
