@@ -1,6 +1,6 @@
 /*
  *		world.c - ODE Ruby Binding - World Class
- *		$Id: world.c,v 1.1 2001/12/28 01:10:42 deveiant Exp $
+ *		$Id: world.c,v 1.2 2002/03/20 14:24:28 deveiant Exp $
  *
  *		Author: Michael Granger <ged@FaerieMUD.org>
  *		Copyright (c) 2001 The FaerieMUD Consortium. All rights reserved.
@@ -27,8 +27,12 @@
 
 #include "ode.h"
 
-VALUE ode_mOde;
 VALUE ode_cOdeWorld;
+
+
+// Forward declarations
+static void ode_world_gc_free( dWorldID );
+static void ode_world_gc_mark( dWorldID );
 
 
 /* --------------------------------------------------
@@ -45,7 +49,8 @@ ode_world_new( self, args )
 
   // Create a new world and wrap it in a Ruby object
   id = dWorldCreate();
-  world = Data_Wrap_Struct( ode_cOdeWorld, 0, ode_world_gc_free, id );
+  debugMsg(( "Created world <%p>", id ));
+  world = Data_Wrap_Struct( ode_cOdeWorld, ode_world_gc_mark, ode_world_gc_free, id );
 
   // Call initialize()
   rb_obj_call_init( world, 0, 0 );
@@ -53,24 +58,25 @@ ode_world_new( self, args )
   return world;
 }
 
+/* GC mark function */
+void
+ode_world_gc_mark( id )
+	 dWorldID id;
+{
+  debugMsg(( "Marking World <%p>", id ));
+}
+
+
 /* free function */
 void
 ode_world_gc_free( id )
 	 dWorldID id;
 {
+  debugMsg(( "Destroying World <%p>", id ));
+
   // Destroy the world =:)
   dWorldDestroy( id );
   id = NULL;
-}
-
-
-/* initialize() */
-VALUE
-ode_world_init( self, args )
-	 VALUE self, args;
-{
-  // No-op. This is here mainly for subclasses
-  return self;
 }
 
 
@@ -195,7 +201,6 @@ ode_init_world(void)
   rb_define_singleton_method( ode_cOdeWorld, "new", ode_world_new, 0 );
 
   // Methods
-  rb_define_method( ode_cOdeWorld, "initialize", ode_world_init, 0 );
   rb_define_method( ode_cOdeWorld, "gravity", ode_world_gravity, 0 );
   rb_define_method( ode_cOdeWorld, "gravity=", ode_world_gravity_eq, 1 );
   rb_define_method( ode_cOdeWorld, "erp", ode_world_erp, 0 );
