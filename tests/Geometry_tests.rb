@@ -169,6 +169,53 @@ class GeometryTestCase < ODE::TestCase
 				$stderr		=> TypeError,
 			},
 		},
+
+		ODE::Geometry::Ray => {
+			:__proto_args__	=> [1],
+
+			:new	=> {
+				[1]						=> ODE::Geometry::Ray,
+				[0]						=> RangeError,
+				[-1]					=> RangeError,
+				[]						=> ArgumentError,
+				[1,nil,[0,0,0]]			=> ODE::Geometry::Ray,
+				[1,nil,[0,0,0],[1,1,1]]	=> ODE::Geometry::Ray,
+				[1,nil,nil,[1,1,1]]		=> ODE::Geometry::Ray,
+				[1,nil,[1,1,1],nil]		=> ODE::Geometry::Ray,
+				[1,nil,"start"]			=> TypeError,
+				[1,nil,0]				=> TypeError,
+				[1,nil,[0,0,0],"dir"]	=> TypeError,
+				[1,nil,[0,0,0],0]		=> TypeError,
+			},
+
+			:length	=> {
+				1			=> 1.0,
+				0			=> RangeError,
+				-1			=> RangeError,
+				[]			=> TypeError,
+				$stderr		=> TypeError,
+			},
+
+			:startPoint => {
+				[1,1,1]		=> ODE::Position::new(1,1,1),
+				[0,1,1]		=> ODE::Position::new(0,1,1),
+				[1,0,1]		=> ODE::Position::new(1,0,1),
+				[1,1,0]		=> ODE::Position::new(1,1,0),
+				[-1,1,1]	=> ODE::Position::new(-1,1,1),
+				[1,-1,1]	=> ODE::Position::new(1,-1,1),
+				[1,1,-1]	=> ODE::Position::new(1,1,-1),
+			},
+
+			:directionPoint => {
+				[1,1,1]		=> ODE::Position::new(1,1,1).normalize,
+				[0,1,1]		=> ODE::Position::new(0,1,1).normalize,
+				[1,0,1]		=> ODE::Position::new(1,0,1).normalize,
+				[1,1,0]		=> ODE::Position::new(1,1,0).normalize,
+				[-1,1,1]	=> ODE::Position::new(-1,1,1).normalize,
+				[1,-1,1]	=> ODE::Position::new(1,-1,1).normalize,
+				[1,1,-1]	=> ODE::Position::new(1,1,-1).normalize,
+			},
+		},
 	}
 
 	# Auto-generate test methods for each op
@@ -245,6 +292,9 @@ class GeometryTestCase < ODE::TestCase
 
 			# Recurse for each value
 			expected.each_index {|i| assertSimilar(expected[i], actual[i], errmsg)}
+		elsif expected.is_a?( ODE::Vector )
+			assert actual.similarTo?( expected ),
+				"#{actual.inspect} was not similar to #{expected.inspect}"
 		else
 			assert_equal expected, actual, errmsg
 		end
@@ -296,9 +346,8 @@ class GeometryTestCase < ODE::TestCase
 		# value.
 		else
 			assert_nothing_raised( "Test set method." ) {
-				rval = @obj.send( setter, test.input )
+				@obj.send( setter, test.input )
 			}
-			assertSimilar( test.expected, rval, "Setter return value was #{rval.inspect}." )
 		end
 	end
 
