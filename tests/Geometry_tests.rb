@@ -231,7 +231,7 @@ class GeometryTestCase < ODE::TestCase
 			eval <<-"EOCODE"
 			def #{methodName}
 				unit = GeomTests[#{klass.name}][:#{op.to_s}]
-				testHeader "Testing '#{op.to_s}' method for '#{klass.name}'."
+				printTestHeader "Testing '#{op.to_s}' method for '#{klass.name}'."
 				runGeomTest( #{klass.name}, :#{op.to_s}, unit )
 			end
 			EOCODE

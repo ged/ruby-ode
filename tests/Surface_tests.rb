@@ -186,7 +186,7 @@ class Surface_test < ODE::TestCase
 		eval <<-"EOCODE"
 		def #{methodName}
 			unit = SurfaceFlagTests[:#{opname}]
-			testHeader "Testing flag accessor for '#{opname}'."
+			printTestHeader "Testing flag accessor for '#{opname}'."
 			runFlagTest( :#{opname}, unit )
 		end
 		EOCODE
@@ -362,14 +362,14 @@ class Surface_test < ODE::TestCase
 
 	# ODE::Surface#new
 	def test_00_instance
-		testHeader "Testing instance"
+		printTestHeader "Testing instance"
 		assert_instance_of ODE::Surface, @surface
 	end
 
 
 	# ODE::Surface#mode
 	def test_01_mode
-		testHeader "Testing #mode, #mode="
+		printTestHeader "Testing #mode, #mode="
 		rval = nil
 
 		# Test fetching the mode
@@ -389,7 +389,7 @@ class Surface_test < ODE::TestCase
 
 	# ODE::Surface#mu
 	def test_02_mu
-		testHeader "Testing #mu, #mu="
+		printTestHeader "Testing #mu, #mu="
 		rval = nil
 
 		# Test fetching mu
@@ -409,7 +409,7 @@ class Surface_test < ODE::TestCase
 
 	# ODE::Surface#useFrictionDirection
 	def test_03_friction_direction
-		testHeader "Testing #useFrictionDirection, #useFrictionDirection="
+		printTestHeader "Testing #useFrictionDirection, #useFrictionDirection="
 		rval = nil
 
 		assert_respond_to @surface, :useFrictionDirection=
@@ -438,7 +438,7 @@ class Surface_test < ODE::TestCase
 
 	# ODE::Surface#frictionModel=
 	def test_03_friction_model
-		testHeader "Testing #frictionModel=, #pyramidFriction{1,2}{?,=}"
+		printTestHeader "Testing #frictionModel=, #pyramidFriction{1,2}{?,=}"
 		rval = nil
 
 		assert_respond_to @surface, :frictionModel=

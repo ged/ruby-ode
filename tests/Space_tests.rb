@@ -43,7 +43,7 @@ class SpaceTestCase < ODE::TestCase
 			eval <<-"EOCODE"
 			def #{methodName}
 				unit = SpaceTests[:#{op.to_s}]
-				testHeader "Testing '#{op.to_s}' method of #{klass.name}."
+				printTestHeader "Testing '#{op.to_s}' method of #{klass.name}."
 				runSpaceTest( #{klass.name}, :#{op.to_s}, unit )
 			end
 			EOCODE

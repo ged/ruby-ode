@@ -231,7 +231,7 @@ class Joint_tests < ODE::TestCase
 			code = <<-"EOCODE"
 			def #{methodName}
 				unit = JointTests[#{klass.name}][:#{opname}]
-				testHeader "Testing #{opname} for #{klass.name}##{opname}."
+				printTestHeader "Testing #{opname} for #{klass.name}##{opname}."
 				runJointTest( #{klass.name}, :#{opname}, unit )
 			end
 			EOCODE
@@ -274,7 +274,7 @@ class Joint_tests < ODE::TestCase
 				code = <<-"EOCODE"
 				def #{methodName}
 					unit = ParamJointTests[:#{opname}]
-					testHeader "Testing param accessor for #{klass.name}##{opname}#{axis}."
+					printTestHeader "Testing param accessor for #{klass.name}##{opname}#{axis}."
 					runJointTest( #{klass.name}, :#{opname}#{axis}, unit )
 				end
 				EOCODE
@@ -318,7 +318,7 @@ class Joint_tests < ODE::TestCase
 		# Make sure the setter's really a setter
 		assert_raises( ArgumentError ) { joint.send(setter) }
 
-		# Now map all the test values into FlagUnit struct objects and
+		# Now map all the test values into JointUnit struct objects and
 		# iterate over them.
 		unit.collect {|ary| JointUnit::new(joint, op, *ary)}.each_with_index {|test, i|
 			config[:pretest].call( test ) if config.key?( :pretest )
@@ -435,7 +435,7 @@ class Joint_tests < ODE::TestCase
 	
 	# Create joint objects without a JointGroup
 	def test_00_create
-		testHeader "Test creation of Joints without JointGroups"
+		printTestHeader "Test creation of Joints without JointGroups"
 
 		assert_raises(ScriptError) { ODE::Joint::new } 
 
@@ -456,7 +456,7 @@ class Joint_tests < ODE::TestCase
 
 	# Create joints in a JointGroup
 	def test_02_create_with_jointGroup
-		testHeader "Test creation of Joints with JointGroups"
+		printTestHeader "Test creation of Joints with JointGroups"
 
 		JointClasses.each {|klass|
 			joint = nil
@@ -478,7 +478,7 @@ class Joint_tests < ODE::TestCase
 
 	# Create joints in a JointGroup
 	def test_03_create_many_with_jointGroup
-		testHeader "Test creation of Many Joints with a single JointGroup"
+		printTestHeader "Test creation of Many Joints with a single JointGroup"
 
 		debugMsg "Creating a JointGroup."
 		jointGroup = ODE::JointGroup.new
@@ -502,7 +502,7 @@ class Joint_tests < ODE::TestCase
 
 	# Test joint obsoletion
 	def test_04_joint_obsoletion
-		testHeader "Test obsoletion of joints after destroying JointGroup"
+		printTestHeader "Test obsoletion of joints after destroying JointGroup"
 
 		debugMsg "Creating a JointGroup."
 		jointGroup = ODE::JointGroup.new
@@ -526,7 +526,7 @@ class Joint_tests < ODE::TestCase
 	def test_04_joint_attach 
 		bodies = [ODE::Body::new(@world), ODE::Body::new(@world)]
 
-		testHeader "Test joint attach"
+		printTestHeader "Test joint attach"
 		JointClasses.each {|klass|
 			rval = nil
 			joint = klass.new( @world )
@@ -552,7 +552,7 @@ class Joint_tests < ODE::TestCase
 
 	# Test joint feedback
 	def test_05_joint_feedback
-		testHeader "Test joint feedback"
+		printTestHeader "Test joint feedback"
 
 		# Setup
 		JointClasses.each {|klass|

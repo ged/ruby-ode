@@ -19,7 +19,7 @@
 # 
 # == Version
 #
-#  $Id: odeunittest.rb,v 1.4 2003/02/11 07:18:23 deveiant Exp $
+#  $Id: odeunittest.rb,v 1.5 2003/06/27 13:37:59 deveiant Exp $
 # 
 
 basedir = File::dirname(File::dirname( __FILE__ ))
@@ -189,7 +189,7 @@ module ODE
 
 
 		### Output a header for delimiting tests
-		def testHeader( desc )
+		def printTestHeader( desc )
 			return unless $VERBOSE || $DEBUG
 			message "%s>>> %s <<<%s" % 
 				[ ansiCode('bold','yellow','on_blue'), desc, ansiCode('reset') ]

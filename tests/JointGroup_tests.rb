@@ -20,7 +20,7 @@ class JointGroupTestCase < ODE::TestCase
 
 	### Test instantiation
 	def test_00_create
-		testHeader "Test creation of empty JointGroups"
+		printTestHeader "Test creation of empty JointGroups"
 		jointGroup = nil
 
 		assert_raises(TypeError) { ODE::JointGroup.new("world") } 
@@ -47,7 +47,7 @@ class JointGroupTestCase < ODE::TestCase
 	
 	### Test empty on an empty group
 	def test_01_empty_on_empty_group
-		testHeader "Test #empty on already-empty JointGroup"
+		printTestHeader "Test #empty on already-empty JointGroup"
 		assert_nothing_raised {
 			@group.empty
 		}
@@ -56,7 +56,7 @@ class JointGroupTestCase < ODE::TestCase
 
 	### Test factory methods
 	def test_02_factory_methods
-		testHeader "Test factory methods"
+		printTestHeader "Test factory methods"
 		rval = nil
 		joints = []
 
@@ -94,7 +94,7 @@ class JointGroupTestCase < ODE::TestCase
 
 	### Test empty? predicate
 	def test_03_empty_p
-		testHeader "Test #empty? predicate method"
+		printTestHeader "Test #empty? predicate method"
 		rval = nil
 		joints = []
 
@@ -110,7 +110,7 @@ class JointGroupTestCase < ODE::TestCase
 
 	### Test empty method (with joints)
 	def test_04_empty
-		testHeader "Test #empty"
+		printTestHeader "Test #empty"
 		joints = []
 
 		5.times { joints << @group.createJoint }
