@@ -1,7 +1,7 @@
 /*
  *		body.c - ODE Ruby Binding - Body Class
- *		$Id: body.c,v 1.4 2003/02/04 11:24:56 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:45:23 deveiant>
+ *		$Id: body.c,v 1.5 2003/02/08 08:26:01 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 15:15:55 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -270,7 +270,7 @@ ode_body_position( self )
  * --
  * Set the body's current position, which can be any object which returns an
  * array with 3 numeric values when <tt>to_ary</tt> is called on it, such as an
- * ODE::Position object, a Math3d::Vector3, or an Array with 3 numeric values.
+ * ODE::Position object, an ODE::Vector, or an Array with 3 numeric values.
  */
 static VALUE
 ode_body_position_eq( self, position )
@@ -387,7 +387,7 @@ ode_body_quaternion( self )
  * --
  * Set the body's current quaternion, which can be any object which returns an
  * array with 3 numeric values when <tt>to_ary</tt> is called on it, such as an
- * ODE::Quaternion object, a Math3d::Vector3, or an Array with 3 numeric values.
+ * ODE::Quaternion object, an ODE::Vector, or an Array with 3 numeric values.
  */
 static VALUE
 ode_body_quaternion_eq( self, quaternion )
@@ -444,7 +444,7 @@ ode_body_linearVelocity( self )
  * --
  * Set the linear velocity of the body. The <tt>linearVelocity</tt> argument can
  * be any object that returns a three-element array when <tt>to_ary</tt> is called
- * on it, such as an ODE::LinearVelocity or a Math3d::Vector3.
+ * on it, such as an ODE::LinearVelocity or an ODE::Vector.
  */
 static VALUE
 ode_body_linearVelocity_eq( self, linearVelocity )
@@ -497,7 +497,7 @@ ode_body_angularVelocity( self )
  * --
  * Set the angular velocity of the body. The <tt>angularVelocity</tt> argument
  * can be any object that returns a three-element array when <tt>to_ary</tt> is
- * called on it, such as an ODE::AngularVelocity or a Math3d::Vector3.
+ * called on it, such as an ODE::AngularVelocity or an ODE::Vector.
  */
 static VALUE
 ode_body_angularVelocity_eq( self, angularVelocity )
@@ -747,7 +747,7 @@ ode_body_finite_rotation_axis_eq( self, axis )
  * --
  * Add a force vector to the body. The <tt>forceVector</tt> can be anything that
  * returns an array of three numeric values when <tt>to_ary</tt> is called on it,
- * such as a Math3d::Vector3, an ODE::ForceVector, or an Array with three
+ * such as an ODE::Vector, an ODE::ForceVector, or an Array with three
  * numeric elements.
  */
 static VALUE
@@ -798,10 +798,10 @@ ode_body_get_force( self )
 
 /*
  * force=( forceVector )
- * ---
+ * --
  * Set the accumulated force vector. The <tt>forceVector</tt> can be anything
  * that returns an array of three numeric values when <tt>to_ary</tt> is called on
- * it, such as a Math3d::Vector3, and ODE::ForceVector, or an Array with three
+ * it, such as an ODE::Vector, and ODE::ForceVector, or an Array with three
  * numeric elements.
  */
 static VALUE
@@ -879,10 +879,10 @@ ode_body_get_torque( self )
 
 /*
  * torque=( torqueVector )
- * ---
+ * --
  * Set the accumulated torque vector. The <tt>torqueVector</tt> can be anything
  * that returns an array of three numeric values when <tt>to_ary</tt> is called on
- * it, such as a Math3d::Vector3, and ODE::TorqueVector, or an Array with three
+ * it, such as an ODE::Vector, and ODE::TorqueVector, or an Array with three
  * numeric elements.
  */
 static VALUE
@@ -914,7 +914,7 @@ ode_body_set_torque( self, torqueVector )
  * coordinates), return that point's position (an ODE::Position object) in
  * global (World) coordinates. The <tt>point</tt> argument can be any object
  * which returns an array of three numeric values when <tt>to_ary</tt> is called
- * on it, such as a Math3d::Vector3, an ODE::Position, or an Array with three
+ * on it, such as an ODE::Vector, an ODE::Position, or an Array with three
  * numeric elements.
  */
 static VALUE
@@ -949,7 +949,7 @@ ode_body_get_rel_point_pos( self, point )
  * Given the specified <tt>point</tt> in global coordinates, return that point's
  * position (an ODE::Position object) in body-relative coordinates. The
  * <tt>point</tt> argument can be any object which returns an array of three
- * numeric values when <tt>to_ary</tt> is called on it, such as a Math3d::Vector3,
+ * numeric values when <tt>to_ary</tt> is called on it, such as an ODE::Vector,
  * an ODE::Position, or an Array with three numeric elements.
  */
 static VALUE
@@ -984,7 +984,7 @@ ode_body_get_pos_rel_point( self, point )
  * coordinates), return that point's velocity (an ODE::LinearVelocity object) in
  * global (World) coordinates. The <tt>point</tt> argument can be any object
  * which returns an array of three numeric values when <tt>to_ary</tt> is called
- * on it, such as a Math3d::Vector3, an ODE::Position, or an Array with three
+ * on it, such as an ODE::Vector, an ODE::Position, or an Array with three
  * numeric elements.
  */
 static VALUE
@@ -1017,7 +1017,7 @@ ode_body_get_rel_point_vel( self, point )
  * return that point's velocity (an ODE::LinearVelocity object) in global
  * (World) coordinates. The <tt>point</tt> argument can be any object which
  * returns an array of three numeric values when <tt>to_ary</tt> is called on it,
- * such as a Math3d::Vector3, an ODE::Position, or an Array with three numeric
+ * such as an ODE::Vector, an ODE::Position, or an Array with three numeric
  * elements.
  */
 static VALUE
@@ -1049,7 +1049,7 @@ ode_body_get_point_vel( self, point )
  * Add a force vector to the body relative to the body's own frame of
  * reference. The <tt>forceVector</tt> can be anything that returns an array of
  * three numeric values when <tt>to_ary</tt> is called on it, such as a
- * Math3d::Vector3, an ODE::ForceVector, or an Array with three numeric
+ * ODE::Vector, an ODE::ForceVector, or an Array with three numeric
  * elements.
  */
 static VALUE
@@ -1109,7 +1109,7 @@ ode_body_add_rel_torque( self, forceVector )
  * Add a force vector to the body originating at the specified position relative
  * to the world. Both the <tt>forceVector</tt> and the <tt>position</tt> can be
  * any object that returns an array of three numeric values when <tt>to_ary</tt>
- * is called on it, such as a Math3d::Vector3, an ODE::ForceVector, an
+ * is called on it, such as an ODE::Vector, an ODE::ForceVector, an
  * ODE::Position, or an Array with three numeric elements.
  */
 static VALUE
@@ -1144,7 +1144,7 @@ ode_body_add_force_at_pos( self, forceVector, position )
  * Add a force vector to the body originating at the specified position relative
  * to the body. Both the <tt>forceVector</tt> and the <tt>position</tt> can be
  * any object that returns an array of three numeric values when <tt>to_ary</tt>
- * is called on it, such as a Math3d::Vector3, an ODE::ForceVector, an
+ * is called on it, such as an ODE::Vector, an ODE::ForceVector, an
  * ODE::Position, or an Array with three numeric elements.
  */
 static VALUE
@@ -1179,7 +1179,7 @@ ode_body_add_force_at_rel_pos( self, forceVector, position )
  * originating at the specified position relative to the world. Both the
  * <tt>forceVector</tt> and the <tt>position</tt> can be any object that returns
  * an array of three numeric values when <tt>to_ary</tt> is called on it, such as
- * a Math3d::Vector3, an ODE::ForceVector, an ODE::Position, or an Array with
+ * an ODE::Vector, an ODE::ForceVector, an ODE::Position, or an Array with
  * three numeric elements.
  */
 static VALUE
@@ -1214,7 +1214,7 @@ ode_body_add_rel_force_at_pos( self, forceVector, position )
  * of which are relative to the body's own frame of reference. Both the
  * <tt>forceVector</tt> and the <tt>position</tt> can be any object that returns
  * an array of three numeric values when <tt>to_ary</tt> is called on it, such as
- * a Math3d::Vector3, an ODE::ForceVector, an ODE::Position, or an Array with
+ * an ODE::Vector, an ODE::ForceVector, an ODE::Position, or an Array with
  * three numeric elements.
  */
 static VALUE
@@ -1247,7 +1247,7 @@ ode_body_add_rel_force_at_rel_pos( self, forceVector, position )
  * Given the specified <tt>vector</tt> in body-relative coordinates, return the
  * vector rotated to global coordinates. The <tt>vector</tt> argument can be any
  * object which returns an array of three numeric values when <tt>to_ary</tt> is
- * called on it, such as a Math3d::Vector3, an ODE::LinearVelocity, or an Array
+ * called on it, such as an ODE::Vector, an ODE::LinearVelocity, or an Array
  * with three numeric elements.
  */
 static VALUE
@@ -1280,7 +1280,7 @@ ode_body_vec_to_world( self, vector )
  * Given the specified <tt>vector</tt> in global coordinates, return the vector
  * rotated to body-relative coordinates. The <tt>vector</tt> argument can be any
  * object which returns an array of three numeric values when <tt>to_ary</tt> is
- * called on it, such as a Math3d::Vector3, an ODE::LinearVelocity, or an Array
+ * called on it, such as an ODE::Vector, an ODE::LinearVelocity, or an Array
  * with three numeric elements.
  */
 static VALUE
@@ -1453,10 +1453,16 @@ void
 ode_init_body(void)
 {
 	static char
-		rcsid[]		= "$Id: body.c,v 1.4 2003/02/04 11:24:56 deveiant Exp $",
-		revision[]	= "$Revision: 1.4 $";
+		rcsid[]		= "$Id: body.c,v 1.5 2003/02/08 08:26:01 deveiant Exp $",
+		revision[]	= "$Revision: 1.5 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
+
+	/* Kluge to make Rdoc see the class in this file */
+#if FOR_RDOC_PARSER
+	ode_mOde = rb_define_module( "ODE" );
+	ode_cOdeBody = rb_define_class_under( ode_mOde, "Body", rb_cObject );
+#endif
 
 	/* Constants */
 	rb_obj_freeze( vstr );
