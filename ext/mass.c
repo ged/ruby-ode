@@ -1,6 +1,6 @@
 /*
  *		mass.c - ODE Ruby Binding - Mass object class
- *		$Id: mass.c,v 1.1 2001/12/28 01:10:42 deveiant Exp $
+ *		$Id: mass.c,v 1.2 2002/03/20 14:18:50 deveiant Exp $
  *
  *		Author: Michael Granger <ged@FaerieMUD.org>
  *		Copyright (c) 2001 The FaerieMUD Consortium. All rights reserved.
@@ -29,8 +29,6 @@
 #include "ode.h"
 
 VALUE ode_cOdeMass;
-VALUE ode_cOdeRotation;
-
 
 
 /* --------------------------------------------------
@@ -205,10 +203,9 @@ ode_mass_inertia( self )
 	 VALUE self;
 {
   dMass		*mass_struct;
-  VALUE		I;
 
   GetMass( self, mass_struct );
-  return ode_matrix_to_rArray( mass_struct->I );
+  return ode_matrix3_to_rArray( mass_struct->I );
 }
 
 
