@@ -1,6 +1,6 @@
 /*
  *		position.c - ODE Ruby Binding - Position Class
- *		$Id: position.c,v 1.1 2001/12/28 01:10:42 deveiant Exp $
+ *		$Id: position.c,v 1.2 2002/03/20 14:22:44 deveiant Exp $
  *
  *		Author: Michael Granger <ged@FaerieMUD.org>
  *		Copyright (c) 2001 The FaerieMUD Consortium. All rights reserved.
@@ -42,11 +42,19 @@ ode_position_new( argc, argv, self )
 	 VALUE *argv;
 	 VALUE self;
 {
-  dReal		*coords;
+  dReal		coords[3] = {0,0,0};
   VALUE		position;
 
+  if ( argc == 3 ) {
+	*(coords) = *(argv);
+	*(coords+1) = *(argv+1);
+	*(coords+2) = *(argv+2);
+  } else {
+	rb_raise( rb_eArgError, "Wrong # of arguments (%d for 3)", argc );
+  }
+
   position = Data_Wrap_Struct( ode_cOdePosition, 0, 0, coords );
-  rb_obj_call_init( position, argc, argv );
+  rb_obj_call_init( position, 0, 0 );
 
   return position;
 }
