@@ -11,15 +11,16 @@
 # 
 # Michael Granger <ged@FaerieMUD.org>
 # 
-# Copyright (c) 2003 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2003 The FaerieMUD Consortium.
 # 
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
+# This work is licensed under the Creative Commons Attribution License. To
+# view a copy of this license, visit
+# http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+# Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
 # 
 # == Version
 #
-#  $Id: Space.rb,v 1.1 2003/02/04 11:28:21 deveiant Exp $
+#  $Id: Space.rb,v 1.2 2003/02/11 07:17:46 deveiant Exp $
 # 
 
 require 'ode'
@@ -30,8 +31,8 @@ module ODE
 	class Space
 
 		### Class constants
-		Version ||= /([\d\.]+)/.match( %q{$Revision: 1.1 $} )[1]
-		Rcsid ||= %q$Id: Space.rb,v 1.1 2003/02/04 11:28:21 deveiant Exp $
+		Version ||= /([\d\.]+)/.match( %q{$Revision: 1.2 $} )[1]
+		Rcsid ||= %q$Id: Space.rb,v 1.2 2003/02/11 07:17:46 deveiant Exp $
 
 
 		######
@@ -43,7 +44,7 @@ module ODE
 		def inspect
 			return "<%s 0x%x: geometries=[%s]>" % [
 				self.class.name,
-				self.object_id * 2,
+				self.respond_to?( :object_id ) ? self.object_id * 2 : self.id * 2,
 				self.geometries.collect {|geom| geom.inspect}.join(", "),
 			]
 		end
