@@ -56,17 +56,23 @@ $CFLAGS << ' -DdDOUBLE'
 $CFLAGS << ' -DBUILD_MODE=debug'
 $CFLAGS << ' -DPLATFORM=linux'
 $CFLAGS << ' -Wall'
+$CFLAGS << ' -Wno-comment' # For Ruby's missing.h
 $CFLAGS << ' -DDEBUG'
 
 # Make sure we have the ODE library and header available
 have_library( "ode", "dWorldCreate" ) or
-	abort( "Can't find the ode library." )
-have_library_no_append( "ode", "dBodyAddForceAtPos" ) or
-	abort( "Can't find a recent enough version of the ode library." )
+	abort( "Can't find the ODE library." )
 have_library_no_append( "ode", "dBodyGetForce" ) or
-	abort( "Can't find a recent enough version of the ode library." )
+	abort( "Can't find a recent enough version of the ODE library." )
+have_library_no_append( "ode", "dSpaceCollide2" ) or
+	abort( "This library uses the new collision system, which your "\
+		   "ODE library doesn't support." )
 have_header( "ode/ode.h" ) or
 	abort( "Can't find the ode/ode.h header." )
+
+# Test for optional features (stuff in the contrib/ directory)
+have_header( "ode/dCylinder.h" )
+have_header( "ode/GeomTransformGroup.h" )
 
 # Write the Makefile
 create_makefile( "ode" )
