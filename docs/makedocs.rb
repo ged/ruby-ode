@@ -1,7 +1,9 @@
 #!/usr/bin/ruby
 #
 #	Ruby-ODE RDoc Documentation Generation Script
-#	$Id: makedocs.rb,v 1.2 2003/02/08 08:21:56 deveiant Exp $
+#	$Id: makedocs.rb,v 1.3 2003/02/11 07:14:25 deveiant Exp $
+#
+#	Borrowed from the MUES project.
 #
 #	Copyright (c) 2001-2003 The FaerieMUD Consortium.
 #
@@ -43,7 +45,7 @@ def makeDocs( docsdir, template='css2', upload=nil, diagrams=false, ridocs=false
 		'--include', 'docs',
 		'--template', template,
 		'--op', docsdir,
-		'--title', "Multi-User Environment Server (MUES)"
+		'--title', "Ruby ODE Binding"
 	]
 
 	flags += [ '--quiet' ] unless $VERBOSE
