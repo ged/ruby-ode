@@ -1,6 +1,6 @@
 /*
  *		ode.h - ODE Ruby Binding - Header file
- *		$Id: ode.h,v 1.1 2001/12/28 01:10:42 deveiant Exp $
+ *		$Id: ode.h,v 1.2 2002/03/20 14:22:24 deveiant Exp $
  *
  *		Author: Michael Granger <ged@FaerieMUD.org>
  *		Copyright (c) 2001 The FaerieMUD Consortium. All rights reserved.
@@ -29,9 +29,21 @@
 #include <ruby.h>
 #include <ode/ode.h>
 
-// Macros
-#define _index(i,j) ((i)*4+(j))
+// Debugging functions/macros
+#ifdef HAVE_STDARG_PROTOTYPES
+#include <stdarg.h>
+#define va_init_list(a,b) va_start(a,b)
+extern void ode_debug(const char *fmt, ...);
+#else
+#include <varargs.h>
+#define va_init_list(a,b) va_start(a)
+extern void ode_debug(fmt, va_alist);
+#endif
 
+
+/* -------------------------------------------------------
+ * Globals
+ * ------------------------------------------------------- */
 
 // Modules
 extern VALUE ode_mOde;
@@ -41,9 +53,7 @@ extern VALUE ode_cOdeWorld;
 extern VALUE ode_cOdeBody;
 extern VALUE ode_cOdeRotation;
 extern VALUE ode_cOdeMass;
-
 extern VALUE ode_cOdeJointGroup;
-
 extern VALUE ode_cOdeJoint;
 extern VALUE ode_cOdeBallJoint;
 extern VALUE ode_cOdeHingeJoint;
@@ -54,162 +64,146 @@ extern VALUE ode_cOdeFixedJoint;
 
 //extern VALUE ode_mOdeSpace;
 
+// Exception classes
+extern VALUE ode_cOdeObsoleteJointError;
 
-/*
+
+
+/* -------------------------------------------------------
  *	Structures
- */
+ * ------------------------------------------------------- */
+
+// ODE::Body struct
 typedef struct {
   dBodyID	id;
   VALUE		world;
 } ode_BODY;
 
+// ODE::Joint struct
 typedef struct {
   dJointID	id;
   VALUE		jointGroup;
   VALUE		world;
   VALUE		body1;
   VALUE		body2;
+  VALUE		surface; // Only for ContactJoints
 } ode_JOINT;
 
+// JointGroup linked list entry
+typedef struct jointListNode {
+  struct jointListNode *next;
+  VALUE joint;
+} ode_JOINTLIST;
 
-/*
+// ODE::JointGroup struct
+typedef struct {
+  dJointGroupID	id;
+  ode_JOINTLIST	*jointList;
+} ode_JOINTGROUP;
+
+  
+
+
+/* -------------------------------------------------------
  *	Macros
- */
+ * ------------------------------------------------------- */
 
+// Macros
+#define _index(i,j) ((i)*4+(j))
+
+// Debugging macro
+#if DEBUG
+#	define debugMsg(f)	ode_debug f
+#else /* ! DEBUG */
+#  define debugMsg(f) 
+#endif /* DEBUG */
+
+
+// Macro for unwrapping World structs
 #define GetWorld( r, s ) {\
   Data_Get_Struct( (r), dWorldID, (dWorldID)(s) );\
   if ( (s) == NULL ) rb_fatal( "Null world pointer." );\
 }
 
+// Macro for unwrapping Body structs
 #define GetBody( r, s ) {\
   Data_Get_Struct( (r), ode_BODY, (s) );\
   if ( (s) == NULL ) rb_fatal( "Null body pointer." );\
 }
 
+// Macro for unwrapping Mass structs
 #define GetMass( r, s ) {\
 	Data_Get_Struct( (r), dMass, (s) );\
 	if ( (s) == NULL ) rb_fatal( "Null mass pointer." );\
 }
 
+// Macro for unwrapping RotationMatrix structs
 #define GetRotationMatrix( r, s ) {\
     Data_Get_Struct( (r), dMatrix3, (s) );\
 	if ( (s) == NULL ) rb_fatal( "Null rotation matrix pointer." );\
 }
 
+// Macro for unwrapping Joint structs
 #define GetJoint( r, s ) {\
     Data_Get_Struct( (r), ode_JOINT, (s) );\
 	if ( (s) == NULL ) rb_fatal( "Null joint pointer." );\
 }
 
+// Macro for unwrapping JointGroup structs
 #define GetJointGroup( r, s ) {\
     Data_Get_Struct( (r), dJointGroupID, (dJointGroupID)(s) );\
 	if ( (s) == NULL ) rb_fatal( "Null jointGroup pointer." );\
 }
 
 
+// Macro that raises an exception if the specified Joint struct's obsoleteFlag is set..
+#define CheckForObsoleteJoint( j ) {\
+	if ( RTEST(rb_iv_get(j,"@obsolete")) ) \
+		 rb_raise( ode_cOdeObsoleteJointError,\
+				   "Cannot use joint which has been marked "\
+				   "obsolete." );\
+}
 
 
-/*
- * Declarations
- */
-
-// Generic functions
-extern VALUE ode_matrix3_to_rArray	_(( dMatrix3 ));
-extern void ode_copy_array			_(( dReal *, dReal *, int ));
-
-
-// World class
+/* -------------------------------------------------------
+ * Initializer functions
+ * ------------------------------------------------------- */
 extern void ode_init_world			_(( void ));
-extern VALUE ode_world_new			_(( VALUE, VALUE ));
-extern VALUE ode_world_init			_(( VALUE, VALUE ));
-extern void ode_world_gc_free		_(( dWorldID ));
-extern VALUE ode_world_gravity		_(( VALUE,VALUE ));
-extern VALUE ode_world_gravity_eq	_(( VALUE,VALUE ));
-extern VALUE ode_world_erp			_(( VALUE,VALUE ));
-extern VALUE ode_world_erp_eq		_(( VALUE,VALUE ));
-extern VALUE ode_world_cfm			_(( VALUE,VALUE ));
-extern VALUE ode_world_cfm_eq		_(( VALUE,VALUE ));
-extern VALUE ode_world_step			_(( VALUE,VALUE ));
-
-
-// World Body factory method (in body.c)
-extern VALUE ode_world_body_create	_(( VALUE ));
-
-
-// Body class
-extern VALUE ode_body_new						_(( VALUE, VALUE ));
-extern void ode_init_body						_(( void ));
-extern VALUE ode_body_init						_(( VALUE ));
-extern void ode_body_gc_free					_(( ode_BODY * ));
-extern void ode_body_gc_mark					_(( ode_BODY * ));
-
-extern VALUE ode_body_position					_(( VALUE, VALUE ));
-extern VALUE ode_body_position_eq				_(( VALUE, VALUE ));
-extern VALUE ode_body_rotation					_(( VALUE, VALUE ));
-extern VALUE ode_body_rotation_eq				_(( VALUE, VALUE ));
-
-extern VALUE ode_body_linearVelocity			_(( VALUE, VALUE ));
-extern VALUE ode_body_linearVelocity_eq			_(( VALUE, VALUE ));
-extern VALUE ode_body_angularVelocity			_(( VALUE, VALUE ));
-extern VALUE ode_body_angularVelocity_eq		_(( VALUE, VALUE ));
-
-extern VALUE ode_body_mass						_(( VALUE, VALUE ));
-extern VALUE ode_body_mass_eq					_(( VALUE, VALUE ));
-
-extern VALUE ode_body_add_force					_(( VALUE, VALUE, VALUE, VALUE ));
-extern VALUE ode_body_add_torque				_(( VALUE, VALUE, VALUE, VALUE ));
-extern VALUE ode_body_add_rel_force				_(( VALUE, VALUE, VALUE, VALUE ));
-extern VALUE ode_body_add_rel_torque			_(( VALUE, VALUE, VALUE, VALUE ));
-extern VALUE ode_body_add_force_at_pos			_(( VALUE, VALUE, VALUE, VALUE, VALUE, VALUE, VALUE ));
-extern VALUE ode_body_add_rel_force_at_pos		_(( VALUE, VALUE, VALUE, VALUE, VALUE, VALUE, VALUE ));
-extern VALUE ode_body_add_rel_force_at_rel_pos	_(( VALUE, VALUE, VALUE, VALUE, VALUE, VALUE, VALUE ));
-
-
-// Rotation class
-extern void ode_init_rotation			_(( void ));
-extern VALUE ode_rotation_new			_(( int, VALUE*, VALUE ));
-extern VALUE ode_rotation_new_from_body	_(( dMatrix3 ));
-extern VALUE ode_rotation_init			_(( int, VALUE*, VALUE ));
-extern VALUE ode_rotation_to_quaternion	_(( VALUE, VALUE ));
-extern VALUE ode_rotation_to_matrix		_(( VALUE, VALUE ));
-extern void ode_rotation_to_dMatrix3	_(( VALUE, dMatrix3 ));
-
-
-// Mass class
+extern void ode_init_body			_(( void ));
+extern void ode_init_rotation		_(( void ));
 extern void ode_init_mass			_(( void ));
-extern VALUE ode_mass_new			_(( int, VALUE*, VALUE ));
-extern VALUE ode_mass_init			_(( int, VALUE*, VALUE ));
-extern VALUE ode_mass_mass			_(( VALUE ));
-extern VALUE ode_mass_cog			_(( VALUE ));
-extern VALUE ode_mass_inertia		_(( VALUE ));
-extern VALUE ode_mass_adjust		_(( VALUE, VALUE ));
-extern VALUE ode_mass_translate		_(( VALUE, VALUE, VALUE, VALUE ));
-extern VALUE ode_mass_rotate		_(( VALUE, VALUE ));
-extern VALUE ode_mass_new_sphere	_(( VALUE, VALUE, VALUE ));
-extern VALUE ode_mass_new_ccyl		_(( VALUE, VALUE, VALUE, VALUE, VALUE ));
-extern VALUE ode_mass_new_box		_(( VALUE, VALUE, VALUE, VALUE, VALUE ));
-
-
-// Joint class
 extern void ode_init_joints			_(( void ));
-extern VALUE ode_joint_new			_(( int, VALUE *, VALUE, dJointID ));
-extern void ode_joint_gc_mark		_(( ode_JOINT * ));
-extern void ode_joint_gc_free		_(( ode_JOINT * ));
-extern VALUE ode_joint_init			_(( VALUE ));
-
-
-// JointGroup class
 extern void ode_init_jointGroup		_(( void ));
-extern VALUE ode_jointGroup_new		_(( VALUE, VALUE ));
-extern VALUE ode_jointGroup_init	_(( VALUE ));
-extern VALUE ode_jointGroup_empty	_(( VALUE ));
-extern void ode_jointGroup_gc_free	_(( dJointGroupID ));
+//extern void ode_init_space		_(( void ));
+//extern void ode_init_				_(( void ));
 
 
-// Space class
+/* -------------------------------------------------------
+ * Global method function declarations
+ * ------------------------------------------------------- */
 
-//extern void ode_init_space	_(( void ));
-//extern void ode_init_body	_(( void ));
+// Generic utility functions
+extern VALUE ode_matrix3_to_rArray		_(( dMatrix3 ));
+extern void ode_rotation_to_dMatrix3	_(( VALUE, dMatrix3 ));
+extern void ode_copy_array				_(( dReal *, dReal *, int ));
+
+/* ODE::Body class */
+extern VALUE ode_body_new				_(( VALUE, VALUE ));
+extern VALUE ode_world_body_create		_(( VALUE ));
+
+/* ODE::Mass class */
+extern VALUE ode_mass_new				_(( int, VALUE *, VALUE ));
+extern VALUE ode_mass_new_from_body		_(( dMass * ));
+
+/* ODE::Rotation class */
+extern VALUE ode_rotation_new			_(( int, VALUE *, VALUE ));
+extern VALUE ode_rotation_new_from_body	_(( dMatrix3 ));
+
+/* ODE::Joint class */
+extern VALUE ode_joint_make_obsolete	_(( VALUE ));
+
+/* ODE::JointGroup class */
+extern void ode_jointGroup_register_joint _(( VALUE, VALUE ));
 
 
 #endif /* _R_ODE_H */
