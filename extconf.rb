@@ -59,23 +59,18 @@ SUBDIRS = #{subdirs.join(' ')}
 #{rule('depend')}
 #{rule('site-install')}
 #{rule('unknown')}
-%.html: %.rd
-	rd2 $< > ${<:%.rd=%.html}
-
-   EOF
-   make.print "HTML = ode.html"
-   Dir.foreach('docs') do |x|
-      make.print " \\\n\tdocs/#{x}" if x.sub!(/\.rd$/, ".html")
-   end
-   make.puts
-   make.print <<-EOF
+docs:
+	rdoc -S --title 'Ruby ODE Binding' --main README README src ext
 
 html: $(HTML)
 
-test: $(DLLIB)
+test: all
 	ruby test.rb
 
-   EOF
+debugtest: clean all
+	ruby -wd test.rb
+
+	EOF
 ensure
    make.close
 end
