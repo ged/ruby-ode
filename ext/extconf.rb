@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 #
-# $Id: extconf.rb,v 1.4 2003/02/04 11:26:24 deveiant Exp $
-# Time-stamp: <04-Feb-2003 03:45:03 deveiant>
+# $Id: extconf.rb,v 1.5 2003/02/11 07:15:30 deveiant Exp $
+# Time-stamp: <11-Feb-2003 00:15:07 deveiant>
 #
 # Authors:
 #   # Michael Granger <ged@FaerieMUD.org>
@@ -105,8 +105,14 @@ end
 
 # Test for which allocation model to use
 if have_library_no_append( "ruby", "rb_define_alloc_func" )
-	puts "  (New allocation framework -- Ruby >= 1.8.x?)"
+	puts "  Ruby 1.8.x allocation framework"
 	$CFLAGS << " -DNEW_ALLOC"
+
+# :TODO: There must be a better way of testing this...
+elsif String::respond_to?( :allocate )
+	puts "  Ruby 1.7.x allocation framework"
+else
+	
 end
 
 # Write the Makefile
