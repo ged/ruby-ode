@@ -8,198 +8,57 @@ class SpaceTestCase < ODE::TestCase
 	Tolerance = ODE::Precision == 'dDOUBLE' ? 1e-5 : 1e-2
 
 	# Test unit struct -- makes passing test data around a bit more readble.
-	GeomUnit = Struct::new( "GeomUnit", :classObj, :op, :input, :expected )
+	SpaceUnit = Struct::new( "SpaceUnit", :classObj, :op, :input, :expected )
 
-	def self.normalizePlaneVector( a, b, c, d )
-		sideSum = a*a + b*b + c*c
-		if sideSum.nonzero?
-			factor = Math::sqrt( 1.0/sideSum )
-
-			return [ a*factor, b*factor, c*factor, d*factor ]
-		else
-			return [ 1.0, 0.0, 0.0, 0.0 ]
-		end
-	end
-
+	# Persistant top-level space for testing containment
+	ProtoSpace = ODE::Space::new
 
 	# Test data for flag/option accessors (Mapped into FlagUnit objects)
-	GeomTests = {
-		# Class
-		#	method
-		#		args, result
-		ODE::Geometry::Sphere => {
-			:__proto_args__	=> [1],
+	SpaceTests = {
 
-			:new	=> {
-				1			=> ODE::Geometry::Sphere,
-				0			=> RangeError,
-				-1			=> RangeError,
-				#[1,mockSpace]	=> ODE::Geometry::Sphere,
-			},
+		# Arguments to use in the default constructor (all tests except those
+		# with more-explicit proto args).
+		:__proto_args__ => [],
 
-			:radius => {
-				1			=> 1.0,
-				0			=> RangeError,
-				-1			=> RangeError,
-			},
+		# op
+		#	input	=> result
+		:new	=> {
+			[]				=> :__class__,
+			[1]				=> TypeError,
+			[nil]			=> TypeError,
+			[ProtoSpace]	=> :__class__,
 		},
 
-		ODE::Geometry::Box => {
-			:__proto_args__	=> [1,1,1],
-
-			:new	=> {
-				[1,1,1]		=> ODE::Geometry::Box,
-				[0,1,1]		=> RangeError,
-				[1,0,1]		=> RangeError,
-				[1,1,0]		=> RangeError,
-				[-1,1,1]	=> RangeError,
-				[1,-1,1]	=> RangeError,
-				[1,1,-1]	=> RangeError,
-				[]			=> ArgumentError,
-				[1]			=> ArgumentError,
-				[1,1]		=> ArgumentError,
-
-				#[1,1,1,mockSpace]	=> ODE::Geometry::Box,
-			},
-
-			:lengths	=> {
-				[1,1,1]		=> [1.0,1.0,1.0],
-				[0,1,1]		=> RangeError,
-				[1,0,1]		=> RangeError,
-				[1,1,0]		=> RangeError,
-				[-1,1,1]	=> RangeError,
-				[1,-1,1]	=> RangeError,
-				[1,1,-1]	=> RangeError,
-				[]			=> ArgumentError,
-				[1]			=> ArgumentError,
-				[1,1]		=> ArgumentError,
-			},
-
-			:lx		=> {
-				1			=> 1.0,
-				0			=> RangeError,
-				-1			=> RangeError,
-			},
-
-			:ly		=> {
-				1			=> 1.0,
-				0			=> RangeError,
-				-1			=> RangeError,
-			},
-
-			:lz		=> {
-				1			=> 1.0,
-				0			=> RangeError,
-				-1			=> RangeError,
-			},
-		},
-
-		ODE::Geometry::Plane => {
-			:__proto_args__	=> [0,0,1,0],
-
-			:new	=> {
-				[1,1,1,1]	=> ODE::Geometry::Plane,
-				[0,1,1,1]	=> ODE::Geometry::Plane,
-				[1,0,1,0]	=> ODE::Geometry::Plane,
-				[0,0,0,0]	=> ODE::Geometry::Plane,
-				[1,1,0,-1]	=> ODE::Geometry::Plane,
-				[-1,1,1,0]	=> ODE::Geometry::Plane,
-				[1,-1,1,0]	=> ODE::Geometry::Plane,
-				[1,1,-1,0]	=> ODE::Geometry::Plane,
-				[]			=> ArgumentError,
-				[1]			=> ArgumentError,
-				[1,0]		=> ArgumentError,
-				[1,0,0]		=> ArgumentError,
-
-				#[1,0,0,0,mockSpace]	=> ODE::Geometry::Plane,
-			},
-
-			:params	=> {
-				[1,1,1,1]	=> normalizePlaneVector(1,1,1,1),
-				[0,1,1,1]	=> normalizePlaneVector(0,1,1,1),
-				[1,0,1,0]	=> normalizePlaneVector(1,0,1,0),
-				[0,0,0,0]	=> normalizePlaneVector(0,0,0,0),
-				[1,1,0,-1]	=> normalizePlaneVector(1,1,0,-1),
-				[-1,1,1,0]	=> normalizePlaneVector(-1,1,1,0),
-				[1,-1,1,0]	=> normalizePlaneVector(1,-1,1,0),
-				[1,1,-1,0]	=> normalizePlaneVector(1,1,-1,0),
-				[]			=> ArgumentError,
-				[1]			=> ArgumentError,
-				[1,0]		=> ArgumentError,
-				[1,0,0]		=> ArgumentError,
-			},
-		},
-
-		ODE::Geometry::CappedCylinder => {
-			:__proto_args__	=> [1,1],
-
-			:new	=> {
-				[1,1]		=> ODE::Geometry::CappedCylinder,
-				[0,1]		=> RangeError,
-				[1,0]		=> RangeError,
-				[-1,0]		=> RangeError,
-				[0,-1]		=> RangeError,
-				[]			=> ArgumentError,
-				[1]			=> ArgumentError,
-			},
-
-			:params	=> {
-				[1,1]		=> [1.0,1.0],
-				[0,1]		=> RangeError,
-				[1,0]		=> RangeError,
-				[-1,0]		=> RangeError,
-				[0,-1]		=> RangeError,
-				[]			=> ArgumentError,
-				[1]			=> ArgumentError,
-			},
-
-			:radius	=> {
-				1			=> 1.0,
-				0			=> RangeError,
-				-1			=> RangeError,
-				[]			=> TypeError,
-				$stderr		=> TypeError,
-			},
-
-			:length	=> {
-				1			=> 1.0,
-				0			=> RangeError,
-				-1			=> RangeError,
-				[]			=> TypeError,
-				$stderr		=> TypeError,
-			},
-		},
 	}
 
 	# Auto-generate test methods for each op
-	GeomTests.keys.each_with_index {|klass, i|
-		debugMsg "Creating test methods for #{klass.name} (i = #{i})"
-
-		GeomTests[klass].keys.each_with_index {|op, n|
+	[ ODE::Space, ODE::HashSpace ].each {|klass|
+		SpaceTests.keys.each_with_index {|op, n|
 			next if op.to_s =~ /^__/
 
-			debugMsg "Creating test method for #{op.to_s} of #{klass.name} (i = #{i}, n = #{n})"
-			methodName = "test_%d_%s_%s" % [ i*10 + n, klass.name.gsub(/:+/, '_'), op.to_s ]
+			debugMsg "Creating test method for %s##{op.to_s} (n = #{n})" % klass.name
+			methodName = "test_%d_%s_%s" %
+				[ 10 + n, klass.name.gsub(/:+/, '_'), op.to_s ]
 
 			eval <<-"EOCODE"
 			def #{methodName}
-				unit = GeomTests[#{klass.name}][:#{op.to_s}]
-				testHeader "Testing '#{op.to_s}' method for '#{klass.name}'."
-				runGeomTest( #{klass.name}, :#{op.to_s}, unit )
+				unit = SpaceTests[:#{op.to_s}]
+				testHeader "Testing '#{op.to_s}' method of #{klass.name}."
+				runSpaceTest( #{klass.name}, :#{op.to_s}, unit )
 			end
 			EOCODE
 		}
 	}
 
-
 	### Run the unit test of the specified op on the given class
-	def runGeomTest( klass, op, unit )
+	def runSpaceTest( klass, op, unit )
 		config = {}
 
 		# Constructor test
 		if op == :new
 			unit.collect {|input, expected|
-				GeomUnit::new(klass, op, input, expected)
+				expected = klass if expected == :__class__
+				SpaceUnit::new( klass, op, input, expected)
 			}.each {|test|
 				runInstantiationTest( test )
 			}
@@ -207,7 +66,7 @@ class SpaceTestCase < ODE::TestCase
 		# Accesor test
 		else
 			# Get the proto args from the test hash
-			args = GeomTests[klass][:__proto_args__]
+			args = SpaceTests["__#{op.to_s}_proto_args__".intern] || SpaceTests[:__proto_args__]
 			@obj = klass.new( *args )
 
 			# Generate symbols for the get/set methods for this flag
@@ -215,9 +74,8 @@ class SpaceTestCase < ODE::TestCase
 			getter = op
 			setter = ("%s=" % op.to_s).intern
 
-			debugMsg "Using testing method: %s" %
-				[ getter, setter ].
-				collect {|sym| sym.inspect}.join(", ")
+			debugMsg "Using testing methods: %s" %
+				[ getter, setter ].collect {|sym| sym.inspect}.join(", ")
 
 			# Test to be sure the interface is right
 			assert_respond_to @obj, getter, "Test: %s#%s" % [ klass.name, op.inspect ]
@@ -226,7 +84,8 @@ class SpaceTestCase < ODE::TestCase
 			# Now map all the test values into FlagUnit struct objects and
 			# iterate over them.
 			unit.collect {|input,expected|
-				GeomUnit::new( klass, op, input, expected )
+				expected = klass if expected == :__class__
+				SpaceUnit::new( klass, op, input, expected )
 			}.each {|test|
 				runTest( test, getter, setter )
 			}
@@ -330,6 +189,7 @@ class SpaceTestCase < ODE::TestCase
 	###	T E S T S
 	#################################################################
 
+	# :TODO: Test deep containment/marking functions/geom+space interaction
 
 end
 
