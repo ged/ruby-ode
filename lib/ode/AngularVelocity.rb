@@ -9,19 +9,20 @@
 #   # Are two bodies rotating similarly?
 #	body1.angularVelocity.almost_equal( body2.angularVelocity, 0.5 )
 # 
-# == Author
+# == Authors
 # 
-# Michael Granger <ged@FaerieMUD.org>
+# * Michael Granger <ged@FaerieMUD.org>
 # 
-# Copyright (c) 2002 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2002, 2003 The FaerieMUD Consortium.
 # 
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
+# This work is licensed under the Creative Commons Attribution License. To
+# view a copy of this license, visit
+# http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+# Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
 # 
 # == Version
 #
-#  $Id: AngularVelocity.rb,v 1.1 2002/11/23 23:07:45 deveiant Exp $
+#  $Id: AngularVelocity.rb,v 1.2 2003/02/04 11:28:45 deveiant Exp $
 # 
 
 require 'ode/Vector'
@@ -33,8 +34,8 @@ module ODE
 	class AngularVelocity < ODE::Vector
 
 		### Class constants
-		Version = /([\d\.]+)/.match( %q$Revision: 1.1 $ )[1]
-		Rcsid = %q$Id: AngularVelocity.rb,v 1.1 2002/11/23 23:07:45 deveiant Exp $
+		Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
+		Rcsid = %q$Id: AngularVelocity.rb,v 1.2 2003/02/04 11:28:45 deveiant Exp $
 
 	end # class AngularVelocity
 end # module ODE

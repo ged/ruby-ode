@@ -1,26 +1,17 @@
 /*
  *		world.c - ODE Ruby Binding - World Class
- *		$Id: world.c,v 1.3 2002/11/23 23:08:45 deveiant Exp $
+ *		$Id: world.c,v 1.4 2003/02/04 11:27:49 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 03:41:33 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2001, 2002 The FaerieMUD Consortium. All rights reserved.
+ *		Copyright (c) 2001, 2002, 2003 The FaerieMUD Consortium.
  *
- *		This library is free software; you can redistribute it and/or modify it
- *		under the terms of the GNU Lesser General Public License as published by
- *		the Free Software Foundation; either version 2.1 of the License, or (at
- *		your option) any later version.
- *
- *		This library is distributed in the hope that it will be useful, but
- *		WITHOUT ANY WARRANTY; without even the implied warranty of
- *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
- *		General Public License for more details.
- *
- *		You should have received a copy of the GNU Lesser General Public License
- *		along with this library (see the file LICENSE.TXT); if not, write to the
- *		Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- *		02111-1307 USA.
+ *		This work is licensed under the Creative Commons Attribution License. To
+ *		view a copy of this license, visit
+ *		http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+ *		Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
  *
  */
 
@@ -40,7 +31,6 @@
  * Macros and constants
  * -------------------------------------------------- */
 
-#define IsWorld( obj ) rb_obj_is_kind_of( (obj), ode_cOdeWorld )
 
 
 /* --------------------------------------------------
@@ -172,16 +162,14 @@ static VALUE
 ode_world_gravity( self, args )
 	 VALUE self, args;
 {
+	dWorldID	world = get_world( self );
 	dVector3	gravity;
-	dWorldID	world;
 	VALUE		rvec;
 
-	// Get the world struct and its gravity
-	GetWorld( self, world );
+	// Get the world's gravity, make a new ODE::Vector with it, and return it
 	dWorldGetGravity( world, gravity );
-
-	// Make a new ODE::Vector with the gravity value and return it
 	Vec3ToOdeVector( gravity, rvec );
+
 	return rvec;
 }
 
@@ -198,7 +186,7 @@ static VALUE
 ode_world_gravity_eq( self, gravity )
 	 VALUE self, gravity;
 {
-	dWorldID	world;
+	dWorldID	world = get_world( self );
 	VALUE		gravArray;
 
 	// Make sure we got an array argument
@@ -208,15 +196,13 @@ ode_world_gravity_eq( self, gravity )
 	else
 		gravArray = ode_obj_to_ary3( gravity, "gravity" );
 
-	// Get the world struct and set its gravity vector from the values in the
-	// array
-	GetWorld( self, world );
+	// Set the world's gravity vector from the values in the array
 	dWorldSetGravity( world,
 					  NUM2DBL(rb_ary_entry( gravArray, 0 )),
 					  NUM2DBL(rb_ary_entry( gravArray, 1 )),
 					  NUM2DBL(rb_ary_entry( gravArray, 2 )) );
 
-	return Qtrue;
+	return gravArray;
 }
 
 
@@ -231,10 +217,7 @@ static VALUE
 ode_world_erp( self, args )
 	 VALUE self, args;
 {
-	dWorldID	world;
-
-	// Get the world struct and return its ERP as a Float
-	GetWorld( self, world );
+	dWorldID	world = get_world( self );
 	return rb_float_new( dWorldGetERP(world) );
 }
 
@@ -250,14 +233,12 @@ static VALUE
 ode_world_erp_eq( self, erp )
 	 VALUE self, erp;
 {
-	dWorldID	world;
+	dWorldID	world = get_world( self );
 
-	// Get the world struct and set the ERP from the argument value
-	GetWorld( self, world );
 	dWorldSetERP( world, NUM2DBL(erp) );
-
-	return Qtrue;
+	return erp;
 }
+
 
 /*
  * cfm()
@@ -270,10 +251,7 @@ static VALUE
 ode_world_cfm( self, args )
 	 VALUE self, args;
 {
-	dWorldID	world;
-
-	// Get the world struct and return the CFM as a Float
-	GetWorld( self, world );
+	dWorldID	world = get_world( self );
 	return rb_float_new( dWorldGetCFM(world) );
 }
 
@@ -289,13 +267,10 @@ static VALUE
 ode_world_cfm_eq( self, cfm )
 	 VALUE self, cfm;
 {
-	dWorldID	world;
+	dWorldID	world = get_world( self );
 
-	// Get the world struct and set the CFM from the argument value
-	GetWorld( self, world );
 	dWorldSetCFM( world, NUM2DBL(cfm) );
-
-	return Qtrue;
+	return cfm;
 }
 
 
@@ -310,12 +285,9 @@ static VALUE
 ode_world_step( self, stepsize )
 	 VALUE self, stepsize;
 {
-	dWorldID	world;
+	dWorldID	world = get_world( self );
 
-	// Get the world struct and step it with the argument value
-	GetWorld( self, world );
 	dWorldStep( world, NUM2DBL(stepsize) );
-
 	return Qtrue;
 }
 
@@ -332,6 +304,9 @@ ode_world_body_create( self )
 	debugMsg(( "createBody: Calling Body constructor." ));
 	return rb_class_new_instance( 1, &self, ode_cOdeBody );
 }
+
+
+
 
 
 /*
@@ -354,11 +329,10 @@ static VALUE
 ode_world_imp2force( self, stepsize, ix, iy, iz )
 	 VALUE self, stepsize, ix, iy, iz;
 {
-	dWorldID	world;
+	dWorldID	world = get_world( self );
 	dVector3	fvec;
 	VALUE		force;
 
-	GetWorld( self, world );
 	dWorldImpulseToForce( world,
 						  (dReal) NUM2DBL(stepsize),
 						  (dReal) NUM2DBL(ix),
@@ -377,8 +351,12 @@ ode_world_imp2force( self, stepsize, ix, iy, iz )
 void
 ode_init_world()
 {
-	/* Constructor */
+	/* Allocator */
+#ifdef NEW_ALLOC
+	rb_define_alloc_func( ode_cOdeWorld, ode_world_s_alloc );
+#else
 	rb_define_singleton_method( ode_cOdeWorld, "allocate", ode_world_s_alloc, 0 );
+#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeWorld, "initialize", ode_world_init, -1 );

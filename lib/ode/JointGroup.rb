@@ -5,79 +5,78 @@
 # == Synopsis
 # 
 #   require 'ode'
-#	require 'ode/SurfaceLibrary'
 #
-#	contactGroup = ODE::JointGroup.new( world, ODE::ContactJoint )
+#	hingeGroup = ODE::JointGroup::new( world, ODE::Joint::Hinge )
 #
-#	joint1 = contactGroup.createJoint( ODE::SL::ConcreteSurface )
-#	joint2 = contactGroup.createJoint( ODE::SL::GlassSurface )
+#	joint1 = hingeGroup.createJoint
+#	joint2 = hingeGroup.createJoint
 #
 #	joint1.attach( body1, body2 )
 #	joint2.attach( body2, body3 )
 # 
-# == Author
+# == Authors
 # 
-# Michael Granger <ged@FaerieMUD.org>
+# * Michael Granger <ged@FaerieMUD.org>
 # 
-# Copyright (c) 2002 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2002, 2003 The FaerieMUD Consortium. 
 # 
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
+# This work is licensed under the Creative Commons Attribution License. To
+# view a copy of this license, visit
+# http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+# Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
 # 
 # == Version
 #
-#  $Id: JointGroup.rb,v 1.2 2002/11/23 23:08:45 deveiant Exp $
+#  $Id: JointGroup.rb,v 1.3 2003/02/04 11:28:45 deveiant Exp $
 # 
 
+require 'ode'
 
 module ODE
 
 	### Ruby half of the ODE::JointGroup class.
 	class JointGroup
 
-		### Class constants
-		Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
-		Rcsid = %q$Id: JointGroup.rb,v 1.2 2002/11/23 23:08:45 deveiant Exp $
-
-		### Create a new ODE::JointGroup object. If the <tt>world</tt> and
-		### <tt>jointClass</tt> arguments are given, the JointGroup can act as a
-		### factory for creating and adding new joints to the group via
-		### #createJoint.
-		def initialize( jointClass=nil, world=nil )
-			raise TypeError, "No implicit conversion of #{jointClass.class.name} to Class" unless
-				(jointClass.nil? || jointClass.kind_of?( Class ))
-			raise TypeError, "No implicit conversion of #{world.class.name} to ODE::World" unless
-				(world.nil? || world.kind_of?( ODE::World ))
-
-			@factoryClass = jointClass
-			@factoryWorld = world
-		end
-
-
 		######
 		public
 		######
+
+		# The ODE::Joint class to instantiate with #createJoint.
+		attr_reader :factoryClass
+
+		# The ODE::World to create new joints in
+		attr_reader :factoryWorld
+
+
+		### Set the factory class for this JointGroup.
+		def factoryClass=( jointClass )
+			raise TypeError, "No implicit conversion of #{jointClass.class.name} to Class" unless
+				(jointClass.nil? || jointClass.kind_of?( Class ))
+			@factoryClass = jointClass
+		end
+
+		### Set the factory world for this JointGroup
+		def factoryWorld=( world )
+			raise TypeError, "No implicit conversion of #{world.class.name} to ODE::World" unless
+				(world.nil? || world.kind_of?( ODE::World ))
+			@factoryWorld = world
+		end
+
 
 		### Returns true if the JointGroup can act as a factory for member joints.
 		def factory?
 			return ! @factoryClass.nil? && ! @factoryWorld.nil?
 		end
 
+
 		### Create a new joint in the receiving JointGroup with the specified
 		### +arguments+. If the jointClass and world arguments weren't specified in
 		### this JointGroup's constructor, an exception is raised.
 		def createJoint( *arguments )
 			raise RuntimeError, "Not a factory JointGroup" unless self.factory?
-
-			return @factoryClass.new( @factoryWorld, self, *arguments )
+			arguments.push( self )
+			return @factoryClass.new( @factoryWorld, *arguments )
 		end
-
-
-		#########
-		protected
-		#########
-
 
 	end # class jointGroup
 end # module ODE

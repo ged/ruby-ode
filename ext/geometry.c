@@ -1,27 +1,17 @@
 /*
  *		geometry.c - ODE Ruby Binding - ODE::Geometry class
- *		$Id: geometry.c,v 1.1 2002/11/23 22:20:30 deveiant Exp $
- *		Time-stamp: <23-Nov-2002 06:09:02 deveiant>
+ *		$Id: geometry.c,v 1.2 2003/02/04 11:27:01 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 03:43:37 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2002 The FaerieMUD Consortium. All rights reserved.
+ *		Copyright (c) 2002, 2003 The FaerieMUD Consortium.
  *
- *		This library is free software; you can redistribute it and/or modify it
- *		under the terms of the GNU Lesser General Public License as published by
- *		the Free Software Foundation; either version 2.1 of the License, or (at
- *		your option) any later version.
- *
- *		This library is distributed in the hope that it will be useful, but
- *		WITHOUT ANY WARRANTY; without even the implied warranty of
- *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
- *		General Public License for more details.
- *
- *		You should have received a copy of the GNU Lesser General Public License
- *		along with this library (see the file LICENSE.TXT); if not, write to the
- *		Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- *		02111-1307 USA.
+ *		This work is licensed under the Creative Commons Attribution License. To
+ *		view a copy of this license, visit
+ *		http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+ *		Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
  *
  */
 
@@ -74,10 +64,12 @@ ode_geometry_alloc()
 	ptr->object		= Qnil;
 	ptr->container	= Qnil;
 	ptr->body		= Qnil;
-
+	ptr->surface	= Qnil;
+	
 	debugMsg(( "Initialized ode_GEOMETRY <%p>", ptr ));
 	return ptr;
 }
+
 
 /*
  * GC mark function
@@ -90,17 +82,9 @@ ode_geometry_gc_mark( ptr )
 	if ( ptr ) {
 		debugMsg(( "Marking Geometry <%p>.", ptr ));
 
-		/* Mark the geom's container, if any */
-		if ( ptr->container ) {
-			debugMsg(( "Marking container." ));
-			rb_gc_mark( ptr->container );
-		}
-
-		/* Mark the body object associated with the geom, if any */
-		if ( ptr->body ) {
-			debugMsg(( "Marking body object." ));
-			rb_gc_mark( ptr->body );
-		}
+		rb_gc_mark( ptr->container );
+		rb_gc_mark( ptr->body );
+		rb_gc_mark( ptr->surface );
 	}
 
 	else {
@@ -120,12 +104,15 @@ ode_geometry_gc_free( ptr )
 
 	if ( ptr ) {
 		debugMsg(( "Freeing Geometry <%p>.", ptr ));
-		dGeomDestroy( ptr->id );
+
+		if ( ptr->id )
+			dGeomDestroy( ptr->id );
 
 		ptr->id			= NULL;
 		ptr->object		= Qnil;
 		ptr->container	= Qnil;
 		ptr->body		= Qnil;
+		ptr->surface	= Qnil;
 
 		xfree( ptr );
 		ptr = NULL;
@@ -224,6 +211,8 @@ ode_geometry_init( argc, argv, self )
 		debugMsg(( "Fetching new data object." ));
 		DATA_PTR(self) = geom = ode_geometry_alloc();
 
+		geom->object = self;
+
 		debugMsg(( "New ode_GEOMETRY = <%p>", geom ));
 	}
 
@@ -233,6 +222,7 @@ ode_geometry_init( argc, argv, self )
 
 	return self;
 }
+
 
 /*
  * ODE::Geometry#container
@@ -292,7 +282,7 @@ static VALUE
 ode_geometry_space_p( self )
 	 VALUE self;
 {
-	ode_GEOMETRY	*geometry = check_geom(self);
+	ode_GEOMETRY	*geometry = get_geom(self);
 
 	if ( dGeomIsSpace(geometry->id) )
 		return Qtrue;
@@ -323,6 +313,7 @@ ode_geometry_category_mask( self )
 
 	return INT2NUM( mask );
 }
+
 
 /*
  * ODE::Geometry#categoryMask=( mask )
@@ -374,6 +365,7 @@ ode_geometry_collide_mask( self )
 	return INT2NUM( mask );
 }
 
+
 /*
  * ODE::Geometry#collideMask=( mask )
  * --
@@ -400,6 +392,7 @@ ode_geometry_collide_mask_eq( self, newMask )
 	return INT2NUM( dGeomGetCollideBits(geometry->id) );
 }
 
+
 /*
  * ODE::Geometry#enable
  * --
@@ -411,10 +404,15 @@ static VALUE
 ode_geometry_enable( self )
 	 VALUE self;
 {
-	ode_GEOMETRY	*geometry = check_geom(self);
+#ifdef HAVE_DGEOMENABLE
+	ode_GEOMETRY	*geometry = get_geom(self);
 	dGeomEnable( geometry->id );
 	return Qtrue;
+#else
+	rb_notimplement();
+#endif /* HAVE_DGEOMENABLE */
 }
+
 
 /*
  * ODE::Geometry#disable
@@ -427,10 +425,15 @@ static VALUE
 ode_geometry_disable( self )
 	 VALUE self;
 {
-	ode_GEOMETRY	*geometry = check_geom(self);
+#ifdef HAVE_DGEOMENABLE
+	ode_GEOMETRY	*geometry = get_geom(self);
 	dGeomDisable( geometry->id );
 	return Qfalse;
+#else
+	rb_notimplement();
+#endif /* HAVE_DGEOMENABLE */
 }
+
 
 /*
  * ODE::Geometry#enabled?
@@ -441,11 +444,73 @@ static VALUE
 ode_geometry_enabled_p( self )
 	 VALUE self;
 {
-	ode_GEOMETRY	*geometry = check_geom(self);
+#ifdef HAVE_DGEOMENABLE
+	ode_GEOMETRY	*geometry = get_geom(self);
 	if ( dGeomIsEnabled(geometry->id) )
 		return Qtrue;
 	else
 		return Qfalse;
+#else
+	rb_notimplement();
+#endif /* HAVE_DGEOMENABLE */
+}
+
+
+/*
+ * ODE::Geometry#surface
+ * --
+ * Get the geometry's surface (an ODE::Surface object).
+ */
+static VALUE
+ode_geometry_surface( self )
+	 VALUE self;
+{
+	ode_GEOMETRY	*ptr = get_geom( self );
+	return ptr->surface;
+}
+
+
+/*
+ * ODE::Geometry#surface=( surface )
+ * --
+ * Set the geometry's surface (an ODE::Surface object) to the one specified.
+ */
+static VALUE
+ode_geometry_surface_eq( self, surface )
+	 VALUE self, surface;
+{
+	ode_GEOMETRY	*ptr = get_geom( self );
+	
+	CheckKindOf( surface, ode_cOdeSurface );
+	ptr->surface = surface;
+
+	return surface;
+}
+
+
+/*
+ * ODE::Geometry#body
+ * --
+ * Returns <tt>nil</tt>; overridden in ODE::Geometry::Placeable.
+ */
+static VALUE
+ode_geometry_body( self )
+	 VALUE self;
+{
+	return Qnil;
+}
+
+
+/*
+ * ODE::Geometry#body=
+ * --
+ * Raises an exception; overridden in ODE::Geometry::Placeable.
+ */
+static VALUE
+ode_geometry_body_eq( self )
+	 VALUE self;
+{
+	rb_raise( ode_eOdeGeometryError, "Cannot set a body for a non-placeable geometry." );
 }
 
 
@@ -455,7 +520,8 @@ ode_geometry_enabled_p( self )
  * Generate contact information for the receiving Geometry and
  * <tt>otherGeometry</tt> in the form of at most <tt>maxContacts</tt>
  * ODE::Contact objects, yielding each in turn to the given
- * <tt>contactHandler</tt>.
+ * <tt>contactHandler</tt>. This corresponds to (and is really just a wrapper
+ * around) the dCollide() function in the C API.
  */
 static VALUE
 ode_geometry_collide( argc, argv, self )
@@ -463,17 +529,15 @@ ode_geometry_collide( argc, argv, self )
 	 VALUE	*argv, self;
 {
 	ode_GEOMETRY	*geom1, *geom2;
-	VALUE			otherGeom, maxContacts, callback;
-	dContactGeom	*contacts;
+	VALUE			otherGeom, maxContacts, contact;
+	dContactGeom	*cgeoms;
 	int				flags, contactCount, i;
 
-	rb_scan_args( argc, argv, "11&", &otherGeom, &maxContacts, &callback );
+	rb_scan_args( argc, argv, "11", &otherGeom, &maxContacts );
 
 	CheckKindOf( otherGeom, ode_cOdeGeometry );
-	if ( callback == Qnil )
-		rb_raise( rb_eArgError, "no callback block given." );
-	if ( !rb_obj_is_kind_of(ruby_cMethod, callback) || !rb_obj_is_kind_of(rb_cProc, callback) )
-		rb_raise( rb_eTypeError, "illegal callback: must be a Proc/Method" );
+	if ( !rb_block_given_p )
+		rb_raise( ruby_eLocalJumpError, "no block given" );
 	
 	/* Fetch or default the contact count */
 	if ( RTEST(maxContacts) ) {
@@ -488,7 +552,8 @@ ode_geometry_collide( argc, argv, self )
 	geom1 = get_geom( self );
 	geom2 = get_geom( otherGeom );
 	
-	/* Echo some of ODE's own optimizations here to save calls to ALLOCA_N.
+	/* Echo some of ODE's own optimizations here to save pointless memory
+	   allocation.
 	   :TODO: ODE currently doesn't do much more than this, but if it ever does
 	   provide some use for colliding an object with itself, this will have to
 	   be removed. */
@@ -497,34 +562,91 @@ ode_geometry_collide( argc, argv, self )
 		return INT2FIX( 0 );
 	
 	/* Allocate contacts and generate contact information. */
-	contacts = ALLOCA_N( dContactGeom, (flags & 0xffff) );
-	contactCount = dCollide( geom1->id, geom2->id, flags, contacts, sizeof(dContactGeom) );
+	cgeoms = ALLOCA_N( dContactGeom, (flags & 0xffff) );
+	contactCount = dCollide( geom1->id, geom2->id, flags, cgeoms, sizeof(dContactGeom) );
 
-	/* Call the callback for each contact object */
+	/* Yield to the block for each contact object */
 	for ( i = 0; i < contactCount; i++ ) {
-		VALUE	contact;
+		contact = rb_class_new_instance( 0, 0, ode_cOdeContact );
 
-		contact = ode_contact_new_from_geom( ode_cOdeContact, (contacts+i) );
-		rb_funcall( callback, rb_intern("call"), 1, &contact );
+		/* Set the internal contact geometry of the contact object to this
+		   contact geom and call the collision callback. */
+		ode_contact_set_cgeom( contact, cgeoms + i );
+		rb_yield( contact );
 	}
 
 	return INT2FIX( contactCount );
 }
 
 
-
 /*
- * ODE::Geometry#intersectWith
+ * ODE::Geometry#intersectWith( otherGeom, *data, &nearCallback )
  * --
- * 
+ * Call the <tt>nearCallback</tt> for potentially intersecting pairs that
+ * contain one geom from the receiving geometry, and one from the
+ * <tt>otherGeom</tt>. Any arguments passed in the <tt>data</tt> Array will be
+ * passed to the callback as arguments after the two potentially-colliding
+ * geometry objects.
+ *
+ * The exact behavior depends on the types of the receiver and the
+ * <tt>otherGeom</tt>:
+ *
+ * * If one of the geoms is a non-space geom and the other is a space, the
+ *   callback is called with all potential intersections between the geom and
+ *   the objects in the space.
+ *
+ * * If both the receiver and <tt>otherGeom</tt> are spaces, then this calls the
+ *   callback for all potentially intersecting pairs that contain one geom from
+ *   the receiver and one geom from <tt>otherGeom</tt>. The algorithm that is
+ *   used depends on what kinds of spaces are being collided. If no optimized
+ *   algorithm can be selected then this function will resort to one of the
+ *   following two strategies:
+ *
+ *   1. All the geoms in the receiver are tested one-by-one against
+ *      <tt>otherGeom</tt>.
+ *   2. All the geoms in <tt>otherGeom</tt> are tested one-by-one against the
+ *      receiver.
+ *
+ * The strategy used may depends on a number of rules, but in general the space
+ * with less objects has its geoms examined one-by-one.
+ *
+ * * If both geoms are the same space, this is equivalent to calling
+ *   #eachAdjacentPair() on that space.
+ *
+ * * If both the receiver and <tt>otherGeom</tt> are non-space geoms, this
+ *   simply calls the callback once with them.
+ *
+ * This method is the equivalent of the dSpaceCollide2() function from the C
+ * API.
  */
 static VALUE
-ode_geometry_isect( self )
-	 VALUE self;
+ode_geometry_isect( argc, argv, self )
+	 int	argc;
+	 VALUE	*argv, self;
 {
-	//ode_GEOMETRY	*geometry = check_geom(self);
-	rb_notimplement();
+	ode_GEOMETRY	*geometry, *geometry2;
+	ode_CALLBACK	*callback;
+	VALUE			otherGeom, data, block;
+
+	rb_scan_args( argc, argv, "1*&", &otherGeom, &data, &block );
+
+	geometry  = get_geom( self );
+	geometry2 = get_geom( otherGeom );
+
+	ode_check_arity( block, 3 );
+
+	callback = ALLOCA_N( ode_CALLBACK, 1 );
+	callback->callback = block;
+	callback->args = data;
+
+	dSpaceCollide2( geometry->id, geometry2->id, callback,
+					(dNearCallback *)(ode_near_callback) );
+
+	return Qtrue;
 }
+
+
+
 
 
 /* --- ODE::Geometry::Placeable ------------------------------ */
@@ -539,7 +661,7 @@ static VALUE
 ode_geometry_placeable_body( self )
 	 VALUE self;
 {
-	ode_GEOMETRY	*ptr = check_geom( self );
+	ode_GEOMETRY	*ptr = get_geom( self );
 	dBodyID			body = dGeomGetBody( ptr->id );
 
 	if ( body ) {
@@ -572,13 +694,14 @@ static VALUE
 ode_geometry_placeable_body_eq( self, body )
 	 VALUE self, body;
 {
-	ode_GEOMETRY	*ptr = check_geom( self );
+	ode_GEOMETRY	*ptr = get_geom( self );
 	ode_BODY		*bodyPtr = ode_get_body( body );
 
 	dGeomSetBody( ptr->id, bodyPtr->id );
 
 	return body;
 }
+
 
 /*
  * ODE::Geometry::Placeable#position
@@ -589,10 +712,14 @@ static VALUE
 ode_geometry_placeable_position( self )
 	 VALUE self;
 {
-	//ode_GEOMETRY	*geometry = check_geom(self);
+	ode_GEOMETRY	*ptr = get_geom( self );
+	const dReal		*vec = dGeomGetPosition( ptr->id );
+	VALUE			position;
 	
-	rb_notimplement();
+	Vec3ToOdePosition( vec, position );
+	return position;
 }
+
 
 /*
  * ODE::Geometry::Placeable#position=
@@ -600,13 +727,27 @@ ode_geometry_placeable_position( self )
  * 
  */
 static VALUE
-ode_geometry_placeable_position_eq( self )
-	 VALUE self;
+ode_geometry_placeable_position_eq( self, position )
+	 VALUE self, position;
 {
-	//ode_GEOMETRY	*geometry = check_geom(self);
+	ode_GEOMETRY	*ptr = get_geom( self );
+	VALUE			posArray;
+
+	/* Normalize the argument/s into a 3rd-order vector */
+	if ( RARRAY(position)->len == 1 ) 
+		posArray = ode_obj_to_ary3( *(RARRAY(position)->ptr), "position" );
+	else
+		posArray = ode_obj_to_ary3( position, "position" );
+
+	/* Set the position from the normalized array */
+	dGeomSetPosition( ptr->id,
+					  (dReal)NUM2DBL(*(RARRAY(posArray)->ptr    )),
+					  (dReal)NUM2DBL(*(RARRAY(posArray)->ptr + 1)),
+					  (dReal)NUM2DBL(*(RARRAY(posArray)->ptr + 2)) );
 	
-	rb_notimplement();
+	return Qtrue;
 }
+
 
 /*
  * ODE::Geometry::Placeable#rotation
@@ -617,10 +758,24 @@ static VALUE
 ode_geometry_placeable_rotation( self )
 	 VALUE self;
 {
-	//ode_GEOMETRY	*geometry = check_geom(self);
+	ode_GEOMETRY	*ptr = get_geom( self );
+	const dReal		*quat;
+	VALUE			args[4];
+
+	/* Fetch the rotation quaternion for the geom. */
+	quat = dGeomGetRotation( ptr->id );
+
+	args[0] = rb_float_new( *(quat  ) );
+	args[1] = rb_float_new( *(quat+1) );
+	args[2] = rb_float_new( *(quat+2) );
+	args[3] = rb_float_new( *(quat+3) );
 	
-	rb_notimplement();
+	/* Create a new ODE::Quaternion object from the quaternion and return it */
+	return rb_class_new_instance( 4, args, ode_cOdeQuaternion );
+	
+	
 }
+
 
 /*
  * ODE::Geometry::Placeable#rotation=
@@ -628,12 +783,32 @@ ode_geometry_placeable_rotation( self )
  * 
  */
 static VALUE
-ode_geometry_placeable_rotation_eq( self )
-	 VALUE self;
+ode_geometry_placeable_rotation_eq( self, rotation )
+	 VALUE self, rotation;
 {
-	//ode_GEOMETRY	*geometry = check_geom(self);
+	ode_GEOMETRY	*ptr = get_geom( self );
+	VALUE			ary;
+	dQuaternion		quat;
+	dMatrix3		R;
+	int				i;
+
+	/* Call to_ary on whatever we got, and make sure it's an Array with four elements. */
+	if ( RARRAY(rotation)->len == 1 ) 
+		ary = ode_obj_to_ary4( *(RARRAY(rotation)->ptr), "rotation" );
+	else
+		ary = ode_obj_to_ary4( rotation, "rotation" );
+
+	/* Copy the values in the array into the quaternion */
+	for ( i = 0 ; i <= 3 ; i++ )
+		quat[i] = NUM2DBL( *(RARRAY(ary)->ptr + i) );
+	dQtoR( quat, R );
+  
+	/* Get the body and set its rotation */
+	dGeomSetRotation( ptr->id, R );
+
+	return Qtrue;
 	
-	rb_notimplement();
+	
 }
 
 
@@ -653,25 +828,30 @@ ode_geometry_sphere_init( argc, argv, self )
 {
 	VALUE			radius, spaceObj;
 	dSpaceID		space = 0;
-	ode_GEOMETRY	*ptr = check_geom(self);
+	ode_GEOMETRY	*geometry = 0;
 
-	debugMsg(( "ODE::Geometry::Sphere init. Calling super()." ));
+	debugMsg(( "Calling super()" ));
 	rb_call_super( 0, 0 );
-	debugMsg(( "Back from sphere's super()." ));
+	debugMsg(( "Back from super()" ));
 
-	debugMsg(( "Scanning %d arg/s.", argc ));
+	/* Fetch the ode_GEOMETRY pointer */
+	geometry = get_geom( self );
+	if ( !geometry ) rb_bug( "Superclass's initialize didn't return a valid Geometry." );
+	debugMsg(( "Sphere::initialize: Geometry is <%p>", geometry ));
+	
+	debugMsg(( "Sphere::initialize: Scanning arguments." ));
 	if ( rb_scan_args(argc, argv, "11", &radius, &spaceObj) == 2 ) {
-		SetContainer( spaceObj, space, ptr );
-	} else {
-		debugMsg(( "No container space." ));
+		SetContainer( spaceObj, space, geometry );
 	}
 
 	CheckPositiveNonZeroNumber( NUM2DBL(radius), "radius" );
 
-	debugMsg(( "Creating underlying dGeometrySphere object." ));
-	ptr->id = (dGeomID)dCreateSphere( space, (dReal)NUM2DBL(radius) );
+	debugMsg(( "Creating new Sphere geometry." ));
+	geometry->id = (dGeomID)dCreateSphere( space, (dReal)NUM2DBL(radius) );
 
-	debugMsg(( "Done. Returning new sphere." ));
+	/* Set the ode_GEOMETRY pointer as the data pointer of the dGeomID */
+	dGeomSetData( geometry->id, geometry );
+
 	return self;
 }
 
@@ -685,7 +865,7 @@ static VALUE
 ode_geometry_sphere_radius( self )
 	 VALUE self;
 {
-	ode_GEOMETRY	*geometry = check_geom(self);
+	ode_GEOMETRY	*geometry = get_geom(self);
 	return rb_float_new( (dReal)dGeomSphereGetRadius(geometry->id) );
 }
 
@@ -731,7 +911,7 @@ ode_geometry_box_init( argc, argv, self )
 
 	/* Fetch the ode_GEOMETRY pointer */
 	geometry = get_geom(self);
-	if ( !geometry ) rb_bug( "Superclass's intialize didn't return a valid Geometry." );
+	if ( !geometry ) rb_bug( "Superclass's initialize didn't return a valid Geometry." );
 	debugMsg(( "Box::initialize: Geometry is <%p>", geometry ));
 	
 	debugMsg(( "Box::initialize: Scanning arguments." ));
@@ -968,16 +1148,33 @@ ode_geometry_plane_init( argc, argv, self )
 {
 	VALUE			a, b, c, d, spaceObj;
 	dSpaceID		space = 0;
-	ode_GEOMETRY	*geometry = check_geom(self);
+	ode_GEOMETRY	*geometry = 0;
 
-	rb_scan_args( argc, argv, "41", &a, &b, &c, &d, &spaceObj );
-	SetContainer( spaceObj, space, geometry );
+	debugMsg(( "Calling super()" ));
+	rb_call_super( 0, 0 );
+	debugMsg(( "Back from super()" ));
 
+	/* Fetch the ode_GEOMETRY pointer */
+	geometry = get_geom(self);
+	if ( !geometry ) rb_bug( "Superclass's initialize didn't return a valid Geometry." );
+	debugMsg(( "Plane::initialize: Geometry is <%p>", geometry ));
+	
+	debugMsg(( "Plane::initialize: Scanning arguments." ));
+	if ( rb_scan_args(argc, argv, "41", &a, &b, &c, &d, &spaceObj) == 5 ) {
+		SetContainer( spaceObj, space, geometry );
+	}
+
+	debugMsg(( "Creating new Plane geometry." ));
 	geometry->id = (dGeomID)dCreatePlane( space,
 										  (dReal)NUM2DBL(a),
 										  (dReal)NUM2DBL(b),
 										  (dReal)NUM2DBL(c),
 										  (dReal)NUM2DBL(d) );
+
+	/* Set the ode_GEOMETRY pointer as the data pointer of the dGeomID */
+	debugMsg(( "Setting geom data for plane <%p> to <%p>",
+			   geometry->id, geometry ));
+	dGeomSetData( geometry->id, geometry );
 
 	return self;
 }
@@ -1068,16 +1265,32 @@ ode_geometry_capcyl_init( argc, argv, self )
 {
 	VALUE			radius, length, spaceObj;
 	dSpaceID		space = 0;
-	ode_GEOMETRY	*geometry = check_geom(self);
+	ode_GEOMETRY	*geometry = 0;
 
-	rb_scan_args( argc, argv, "21", &radius, &length, &spaceObj );
+	debugMsg(( "Calling super()" ));
+	rb_call_super( 0, 0 );
+	debugMsg(( "Back from super()" ));
+
+	/* Fetch the ode_GEOMETRY pointer */
+	geometry = get_geom(self);
+	if ( !geometry ) rb_bug( "Superclass's initialize didn't return a valid Geometry." );
+	debugMsg(( "CappedCylinder::initialize: Geometry is <%p>", geometry ));
+	
+	debugMsg(( "CappedCylinder::initialize: Scanning arguments." ));
+	if ( rb_scan_args(argc, argv, "21", &radius, &length, &spaceObj) == 3 ) {
+		SetContainer( spaceObj, space, geometry );
+	}
+
 	CheckPositiveNonZeroNumber( NUM2DBL(radius), "radius" );
 	CheckPositiveNonZeroNumber( NUM2DBL(length), "length" );
-	SetContainer( spaceObj, space, geometry );
 
+	debugMsg(( "Creating new CappedCylinder geometry." ));
 	geometry->id = (dGeomID)dCreateCCylinder( space,
 											  (dReal)NUM2DBL(radius),
 											  (dReal)NUM2DBL(length) );
+
+	/* Set the ode_GEOMETRY pointer as the data pointer of the dGeomID */
+	dGeomSetData( geometry->id, geometry );
 
 	return self;
 }
@@ -1239,16 +1452,32 @@ ode_geometry_cylinder_init( argc, argv, self )
 #ifdef HAVE_ODE_DCYLINDER_H
 	VALUE			radius, length, spaceObj;
 	dSpaceID		space = 0;
-	ode_GEOMETRY	*geometry = check_geom(self);
+	ode_GEOMETRY	*geometry = 0;
 
-	rb_scan_args( argc, argv, "21", &radius, &length, &spaceObj );
+	debugMsg(( "Calling super()" ));
+	rb_call_super( 0, 0 );
+	debugMsg(( "Back from super()" ));
+
+	/* Fetch the ode_GEOMETRY pointer */
+	geometry = get_geom(self);
+	if ( !geometry ) rb_bug( "Superclass's initialize didn't return a valid Geometry." );
+	debugMsg(( "Cylinder::initialize: Geometry is <%p>", geometry ));
+	
+	debugMsg(( "Cylinder::initialize: Scanning arguments." ));
+	if ( rb_scan_args(argc, argv, "21", &radius, &length, &spaceObj) == 3 ) {
+		SetContainer( spaceObj, space, geometry );
+	}
+
 	CheckPositiveNonZeroNumber( NUM2DBL(radius), "radius" );
 	CheckPositiveNonZeroNumber( NUM2DBL(length), "length" );
-	SetContainer( spaceObj, space, geometry );
 
+	debugMsg(( "Creating new Cylinder geometry." ));
 	geometry->id = (dGeomID)dCreateCylinder( space,
 											 (dReal)NUM2DBL(radius),
 											 (dReal)NUM2DBL(length) );
+
+	/* Set the ode_GEOMETRY pointer as the data pointer of the dGeomID */
+	dGeomSetData( geometry->id, geometry );
 
 	return self;
 #else
@@ -1409,17 +1638,24 @@ ode_geometry_cylinder_length_eq( self, newLength )
 void ode_init_geometry()
 {
 	static char
-		rcsid[]		= "$Id: geometry.c,v 1.1 2002/11/23 22:20:30 deveiant Exp $",
-		revision[]	= "$Revision: 1.1 $";
+		rcsid[]		= "$Id: geometry.c,v 1.2 2003/02/04 11:27:01 deveiant Exp $",
+		revision[]	= "$Revision: 1.2 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 
 	/* Constants */
+	rb_obj_freeze( vstr );
 	rb_define_const( ode_cOdeGeometry, "Version", vstr );
+	vstr = rb_str_new2( rcsid );
+	rb_obj_freeze( vstr );
 	rb_define_const( ode_cOdeGeometry, "Rcsid", rb_str_new2(rcsid) );
 
 	/* Constructor */
+#ifdef NEW_ALLOC
+	rb_define_alloc_func( ode_cOdeGeometry, ode_geometry_s_alloc );
+#else
 	rb_define_singleton_method( ode_cOdeGeometry, "allocate", ode_geometry_s_alloc, 0 );
+#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeGeometry, "initialize", ode_geometry_init, -1 );
@@ -1458,6 +1694,11 @@ void ode_init_geometry()
 	rb_define_method( ode_cOdeGeometry, "disable", ode_geometry_disable, 0 );
 	rb_define_method( ode_cOdeGeometry, "enabled?", ode_geometry_enabled_p, 0 );
 
+	rb_define_method( ode_cOdeGeometry, "surface", ode_geometry_surface, 0 );
+	rb_define_method( ode_cOdeGeometry, "surface=", ode_geometry_surface_eq, 1 );
+	rb_define_method( ode_cOdeGeometry, "body", ode_geometry_body, 0 );
+	rb_define_method( ode_cOdeGeometry, "body=", ode_geometry_body_eq, 0 );
+
 	/* Collision */
 	rb_define_method( ode_cOdeGeometry, "collideWith", ode_geometry_collide, -1 );
 	rb_define_method( ode_cOdeGeometry, "intersectWith", ode_geometry_isect, -1 );
@@ -1466,9 +1707,9 @@ void ode_init_geometry()
 	rb_define_method( ode_cOdePlaceable, "body", ode_geometry_placeable_body, 0 );
 	rb_define_method( ode_cOdePlaceable, "body=", ode_geometry_placeable_body_eq, 1 );
 	rb_define_method( ode_cOdePlaceable, "position", ode_geometry_placeable_position, 0 );
-	rb_define_method( ode_cOdePlaceable, "position=", ode_geometry_placeable_position_eq, 1 );
+	rb_define_method( ode_cOdePlaceable, "position=", ode_geometry_placeable_position_eq, -2 );
 	rb_define_method( ode_cOdePlaceable, "rotation", ode_geometry_placeable_rotation, 0 );
-	rb_define_method( ode_cOdePlaceable, "rotation=", ode_geometry_placeable_rotation_eq, 1 );
+	rb_define_method( ode_cOdePlaceable, "rotation=", ode_geometry_placeable_rotation_eq, -2 );
 
 	/* ODE::Geometry::Sphere */
 	rb_define_method( ode_cOdeGeometrySphere, "initialize", ode_geometry_sphere_init, -1 );

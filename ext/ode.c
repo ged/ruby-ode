@@ -1,26 +1,17 @@
 /*
  *		ode.c - ODE Ruby Binding
- *		$Id: ode.c,v 1.3 2002/11/23 23:08:45 deveiant Exp $
+ *		$Id: ode.c,v 1.4 2003/02/04 11:27:49 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 03:42:59 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2001, 2002 The FaerieMUD Consortium. All rights reserved.
+ *		Copyright (c) 2001, 2002, 2003 The FaerieMUD Consortium.
  *
- *		This library is free software; you can redistribute it and/or modify it
- *		under the terms of the GNU Lesser General Public License as published by
- *		the Free Software Foundation; either version 2.1 of the License, or (at
- *		your option) any later version.
- *
- *		This library is distributed in the hope that it will be useful, but
- *		WITHOUT ANY WARRANTY; without even the implied warranty of
- *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
- *		General Public License for more details.
- *
- *		You should have received a copy of the GNU Lesser General Public License
- *		along with this library (see the file LICENSE.TXT); if not, write to the
- *		Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- *		02111-1307 USA.
+ *		This work is licensed under the Creative Commons Attribution License. To
+ *		view a copy of this license, visit
+ *		http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+ *		Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
  *
  */
 
@@ -33,28 +24,36 @@
 VALUE ode_mOde;
 
 VALUE ode_eOdeObsoleteJointError;
+VALUE ode_eOdeGeometryError;
 
 VALUE ode_cOdeVector;
-VALUE ode_cOdeRotation;
+VALUE ode_cOdeQuaternion;
 VALUE ode_cOdePosition;
 VALUE ode_cOdeLinearVelocity;
 VALUE ode_cOdeAngularVelocity;
 VALUE ode_cOdeForce;
 VALUE ode_cOdeTorque;
+VALUE ode_cOdeMatrix;
 
 VALUE ode_cOdeWorld;
 VALUE ode_cOdeBody;
 VALUE ode_cOdeJointGroup;
 VALUE ode_cOdeJoint;
 VALUE ode_cOdeBallJoint;
-VALUE ode_cOdeHingeJoint;
-VALUE ode_cOdeHinge2Joint;
-VALUE ode_cOdeSliderJoint;
 VALUE ode_cOdeFixedJoint;
 VALUE ode_cOdeUniversalJoint;
 VALUE ode_cOdeContactJoint;
+
+VALUE ode_cOdeParamJoint;
+VALUE ode_cOdeHingeJoint;
+VALUE ode_cOdeHinge2Joint;
+VALUE ode_cOdeSliderJoint;
 VALUE ode_cOdeAMotorJoint;
+
 VALUE ode_cOdeMass;
+VALUE ode_cOdeMassBox;
+VALUE ode_cOdeMassSphere;
+VALUE ode_cOdeMassCapCyl;
 
 VALUE ode_cOdeContact;
 VALUE ode_cOdePlaceable;
@@ -72,29 +71,11 @@ VALUE ode_cOdeHashSpace;
 VALUE ode_cOdeSurface;
 VALUE ode_cOdeContact;
 
-
 /* 
- * Hack to work around rb_cMethod being static.
+ * Hack to work around various Ruby variables being static.
  */
 VALUE ruby_cMethod;
-
-
-/*
- * Classes/modules from the Math3d Library
- */
-VALUE math3d_cMatrix4;
-VALUE math3d_cRotation;
-VALUE math3d_cVector;
-VALUE math3d_cVector2;
-VALUE math3d_cVector3;
-VALUE math3d_cVector4;
-VALUE math3d_cLineSeg;
-VALUE math3d_cPlane;
-VALUE math3d_cBound;
-VALUE math3d_mFrust;
-VALUE math3d_cFrust;
-VALUE math3d_cOrtho;
-VALUE math3d_mMath3d;
+VALUE ruby_eLocalJumpError;
 
 
 
@@ -114,7 +95,7 @@ ode_debug(const char *fmt, ...)
 	char		buf[BUFSIZ], buf2[BUFSIZ];
 	va_list	args;
 
-	if (!RTEST(ruby_verbose)) return;
+	if (!RTEST(ruby_debug)) return;
 
 	snprintf( buf, BUFSIZ, "ODE Debug>>> %s", fmt );
 
@@ -127,8 +108,8 @@ ode_debug(const char *fmt, ...)
 }
 
 
-// Convert an ODE dMatrix3 to a Ruby Array object
-VALUE
+/* Convert an ODE dMatrix3 to a Ruby Array object */
+inline VALUE
 ode_matrix3_to_rArray( matrix )
 	 dMatrix3 matrix;
 {
@@ -146,8 +127,8 @@ ode_matrix3_to_rArray( matrix )
 }
 
 
-// Convert an ODE dVector3 to a Ruby Array object
-VALUE
+/* Convert an ODE dVector3 to a Ruby Array object */
+inline VALUE
 ode_vector3_to_rArray( vector )
 	 dVector3 vector;
 {
@@ -161,14 +142,18 @@ ode_vector3_to_rArray( vector )
 }
 
 
-// Convert an object to a 3-element array
-VALUE
+/* Convert an object to a 3-element array */
+inline VALUE
 ode_obj_to_ary3( obj, name )
 	 VALUE		obj;
 	 const char	*name;
 {
 	VALUE	ary;
 
+	if ( !rb_respond_to(obj, rb_intern("to_ary")) )
+		rb_raise( rb_eTypeError, "no implicit conversion from %s to Array for %s",
+				  rb_class2name(CLASS_OF( obj )),
+				  name );
 	ary = rb_funcall( obj, rb_intern("to_ary"), 0, 0 );
 	debugMsg(( "ode_obj_to_ary3: to_ary returned '%s'",
 			   STR2CSTR(rb_funcall( ary, rb_intern("inspect"), 0, 0 )) ));
@@ -186,8 +171,8 @@ ode_obj_to_ary3( obj, name )
 	return ary;
 }
 
-// Convert an object to a 4-element array
-VALUE
+/* Convert an object to a 4-element array */
+inline VALUE
 ode_obj_to_ary4( obj, name )
 	 VALUE		obj;
 	 const char	*name;
@@ -211,33 +196,139 @@ ode_obj_to_ary4( obj, name )
 	return ary;
 }
 
-// Convert an ODE::Rotation object to a dMatrix3
-void
-ode_rotation_to_dMatrix3( rotation, matrix )
-	 VALUE		rotation;
+/* Convert an ODE::Quaternion object to a dMatrix3 */
+inline void
+ode_quaternion_to_dMatrix3( quaternion, matrix )
+	 VALUE		quaternion;
 	 dMatrix3	matrix;
 {
 	VALUE			rarray;
 	
-	// Fetch the rotation as axis & angle
-	rarray = rb_funcall( rotation, rb_intern("to_ary"), 0, 0 );
+	/* Fetch the quaternion as axis & angle */
+	rarray = rb_funcall( quaternion, rb_intern("to_ary"), 0, 0 );
 
 	if ( TYPE(rarray) != T_ARRAY )
-		rb_bug( "Rotation#to_ary did not return an array" );
+		rb_bug( "Quaternion#to_ary did not return an array" );
 	else if ( RARRAY(rarray)->len != 4 )
-		rb_bug( "Rotation array only contains %d components instead of 4.",
+		rb_bug( "Quaternion array only contains %d components instead of 4.",
 				RARRAY(rarray)->len );
 
-	debugMsg(( "Rotation -> array: %s",
+	debugMsg(( "Quaternion -> array: %s",
 			   STR2CSTR(rb_funcall( rarray, rb_intern("inspect"), 0, 0 )) ));
 	
-	// Convert to a dMatrix3 from the axis & angle
+	/* Convert to a dMatrix3 from the axis & angle */
 	dRFromAxisAndAngle( matrix,
 						(dReal) NUM2DBL(*(RARRAY(rarray)->ptr  )),
 						(dReal) NUM2DBL(*(RARRAY(rarray)->ptr+1)),
 						(dReal) NUM2DBL(*(RARRAY(rarray)->ptr+2)),
 						(dReal) NUM2DBL(*(RARRAY(rarray)->ptr+3)) );
 }
+
+
+/*
+ * Test the arity of the specified block, making sure that it's either of
+ * variable arity or at least the arity specified, and raising an ArgumentError
+ * if not.
+ */
+inline void
+ode_check_arity( block, minArity )
+	 VALUE		block;
+	 const int	minArity;
+{
+	int arity = NUM2INT(rb_funcall( block, rb_intern("arity"), 0 ));
+
+	if ( arity > -1 && arity < minArity )
+		rb_raise( rb_eArgError,
+				  "Not enough parameters for block (requires at least %d, got %d)",
+				  minArity, arity );
+}
+
+
+/*
+ * Return a string containing the class name associated with a given dGeomID.
+ */ 
+static const char*
+ode_get_geom_class( obj )
+	 dGeomID	obj;
+{
+	char *class;
+
+	switch( dGeomGetClass(obj) ) {
+
+	case dSphereClass:
+		class = "Sphere";
+		break;
+
+	case dBoxClass:
+		class = "Box";
+		break;
+
+	case dCCylinderClass:
+		class = "Capped cylinder";
+		break;
+
+	case dCylinderClass:
+		class = "Regular flat-ended cylinder";
+		break;
+
+	case dPlaneClass:
+		class = "Infinite plane (non-placeable)";
+		break;
+
+	case dGeomTransformClass:
+		class = "Geometry transform";
+		break;
+
+	case dRayClass:
+		class = "Ray";
+		break;
+
+	case dTriMeshClass:
+		class = "Triangle mesh";
+		break;
+
+	case dSimpleSpaceClass:
+		class = "Simple space";
+		break;
+
+	case dHashSpaceClass:
+		class = "Hash table based space";
+		break;
+
+	default:
+		class = "(Unknown)";
+	}
+
+	return class;
+}
+
+
+/*
+ * Delegator for collision "near" callbacks. Called from
+ * ode_space_each_adjacent_pair() and ode_geometry_isect() when two geometries
+ * in a space are potentially colliding.
+*/
+void
+ode_near_callback( callback, o1, o2 )
+	 ode_CALLBACK	*callback;
+	 dGeomID		o1, o2;
+{
+	ode_GEOMETRY		*geom1, *geom2;
+	static const char	*class1, *class2;
+
+	class1 = ode_get_geom_class( o1 );
+	class2 = ode_get_geom_class( o2 );
+
+	debugMsg(( "In near callback with %p (%s) and %p (%s).", o1, class1, o2, class2 ));
+
+	geom1 = dGeomGetData( o1 );
+	geom2 = dGeomGetData( o2 );
+
+	rb_funcall( callback->callback, rb_intern("call"), 3,
+				geom1->object, geom2->object, callback->args );
+}
+
+
 
 
 /* --------------------------------------------------
@@ -247,24 +338,28 @@ void
 Init_ode()
 {
 	static char
-		rcsid[]		= "$Id: ode.c,v 1.3 2002/11/23 23:08:45 deveiant Exp $",
-		revision[]	= "$Revision: 1.3 $";
+		rcsid[]		= "$Id: ode.c,v 1.4 2003/02/04 11:27:49 deveiant Exp $",
+		revision[]	= "$Revision: 1.4 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 	VALUE features	= rb_hash_new();
 
-	// Modules
+	ode_debug( "Loading Ruby ODE binding v%s", STR2CSTR(vstr) );
+
+	/* Modules */
 	ode_mOde = rb_define_module( "ODE" );
 
-	// Module constants
+	/* Module constants */
 	rb_obj_freeze( vstr );
 	rb_define_const( ode_mOde, "Version", vstr );
 	vstr = rb_str_new2( rcsid );
 	rb_obj_freeze( vstr );
 	rb_define_const( ode_mOde, "Rcsid", vstr );
 
-	rb_define_const( ode_mOde, "PI", rb_float_new(M_PI) );
+	rb_define_const( ode_mOde, "Pi", rb_float_new(M_PI) );
 	rb_define_const( ode_mOde, "Infinity", rb_float_new(dInfinity) );
+	rb_define_const( ode_mOde, "ROTATION_INFINITESIMAL", INT2FIX(0) );
+	rb_define_const( ode_mOde, "ROTATION_FINITE", INT2FIX(1) );
 
 #ifdef dDOUBLE
 	vstr = rb_str_new2("dDOUBLE");
@@ -288,31 +383,12 @@ Init_ode()
 	rb_const_set( ode_mOde, rb_intern("Features"), features );
 
 
-	// Find the 'Method' class (as rb_cMethod is static to eval.c for some
-	// reason).
-	ruby_cMethod		= rb_const_get( rb_cObject,		rb_intern("Method") );
+	/* Find the 'Method' and LocalJumpError classes (as rb_cMethod and
+	   rb_eLocalJumpError are static for some reason). */
+	ruby_cMethod		 = rb_const_get( rb_cObject,	rb_intern("Method") );
+	ruby_eLocalJumpError = rb_const_get( rb_cObject,	rb_intern("LocalJumpError") );
 
-
-	// Require the math3d library
-	rb_require( "math3d" );
-  
-	// Load the Math3d constants so we can use them
-	math3d_mMath3d		= rb_const_get( rb_cObject,		rb_intern("Math3d") ); 
-	math3d_cMatrix4		= rb_const_get( math3d_mMath3d,	rb_intern("Matrix4") );
-	math3d_cRotation	= rb_const_get( math3d_mMath3d,	rb_intern("Rotation") );
-	math3d_cVector		= rb_const_get( math3d_mMath3d,	rb_intern("Vector") );
-	math3d_cVector2		= rb_const_get( math3d_mMath3d,	rb_intern("Vector2") );
-	math3d_cVector3		= rb_const_get( math3d_mMath3d,	rb_intern("Vector3") );
-	math3d_cVector4		= rb_const_get( math3d_mMath3d,	rb_intern("Vector4") );
-	math3d_cLineSeg		= rb_const_get( math3d_mMath3d,	rb_intern("LineSeg") );
-	math3d_cPlane		= rb_const_get( math3d_mMath3d,	rb_intern("Plane") );
-	math3d_cBound		= rb_const_get( math3d_mMath3d,	rb_intern("Bound") );
-	math3d_mFrust		= rb_const_get( math3d_mMath3d,	rb_intern("FrustumModule") );
-	math3d_cFrust		= rb_const_get( math3d_mMath3d,	rb_intern("Frustum") );
-	math3d_cOrtho		= rb_const_get( math3d_mMath3d,	rb_intern("Ortho") );
-  
-
-	// Load ruby half of the class library and fetch the class objects
+	/* Load ruby half of the class library and fetch the class objects */
 	rb_require( "ode/Vector" );
 	ode_cOdeVector			= rb_const_get( ode_mOde, rb_intern("Vector") );
 
@@ -328,37 +404,45 @@ Init_ode()
 	rb_require( "ode/Position" );
 	ode_cOdePosition		= rb_const_get( ode_mOde, rb_intern("Position") );
 
-	rb_require( "ode/Rotation" );
-	ode_cOdeRotation		= rb_const_get( ode_mOde, rb_intern("Rotation") );
+	rb_require( "ode/Quaternion" );
+	ode_cOdeQuaternion		= rb_const_get( ode_mOde, rb_intern("Quaternion") );
 
 	rb_require( "ode/Torque" );
 	ode_cOdeTorque			= rb_const_get( ode_mOde, rb_intern("Torque") );
 
-	// Add some ODE constants to a few of the classes
-	rb_define_const( ode_cOdeRotation, "INFINITESIMAL", INT2FIX(0) );
-	rb_define_const( ode_cOdeRotation, "FINITE",		INT2FIX(1) );
+	rb_require( "ode/Matrix" );
+	ode_cOdeMatrix			= rb_const_get( ode_mOde, rb_intern("Matrix") );
 
 
-	// Define exception class/es
+	/* Define exception class/es */
 	ode_eOdeObsoleteJointError =
 		rb_define_class_under( ode_mOde, "ObsoleteJointError", rb_eRuntimeError );
+	ode_eOdeGeometryError =
+		rb_define_class_under( ode_mOde, "GeometryError", rb_eRuntimeError );
 
-	// Define the ODE classes
+
+	/* Define the ODE classes */
 	ode_cOdeWorld			= rb_define_class_under( ode_mOde, "World", rb_cObject );
 	ode_cOdeBody			= rb_define_class_under( ode_mOde, "Body", rb_cObject );
 	ode_cOdeJointGroup		= rb_define_class_under( ode_mOde, "JointGroup", rb_cObject );
 	ode_cOdeJoint			= rb_define_class_under( ode_mOde, "Joint", rb_cObject );
 	ode_cOdeBallJoint		= rb_define_class_under( ode_mOde, "BallJoint", ode_cOdeJoint );
-	ode_cOdeHingeJoint		= rb_define_class_under( ode_mOde, "HingeJoint", ode_cOdeJoint );
-	ode_cOdeHinge2Joint		= rb_define_class_under( ode_mOde, "Hinge2Joint", ode_cOdeJoint );
-	ode_cOdeSliderJoint		= rb_define_class_under( ode_mOde, "SliderJoint", ode_cOdeJoint );
 	ode_cOdeFixedJoint		= rb_define_class_under( ode_mOde, "FixedJoint", ode_cOdeJoint );
 	ode_cOdeUniversalJoint	= rb_define_class_under( ode_mOde, "UniversalJoint", ode_cOdeJoint );
 	ode_cOdeContactJoint	= rb_define_class_under( ode_mOde, "ContactJoint", ode_cOdeJoint );
-	ode_cOdeAMotorJoint		= rb_define_class_under( ode_mOde, "AngularMotorJoint", ode_cOdeJoint );
-	ode_cOdeMass			= rb_define_class_under( ode_mOde, "Mass", rb_cObject );
 
-	// ODE Collision classes
+	ode_cOdeParamJoint		= rb_define_class_under( ode_mOde, "ParameterizedJoint", ode_cOdeJoint );
+	ode_cOdeHingeJoint		= rb_define_class_under( ode_mOde, "HingeJoint", ode_cOdeParamJoint );
+	ode_cOdeHinge2Joint		= rb_define_class_under( ode_mOde, "Hinge2Joint", ode_cOdeParamJoint );
+	ode_cOdeSliderJoint		= rb_define_class_under( ode_mOde, "SliderJoint", ode_cOdeParamJoint );
+	ode_cOdeAMotorJoint		= rb_define_class_under( ode_mOde, "AngularMotorJoint", ode_cOdeParamJoint );
+
+	ode_cOdeMass			= rb_define_class_under( ode_mOde, "Mass", rb_cObject );
+	ode_cOdeMassBox			= rb_define_class_under( ode_cOdeMass, "Box", ode_cOdeMass );
+	ode_cOdeMassSphere		= rb_define_class_under( ode_cOdeMass, "Sphere", ode_cOdeMass );
+	ode_cOdeMassCapCyl		= rb_define_class_under( ode_cOdeMass, "CappedCylinder", ode_cOdeMass );
+
+	/* ODE Collision classes */
 	ode_cOdeContact			= rb_define_class_under( ode_mOde, "Contact", rb_cObject );
 
 	ode_cOdeGeometry		= rb_define_class_under( ode_mOde, "Geometry", rb_cObject );
@@ -379,10 +463,9 @@ Init_ode()
 	ode_cOdeContact			= rb_define_class_under( ode_mOde, "Contact", rb_cObject );
 	ode_cOdeSurface			= rb_define_class_under( ode_mOde, "Surface", rb_cObject );
 
-
-	// Init the other modules
+	/* Init the other modules */
 	ode_init_world();
-	// ode_init_space();
+	ode_init_space();
 	ode_init_body();
 	ode_init_mass();
 	ode_init_joints();

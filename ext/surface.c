@@ -1,27 +1,17 @@
 /*
  *		surface.c - ODE Ruby Binding - ODE::Surface class
- *		$Id: surface.c,v 1.1 2002/11/23 23:08:10 deveiant Exp $
- *		Time-stamp: <23-Nov-2002 13:03:20 deveiant>
+ *		$Id: surface.c,v 1.2 2003/02/04 11:27:49 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 03:42:01 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2002 The FaerieMUD Consortium. All rights reserved.
+ *		Copyright (c) 2002, 2003 The FaerieMUD Consortium.
  *
- *		This library is free software; you can redistribute it and/or modify it
- *		under the terms of the GNU Lesser General Public License as published by
- *		the Free Software Foundation; either version 2.1 of the License, or (at
- *		your option) any later version.
- *
- *		This library is distributed in the hope that it will be useful, but
- *		WITHOUT ANY WARRANTY; without even the implied warranty of
- *		MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU Lesser
- *		General Public License for more details.
- *
- *		You should have received a copy of the GNU Lesser General Public License
- *		along with this library (see the file LICENSE.TXT); if not, write to the
- *		Free Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
- *		02111-1307 USA.
+ *		This work is licensed under the Creative Commons Attribution License. To
+ *		view a copy of this license, visit
+ *		http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+ *		Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
  *
  */
 
@@ -88,7 +78,7 @@ ode_surface_alloc()
 	dSurfaceParameters *ptr = ALLOC( dSurfaceParameters );
 
 	ptr->mode		= 0;
-	ptr->mu			= 0.f;
+	ptr->mu			= dInfinity;
 
 	ptr->mu2		= 0.f;
 	ptr->bounce		= 0.f;
@@ -195,6 +185,53 @@ ode_surface_init( argc, argv, self )
 	return self;
 }
 
+
+/*
+ * Average two dReals.
+ */
+static dReal
+average( val1, val2 )
+	 dReal	val1, val2;
+{
+	if ( val1 == dInfinity || val2 == dInfinity ) return dInfinity;
+	return (dReal)(( val1 + val2 ) / 2.0);
+}
+
+
+/*
+ * |( otherSurface )
+ * --
+ * Combine the receiver with the <tt>otherSurface</tt> and return the new
+ * surface.
+ */
+static VALUE
+ode_surface_combine( self, otherSurface )
+	 VALUE self, otherSurface;
+{
+	dSurfaceParameters *surface	= get_surface( self );
+	dSurfaceParameters *other	= get_surface( otherSurface );
+
+	VALUE newSurface = rb_class_new_instance( 0, 0, CLASS_OF(self) );
+	dSurfaceParameters *ptr = get_surface( newSurface );
+
+	/* This is by no means perfect, and probably not even mathematically or
+	   physically correct, but it does the job for now. Suggestions for a better
+	   way to do this welcomed. */
+	ptr->mode		= surface->mode | other->mode;
+	ptr->mu			= average( surface->mu, other->mu );
+	ptr->mu2		= average( surface->mu2, other->mu2 );
+
+	ptr->bounce		= average( surface->bounce, other->bounce );
+	ptr->bounce_vel	= average( surface->bounce_vel, other->bounce_vel );
+	ptr->soft_erp	= average( surface->soft_erp, other->soft_erp );
+	ptr->soft_cfm	= average( surface->soft_cfm, other->soft_cfm );
+	ptr->motion1	= average( surface->motion1, other->motion1 );
+	ptr->motion2	= average( surface->motion2, other->motion2 );
+	ptr->slip1		= average( surface->slip1, other->slip1 );
+	ptr->slip2		= average( surface->slip2, other->slip2 );
+
+	return newSurface;
+}
 
 /*
  * mode()
@@ -349,7 +386,7 @@ ode_surface_mu2_p( self )
 /*
  * bounce()
  * --
- * Get the surface's elasticity as the coefficient of restitution; which will be
+ * Get the surface's elasticity as the coefficient of restitution, which will be
  * a value between 0 and 1, inclusive. 0 means the surfaces are not elastic at
  * all; 1 is perfect elasticity.
  */
@@ -378,7 +415,6 @@ ode_surface_set_bounce( self, newBounce )
 	 VALUE self, newBounce;
 {
 	dSurfaceParameters	*surface = get_surface(self);
-
 
 	if (RTEST( newBounce )) {
 		dReal bounce = NUM2DBL( newBounce );
@@ -1024,8 +1060,8 @@ ode_surface_friction_model2_p( self )
 void ode_init_surface()
 {
 	static char
-		rcsid[]		= "$Id: surface.c,v 1.1 2002/11/23 23:08:10 deveiant Exp $",
-		revision[]	= "$Revision: 1.1 $";
+		rcsid[]		= "$Id: surface.c,v 1.2 2003/02/04 11:27:49 deveiant Exp $",
+		revision[]	= "$Revision: 1.2 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 
@@ -1034,12 +1070,19 @@ void ode_init_surface()
 	rb_define_const( ode_cOdeSurface, "Rcsid", rb_str_new2(rcsid) );
 
 	/* Constructor */
+#ifdef NEW_ALLOC
+	rb_define_alloc_func( ode_cOdeSurface, ode_surface_s_alloc );
+#else
 	rb_define_singleton_method( ode_cOdeSurface, "allocate", ode_surface_s_alloc, 0 );
+#endif
 
 	/* Initializers */
 	rb_define_method( ode_cOdeSurface, "initialize", ode_surface_init, -1 );
 	rb_enable_super ( ode_cOdeSurface, "initialize" );
 
+	/* Operators */
+	rb_define_method( ode_cOdeSurface, "|", ode_surface_combine, 1 );
+	
 	/* Accessors */
 	rb_define_method( ode_cOdeSurface, "mode", ode_surface_get_mode, 0 );
 	rb_define_method( ode_cOdeSurface, "mode=", ode_surface_set_mode, 1 );
