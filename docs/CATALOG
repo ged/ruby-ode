@@ -1,0 +1,17 @@
+# -*- default-generic -*-
+#
+# Time-stamp: <04-Feb-2003 13:53:33 deveiant>
+# $Id: CATALOG,v 1.1 2003/02/08 08:22:39 deveiant Exp $
+#
+# This is the list of files that contain documentation readable by Rdoc. It is
+# read by functions in utils.rb.
+#
+
+README
+TODO
+ChangeLog
+ext/*.c
+ext/*.h
+examples/*.rb
+lib/ode/*.rb
+

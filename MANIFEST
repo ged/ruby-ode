@@ -1,0 +1,28 @@
+# -*- default-generic -*-
+#
+# Time-stamp: <04-Feb-2003 10:15:45 deveiant>
+# $Id: MANIFEST,v 1.1 2003/02/08 08:22:40 deveiant Exp $
+#
+# This is the list of files that belong in distributions. It is used by
+# makedist.rb and a few other utilities. It is read by functions in utils.rb.
+#
+#
+
+ChangeLog
+INSTALL
+MANIFEST
+README
+TODO
+docs/CATALOG
+docs/lib/**/*
+docs/makedocs.rb
+docs/stylesheets/*
+ext/*.c
+ext/*.h
+ext/extconf.rb
+hostreport.rb
+extconf.rb
+lib/**/*
+test.rb
+tests/**/*
+utils.rb
