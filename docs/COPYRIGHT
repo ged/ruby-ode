@@ -1,12 +1,13 @@
 # 
 # == Copyright
 # 
-# Copyright (c) 2000-2002 The FaerieMUD Consortium. All rights reserved.
+# Copyright (c) 2000-2003 The FaerieMUD Consortium.
 # 
-# This module is free software. You may use, modify, and/or redistribute this
-# software under the terms of the Perl Artistic License. (See
-# http://language.perl.com/misc/Artistic.html)
-#  
+# This work is licensed under the Creative Commons Attribution License. To
+# view a copy of this license, visit
+# http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+# Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
+#
 # THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES,
 # INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND
 # FITNESS FOR A PARTICULAR PURPOSE.
