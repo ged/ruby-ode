@@ -4,16 +4,17 @@
 #
 #
 
-$LOAD_PATH.unshift "lib", "ext"
+BEGIN { $LOAD_PATH.unshift "tests", "lib", "ext" }
 
 require 'find'
 require 'test/unit'
 require 'test/unit/testsuite'
-# begin
-# 	require 'test/unit/ui/fox/testrunner'
-# rescue
-	require 'test/unit/ui/console/testrunner'
-#end
+require 'test/unit/ui/console/testrunner'
+require 'odeunittest'
+
+if Object::const_defined?( :Fox )
+ 	require 'test/unit/ui/fox/testrunner'
+end
 
 if ARGV.length.nonzero?
 	patsrc = "(" + ARGV.join('|') + ")"
@@ -42,15 +43,13 @@ class ODETests
 		classes = []
 
 		ObjectSpace.each_object( Class ) {|klass|
-			if klass < Test::Unit::TestCase
+			if klass < ODE::TestCase
 				classes << klass
 			end
 		}
 
 		$stderr.puts "WARNING: No matching testcases found." if classes.empty?
-		classes.each {|klass|
-			@suite.add( klass.suite )
-		}
+		classes.each {|klass| @suite << klass.suite }
 	end
 
 	attr_accessor :suite
@@ -68,6 +67,7 @@ class ODETests
 	end
 end
 
+$defout.sync = true
 
 if ENV.key?( "DISPLAY" ) && Object::const_defined?( :Fox )
 	Test::Unit::UI::Fox::TestRunner.run( ODETests::new )
