@@ -1,59 +1,142 @@
 #!/usr/bin/ruby
 
-require "walkit/cli_script"
+begin
+	require "odeunittest"
+rescue
+	require "../odeunittest"
+end
+
 require "ode"
 
-class Joint_tests < Walkit::Testclass
+class Joint_tests < ODE::TestCase
 
-	JointClasses = [ODE::BallJoint, ODE::HingeJoint, ODE::Hinge2Joint,
-		ODE::SliderJoint, ODE::ContactJoint, ODE::FixedJoint]
-	JointGroupMaxSize = (16*1024)
+	JointClasses = [
+		ODE::BallJoint,
+		ODE::HingeJoint,
+		ODE::Hinge2Joint,
+		ODE::SliderJoint,
+		ODE::FixedJoint,
+		#	ODE::ContactJoint, 
+	]
+
 	@world = nil
-	
-	def setup
+
+	# Setup preconditions
+	def set_up
 		@world = ODE::World.new
 	end
 
-	def teardown
+	# Remove preconditions
+	def tear_down
 		@world = nil
+		collectGarbage()
 	end
-
+	
+	# Create joint objects without a JointGroup
 	def test_00_create
-		vet { assert_exception(RuntimeError) { ODE::Joint.new } }
+		testHeader "Test creation of Joints without JointGroups"
+
+		assert_raises(RuntimeError) { ODE::Joint.new } 
 
 		JointClasses.each {|klass|
-			vet {
-				joint = nil
-				assert_exception(ArgumentError) { klass.new } 
-				assert_no_exception { joint = klass.new(@world) }
-				assert_instance_of( klass, joint )
-			}
+			joint = nil
+
+			debugMsg "Create: Testing the #{klass.name} class."
+			assert_raises(ArgumentError) { klass.new } 
+			assert_nothing_raised { joint = klass.new(@world) }
+			assert_instance_of( klass, joint )
+
+			debugMsg "Clobbering joint"
+			$stderr.flush
+			joint = nil
+			collectGarbage()
 		}
 	end
 
+	# Create an empty JointGroup
 	def test_01_create_jointGroup
+		testHeader "Test creation of empty JointGroups"
+
 		jointGroup = nil
-		vet { assert_exception(ArgumentError) { ODE::JointGroup.new } }
-		vet { assert_exception(TypeError) { ODE::JointGroup.new("world") } }
-		vet { assert_no_exception { ODE::JointGroup.new(JointGroupMaxSize) } }
+
+		assert_raises(TypeError) { ODE::JointGroup.new("world") } 
+		collectGarbage()
+
+		assert_nothing_raised { ODE::JointGroup.new } 
+		collectGarbage()
+
+		assert_nothing_raised { ODE::JointGroup.new(ODE::SliderJoint) } 
+		collectGarbage()
 	end
 
+	# Create joints in a JointGroup
 	def test_02_create_with_jointGroup
+		testHeader "Test creation of Joints with JointGroups"
+
 		JointClasses.each {|klass|
-			vet {
-				jointGroup = ODE::JointGroup.new(JointGroupMaxSize)
-				joint = nil
-				assert_exception(TypeError) { klass.new(@world, "jointGroup") } 
-				assert_no_exception { joint = klass.new(@world, jointGroup) }
-				assert_instance_of( klass, joint )
-			}
+			joint = nil
+
+			debugMsg "Creating a JointGroup."
+			jointGroup = ODE::JointGroup.new
+
+			assert_raises(TypeError) { klass.new(@world, "jointGroup") } 
+
+			debugMsg "Create with JointGroup: Testing the '#{klass.name}' class."
+			assert_nothing_raised { joint = klass.new(@world, jointGroup) }
+			assert_instance_of( klass, joint )
+
+			debugMsg "Clobbering joint"
+			joint = nil
+			collectGarbage()
 		}
 	end
 
+	# Create joints in a JointGroup
+	def test_03_create_many_with_jointGroup
+		testHeader "Test creation of Many Joints with a single JointGroup"
+
+		debugMsg "Creating a JointGroup."
+		jointGroup = ODE::JointGroup.new
+
+		JointClasses.each {|klass|
+			joint = nil
+
+			debugMsg "Create Many with JointGroup: Adding a '#{klass.name}' object."
+			assert_nothing_raised { joint = klass.new(@world, jointGroup) }
+			assert_instance_of( klass, joint )
+
+			debugMsg "Clobbering joint"
+			joint = nil
+			collectGarbage()
+		}
+
+		debugMsg "Clobbering jointGroup"
+		jointGroup = nil
+		collectGarbage()
+	end
+
+	# Test joint obsoletion
+	def test_04_joint_obsoletion
+		testHeader "Test obsoletion of joints after destroying JointGroup"
+
+		debugMsg "Creating a JointGroup."
+		jointGroup = ODE::JointGroup.new
+		joints = []
+
+		JointClasses.each {|klass|
+			debugMsg "Obsoletion: Adding a '#{klass.name}'."
+			joints.push klass.new(@world, jointGroup)
+		}
+
+		debugMsg "Emptying jointGroup"
+		jointGroup.empty
+
+		joints.each {|j|
+			assert j.obsolete?
+			assert_raises( ODE::ObsoleteJointError ) { j.attachedBodies }
+		}
+	end
 
 end
 
-if $0 == __FILE__
-    Walkit::Cli_script.new.select([Joint_tests], $*.shift)
-end
 

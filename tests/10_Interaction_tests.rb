@@ -1,27 +1,28 @@
 #!/usr/bin/ruby
 
-require "walkit/cli_script"
+if File.directory? "src"
+	$:.unshift "src"
+elsif File.directory? "../src"
+	$:.unshift "../src"
+end
+
+require "test/unit"
 require "ode"
 
-class Interaction_test < Walkit::Testclass
+class Interaction_test < Test::Unit::TestCase
 
 	def test_00_world_scope
 		body = nil
 
 		# Test to be sure the world going out of scope doesn't hork our body
 		# object, which is still in scope.
-		vet {
-			body = ODE::World.new.createBody
+		body = ODE::World.new.createBody
 
-			100.times { ODE::World.new ; GC.start }
-			assert_no_exception { body.position }
-		}
+		100.times { ODE::World.new ; GC.start }
+		assert_nothing_raised { body.position }
 	end
 
 	def test_01_simple
-		vet {
-		}
-		
 	end
 
 end
