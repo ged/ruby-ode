@@ -1,7 +1,7 @@
 /*
  *		space.c - ODE Ruby Binding - ODE::Space class
- *		$Id: space.c,v 1.2 2003/02/04 11:27:49 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:42:14 deveiant>
+ *		$Id: space.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 15:38:09 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -434,9 +434,11 @@ ode_space_each( self )
 
 
 /*
- * 
+ * eachAdjacentPair( *data ) {|geom1, geom2, *data| block }
  * --
- * 
+ * Call the specified <tt>block</tt> once for each adjacent pair of
+ * ODE::Geometry objects in the receiving space. The block must accept three
+ * arguments: the two geometries and a <tt>data</tt> Array.
  */
 static VALUE
 ode_space_each_adjacent_pair( argc, argv, self )
@@ -502,10 +504,17 @@ ode_hashspace_set_levels( self, minlevel, maxlevel )
 void ode_init_space()
 {
 	static char
-		rcsid[]		= "$Id: space.c,v 1.2 2003/02/04 11:27:49 deveiant Exp $",
-		revision[]	= "$Revision: 1.2 $";
+		rcsid[]		= "$Id: space.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $",
+		revision[]	= "$Revision: 1.3 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
+
+	/* Kluge to make Rdoc see the class in this file */
+#if FOR_RDOC_PARSER
+	ode_mOde = rb_define_module( "ODE" );
+	ode_cOdeSpace			= rb_define_class_under( ode_mOde, "Space", ode_cOdeGeometry );
+	ode_cOdeHashSpace		= rb_define_class_under( ode_mOde, "HashSpace", ode_cOdeSpace );
+#endif
 
 	/* --- ODE::Space ------------------------------ */
 	/* Constants */

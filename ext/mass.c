@@ -1,7 +1,7 @@
 /*
  *		mass.c - ODE Ruby Binding - Mass object class
- *		$Id: mass.c,v 1.4 2003/02/04 11:27:49 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:42:53 deveiant>
+ *		$Id: mass.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 15:32:18 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -443,6 +443,15 @@ ode_mass_box_init( argc, argv, self )
 void
 ode_init_mass(void)
 {
+
+	/* Kluge to make Rdoc see the class in this file */
+#if FOR_RDOC_PARSER
+	ode_mOde = rb_define_module( "ODE" );
+	ode_cOdeMass			= rb_define_class_under( ode_mOde, "Mass", rb_cObject );
+	ode_cOdeMassBox			= rb_define_class_under( ode_cOdeMass, "Box", ode_cOdeMass );
+	ode_cOdeMassSphere		= rb_define_class_under( ode_cOdeMass, "Sphere", ode_cOdeMass );
+	ode_cOdeMassCapCyl		= rb_define_class_under( ode_cOdeMass, "CappedCylinder", ode_cOdeMass );
+#endif
 
 	/* Allocator */
 #ifdef NEW_ALLOC

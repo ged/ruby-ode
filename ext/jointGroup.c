@@ -1,7 +1,7 @@
 /*
  *		jointGroup.c - ODE Ruby Binding - JointGroup Class
- *		$Id: jointGroup.c,v 1.4 2003/02/04 11:27:15 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:43:32 deveiant>
+ *		$Id: jointGroup.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 15:13:02 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -388,13 +388,16 @@ void
 ode_init_jointGroup(void)
 {
 	static char
-		rcsid[]		= "$Id: jointGroup.c,v 1.4 2003/02/04 11:27:15 deveiant Exp $",
-		revision[]	= "$Revision: 1.4 $";
+		rcsid[]		= "$Id: jointGroup.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $",
+		revision[]	= "$Revision: 1.5 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 
-	/* Load the Ruby half of the class */
-	rb_require( "ode/JointGroup" );
+	/* Kluge to make Rdoc see the class in this file */
+#if FOR_RDOC_PARSER
+	ode_mOde = rb_define_module( "ODE" );
+	ode_cOdeJointGroup		= rb_define_class_under( ode_mOde, "JointGroup", rb_cObject );
+#endif
 
 	/* Constants */
 	rb_obj_freeze( vstr );
@@ -417,5 +420,7 @@ ode_init_jointGroup(void)
 	rb_define_method( ode_cOdeJointGroup, "empty", ode_jointGroup_empty, 0 );
 	rb_define_method( ode_cOdeJointGroup, "empty?", ode_jointGroup_empty_p, 0 );
 
+	/* Load the Ruby half of the class */
+	rb_require( "ode/JointGroup" );
 }
 

@@ -1,7 +1,7 @@
 /*
  *		contact.c - ODE Ruby Binding - ODE::Contact class
- *		$Id: contact.c,v 1.2 2003/02/04 11:25:50 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:37:44 deveiant>
+ *		$Id: contact.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 15:09:29 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -610,10 +610,15 @@ ode_contact_fdir1_eq( self, direction )
 void ode_init_contact()
 {
 	static char
-		rcsid[]		= "$Id: contact.c,v 1.2 2003/02/04 11:25:50 deveiant Exp $",
-		revision[]	= "$Revision: 1.2 $";
+		rcsid[]		= "$Id: contact.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $",
+		revision[]	= "$Revision: 1.3 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
+
+#if FOR_RDOC_PARSER
+	ode_mOde = rb_define_module( "ODE" );
+	ode_cOdeContact = rb_define_class_under( ode_mOde, "Contact", rb_cObject );
+#endif
 
 	/* Constants */
 	rb_obj_freeze( vstr );

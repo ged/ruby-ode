@@ -1,7 +1,7 @@
 /*
  *		world.c - ODE Ruby Binding - World Class
- *		$Id: world.c,v 1.4 2003/02/04 11:27:49 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:41:33 deveiant>
+ *		$Id: world.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 15:33:52 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -351,6 +351,14 @@ ode_world_imp2force( self, stepsize, ix, iy, iz )
 void
 ode_init_world()
 {
+
+	/* Kluge to make Rdoc see the class in this file */
+#if FOR_RDOC_PARSER
+	ode_mOde = rb_define_module( "ODE" );
+	ode_cOdeWorld = rb_define_class_under( ode_mOde, "World", rb_cObject );
+#endif
+
+
 	/* Allocator */
 #ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeWorld, ode_world_s_alloc );

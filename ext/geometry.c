@@ -1,7 +1,7 @@
 /*
  *		geometry.c - ODE Ruby Binding - ODE::Geometry class
- *		$Id: geometry.c,v 1.2 2003/02/04 11:27:01 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:43:37 deveiant>
+ *		$Id: geometry.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 15:12:05 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -1638,10 +1638,29 @@ ode_geometry_cylinder_length_eq( self, newLength )
 void ode_init_geometry()
 {
 	static char
-		rcsid[]		= "$Id: geometry.c,v 1.2 2003/02/04 11:27:01 deveiant Exp $",
-		revision[]	= "$Revision: 1.2 $";
+		rcsid[]		= "$Id: geometry.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $",
+		revision[]	= "$Revision: 1.3 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
+
+	/* Kluge to make Rdoc see the class in this file */
+#if FOR_RDOC_PARSER
+	ode_mOde = rb_define_module( "ODE" );
+	ode_cOdeGeometry		= rb_define_class_under( ode_mOde, "Geometry", rb_cObject );
+	ode_cOdeGeometryPlane	= rb_define_class_under( ode_cOdeGeometry, "Plane", ode_cOdeGeometry );
+
+	ode_cOdePlaceable		= rb_define_class_under( ode_cOdeGeometry, "Placeable", ode_cOdeGeometry );
+	ode_cOdeGeometrySphere	= rb_define_class_under( ode_cOdeGeometry, "Sphere", ode_cOdePlaceable );
+	ode_cOdeGeometryBox		= rb_define_class_under( ode_cOdeGeometry, "Box", ode_cOdePlaceable );
+	ode_cOdeGeometryCapCyl	= rb_define_class_under( ode_cOdeGeometry, "CappedCylinder", ode_cOdePlaceable );
+	ode_cOdeGeometryCylinder = rb_define_class_under( ode_cOdeGeometry, "Cylinder", ode_cOdePlaceable );
+
+	ode_cOdeGeometryTransform = rb_define_class_under( ode_cOdeGeometry, "Transform", ode_cOdeGeometry );
+	ode_cOdeGeometryTransformGroup = rb_define_class_under( ode_cOdeGeometry, "TransformGroup", ode_cOdeGeometry );
+
+	ode_cOdeSpace			= rb_define_class_under( ode_mOde, "Space", ode_cOdeGeometry );
+	ode_cOdeHashSpace		= rb_define_class_under( ode_mOde, "HashSpace", ode_cOdeSpace );
+#endif
 
 	/* Constants */
 	rb_obj_freeze( vstr );

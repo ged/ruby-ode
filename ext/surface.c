@@ -1,7 +1,7 @@
 /*
  *		surface.c - ODE Ruby Binding - ODE::Surface class
- *		$Id: surface.c,v 1.2 2003/02/04 11:27:49 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:42:01 deveiant>
+ *		$Id: surface.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 15:33:25 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -1060,14 +1060,20 @@ ode_surface_friction_model2_p( self )
 void ode_init_surface()
 {
 	static char
-		rcsid[]		= "$Id: surface.c,v 1.2 2003/02/04 11:27:49 deveiant Exp $",
-		revision[]	= "$Revision: 1.2 $";
+		rcsid[]		= "$Id: surface.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $",
+		revision[]	= "$Revision: 1.3 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 
 	/* Constants */
 	rb_define_const( ode_cOdeSurface, "Version", vstr );
 	rb_define_const( ode_cOdeSurface, "Rcsid", rb_str_new2(rcsid) );
+
+	/* Kluge to make Rdoc see the class in this file */
+#if FOR_RDOC_PARSER
+	ode_mOde = rb_define_module( "ODE" );
+	ode_cOdeSurface			= rb_define_class_under( ode_mOde, "Surface", rb_cObject );
+#endif
 
 	/* Constructor */
 #ifdef NEW_ALLOC

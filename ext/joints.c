@@ -1,7 +1,7 @@
 /*
  *		joints.c - ODE Ruby Binding - Joint Classes
- *		$Id: joints.c,v 1.4 2003/02/04 11:27:49 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:43:24 deveiant>
+ *		$Id: joints.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $
+ *		Time-stamp: <04-Feb-2003 15:31:57 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -2176,10 +2176,25 @@ void
 ode_init_joints( void )
 {
 	static char
-		rcsid[]		= "$Id: joints.c,v 1.4 2003/02/04 11:27:49 deveiant Exp $",
-		revision[]	= "$Revision: 1.4 $";
+		rcsid[]		= "$Id: joints.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $",
+		revision[]	= "$Revision: 1.5 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
+
+	/* Kluge to make Rdoc see the class in this file */
+#if FOR_RDOC_PARSER
+	ode_mOde = rb_define_module( "ODE" );
+	ode_cOdeJoint			= rb_define_class_under( ode_mOde, "Joint", rb_cObject );
+	ode_cOdeBallJoint		= rb_define_class_under( ode_mOde, "BallJoint", ode_cOdeJoint );
+	ode_cOdeFixedJoint		= rb_define_class_under( ode_mOde, "FixedJoint", ode_cOdeJoint );
+	ode_cOdeUniversalJoint	= rb_define_class_under( ode_mOde, "UniversalJoint", ode_cOdeJoint );
+	ode_cOdeContactJoint	= rb_define_class_under( ode_mOde, "ContactJoint", ode_cOdeJoint );
+	ode_cOdeParamJoint		= rb_define_class_under( ode_mOde, "ParameterizedJoint", ode_cOdeJoint );
+	ode_cOdeHingeJoint		= rb_define_class_under( ode_mOde, "HingeJoint", ode_cOdeParamJoint );
+	ode_cOdeHinge2Joint		= rb_define_class_under( ode_mOde, "Hinge2Joint", ode_cOdeParamJoint );
+	ode_cOdeSliderJoint		= rb_define_class_under( ode_mOde, "SliderJoint", ode_cOdeParamJoint );
+	ode_cOdeAMotorJoint		= rb_define_class_under( ode_mOde, "AngularMotorJoint", ode_cOdeParamJoint );
+#endif
 
 	/* Constants */
 	rb_obj_freeze( vstr );
