@@ -1,3 +1,10 @@
+.glimpse_filenames
+.glimpse_filenames_index
+.glimpse_filetimes
+.glimpse_index
+.glimpse_messages
+.glimpse_partitions
+.glimpse_statistics
 Makefile
 mkmf.log
 testSpace.rb
