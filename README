@@ -3,7 +3,8 @@
 
 == Authors
 
-  Michael Granger <ged@FaerieMUD.org>
+  * Michael Granger <ged@FaerieMUD.org>
+
 
 == General Information
 
@@ -15,6 +16,7 @@ friction, and built-in collision detection.
 
 You can find out more about ODE, including instructions for obtaining it, on the
 author's page at <http://www.q12.org/ode/ode.html>.
+
 
 == Caveats
 
@@ -29,10 +31,14 @@ software. Suggestions, feature requests, questions, design critiques, and bug
 reports are most welcome. Relevant patches are particularly helpful. I may be
 reached at <ged@FaerieMUD.org>.
 
+
 == Installation
 
-For installation instructions (such as they are at this point), see the INSTALL
-file.
+ $ ruby extconf.rb
+ $ make
+ $ make test #(if Test::Unit is installed)
+ # make site-install
+
 
 == More Information
 
@@ -40,27 +46,17 @@ You may also access a web interface to the Ruby-ODE CVS module at:
 <http://cvs.faeriemud.org/cgi/viewcvs.cgi/Ruby-ODE/>, which includes
 instructions on checking out the CVS version.
 
+
 == Legal
 
-Ruby-ODE is Open Source Software which is Copyright (c) 2001, 2002 by The
+Ruby-ODE is Open Source Software which is Copyright (c) 2001-2003 by The
 FaerieMUD Consortium.
 
-You may use, modify, and/or redistribute this software under the terms of either
-the Perl Artistic License or ODE's license (LGPL) -- whichever you prefer. A
-copy of the Artistic license should have been included in this distribution; see
-the file Artistic. If it was not, a copy of it may be obtained from
-http://language.perl.com/misc/Artistic.html or
-http://www.faeriemud.org/artistic.html).
-
-THIS PACKAGE IS PROVIDED "AS IS" AND WITHOUT ANY EXPRESS OR IMPLIED WARRANTIES,
-INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF MERCHANTIBILITY AND
-FITNESS FOR A PARTICULAR PURPOSE.
+This work is licensed under the Creative Commons Attribution License. To
+view a copy of this license, visit
+http://creativecommons.org/licenses/by/1.0 or send a letter to Creative
+Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
 
 
-			  $Id: README,v 1.2 2002/11/23 23:08:45 deveiant Exp $
-
-
-
-
-
+  $Id: README,v 1.3 2003/02/04 11:36:59 deveiant Exp $
 
