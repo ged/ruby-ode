@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 #
-# $Id: extconf.rb,v 1.5 2003/02/11 07:15:30 deveiant Exp $
-# Time-stamp: <11-Feb-2003 00:15:07 deveiant>
+# $Id: extconf.rb,v 1.6 2003/02/14 18:29:47 deveiant Exp $
+# Time-stamp: <14-Feb-2003 11:29:29 deveiant>
 #
 # Authors:
 #   # Michael Granger <ged@FaerieMUD.org>
@@ -14,7 +14,10 @@
 # Commons, 559 Nathan Abbott Way, Stanford, California 94305, USA.
 #
 
-require "mkmf"
+require 'mkmf'
+require 'rbconfig'
+include Config
+
 dir_config( "ode" )
 
 ### Print an error message and exit with an error condition
@@ -67,11 +70,7 @@ end
 
 # Add necessary flags for compiling with ODE headers 
 $CFLAGS << ' -DdDOUBLE'
-$CFLAGS << ' -DBUILD_MODE=debug'
-$CFLAGS << ' -DPLATFORM=linux'
 $CFLAGS << ' -Wall'
-$CFLAGS << ' -Wno-comment' # For Ruby's missing.h
-$CFLAGS << ' -DDEBUG'
 
 # Make sure we have the ODE library and header available
 have_library( "ode", "dWorldCreate" ) or
