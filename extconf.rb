@@ -7,7 +7,7 @@
 #	Author: Michael Granger (with lots of code borrowed from the bdb Ruby
 #				extension's extconf.rb)
 #
-#	Copyright (c) 2001, The FaerieMUD Consortium. All rights reserved.
+#	Copyright (c) 2001, 2002, The FaerieMUD Consortium. All rights reserved.
 #
 #	This program is free software; you can redistribute it and/or modify it
 #	under the terms of the GNU Lesser General Public License as published by
@@ -43,7 +43,8 @@ def rule(target, clean = nil)
 end
 
 subdirs = Dir["*"].select do |subdir|
-   File.file?(subdir + "/extconf.rb")
+	next if subdir =~ /misc/
+	File.file?(subdir + "/extconf.rb")
 end
 
 begin
