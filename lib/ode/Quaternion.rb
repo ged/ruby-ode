@@ -47,11 +47,25 @@
 #
 # == Version
 #
-#  $Id: Quaternion.rb,v 1.2 2003/02/04 11:30:59 deveiant Exp $
+#  $Id: Quaternion.rb,v 1.3 2003/02/11 07:17:11 deveiant Exp $
 #
 
 require 'ode/Vector'
 require 'ode/Matrix'
+
+# Workaround for Ruby versions without copy_object:
+unless Module::methods.include? "copy_object"
+	Object.module_eval <<-EOF
+		def copy_object( other )
+			self.instance_variables.each {|ivar|
+				val = eval(ivar)
+				other.instance_eval("\#{ivar} = val")
+			}
+			return self
+		end
+		public :copy_object
+	EOF
+end
 
 module ODE
 
@@ -60,8 +74,8 @@ module ODE
 		include Math
 
 		### Class constants
-		Version = /([\d\.]+)/.match( %q{$Revision: 1.2 $} )[1]
-		Rcsid = %q$Id: Quaternion.rb,v 1.2 2003/02/04 11:30:59 deveiant Exp $
+		Version = /([\d\.]+)/.match( %q{$Revision: 1.3 $} )[1]
+		Rcsid = %q$Id: Quaternion.rb,v 1.3 2003/02/11 07:17:11 deveiant Exp $
 
 		X = 0; Y = 1; Z = 2; W = 3
 
