@@ -1,6 +1,6 @@
 /*
  *		ode.c - ODE Ruby Binding
- *		$Id: ode.c,v 1.1 2001/12/28 01:10:42 deveiant Exp $
+ *		$Id: ode.c,v 1.2 2002/03/20 14:20:03 deveiant Exp $
  *
  *		Author: Michael Granger <ged@FaerieMUD.org>
  *		Copyright (c) 2001 The FaerieMUD Consortium. All rights reserved.
@@ -23,17 +23,49 @@
  */
 
 #include <ruby.h>
+#include <stdio.h>
 #include <ode/ode.h>
 
 #include "ode.h"
 
 
+/* -------------------------------------------------------
+ * Globals
+ * ------------------------------------------------------- */
 VALUE ode_mOde;
+
+VALUE ode_cOdeObsoleteJointError;
+
 
 
 /* --------------------------------------------------
  * Utility functions
  * -------------------------------------------------- */
+
+void
+#ifdef HAVE_STDARG_PROTOTYPES
+ode_debug(const char *fmt, ...)
+#else
+ode_debug(fmt, va_alist)
+    const char *fmt;
+    va_dcl
+#endif
+{
+  char		buf[BUFSIZ], buf2[BUFSIZ];
+  va_list	args;
+
+  if (!RTEST(ruby_verbose)) return;
+
+  snprintf( buf, BUFSIZ, "ODE Debug>>> %s", fmt );
+
+  va_init_list( args, fmt );
+  vsnprintf( buf2, BUFSIZ, buf, args );
+  fputs( buf2, stderr );
+  fputs( "\n", stderr );
+  fflush( stderr );
+  va_end( args );
+}
+
 
 VALUE
 ode_matrix3_to_rArray( matrix )
@@ -76,6 +108,11 @@ Init_ode()
   // Modules
   ode_mOde = rb_define_module( "ODE" );
   rb_define_const( ode_mOde, "PI", rb_float_new(M_PI) );
+
+  // Define exception classes
+  ode_cOdeObsoleteJointError = rb_define_class_under( ode_mOde,
+													  "ObsoleteJointError",
+													  rb_eRuntimeError );
 
   // Init all the other classes
   ode_init_world();
