@@ -1,7 +1,7 @@
-/*
+L/*
  *		joints.c - ODE Ruby Binding - Joint Classes
- *		$Id: joints.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 15:31:57 deveiant>
+ *		$Id: joints.c,v 1.6 2003/02/08 08:27:54 deveiant Exp $
+ *		Time-stamp: <08-Feb-2003 01:27:30 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
@@ -305,8 +305,6 @@ ode_set_joint_param3( id, ary, name, fptr, rklass )
 			(dReal)NUM2DBL(*(RARRAY(posArray)->ptr + 1)),
 			(dReal)NUM2DBL(*(RARRAY(posArray)->ptr + 2)) );
 
-	/* When/if Math3d supports the new allocation framework, this should be: */
-	/* return rb_class_new_instance( 3, RARRAY(posArray)->ptr, rklass ); */
 	return rb_class_new_instance( 3, RARRAY(posArray)->ptr, rklass );
 }
 
@@ -617,7 +615,7 @@ ode_ballJoint_anchor( self )
  * --
  * Set the joint's anchor point, which can be any object which returns an array
  * with 3 numeric values when <tt>to_ary</tt> is called on it, such as an
- * ODE::Position object, a Math3d::Vector3, or an Array with 3 numeric values.
+ * ODE::Position object, a ODE::Vector, or an Array with 3 numeric values.
  */
 static VALUE
 ode_ballJoint_anchor_eq( self, position )
@@ -699,7 +697,7 @@ ode_universalJoint_anchor( self )
  * --
  * Set the position of the joint's anchor. The <tt>position</tt> argument can be
  * any object which returns an array of three numeric values when
- * <tt>to_ary</tt> is called on it, such as a Math3d::Vector3, an ODE::Position,
+ * <tt>to_ary</tt> is called on it, such as a ODE::Vector, an ODE::Position,
  * or an Array with three numeric elements.
  */
 static VALUE
@@ -733,7 +731,7 @@ ode_universalJoint_axis1( self )
  * Set the first axis of the joint, which must be parallel to the second
  * axis. The <tt>vector</tt> argument can be any object which returns an array
  * of three numeric values when <tt>to_ary</tt> is called on it, such as a
- * Math3d::Vector3, an ODE::Vector, or an Array with three numeric elements.
+ * ODE::Vector, an ODE::Vector, or an Array with three numeric elements.
  */
 static VALUE
 ode_universalJoint_axis1_eq( self, axis )
@@ -765,7 +763,7 @@ ode_universalJoint_axis2( self )
  * Set the second axis of the joint, which must be parallel to the first
  * axis. The <tt>vector</tt> argument can be any object which returns an array
  * of three numeric values when <tt>to_ary</tt> is called on it, such as a
- * Math3d::Vector3, an ODE::Vector, or an Array with three numeric elements.
+ * ODE::Vector, an ODE::Vector, or an Array with three numeric elements.
  */
 static VALUE
 ode_universalJoint_axis2_eq( self, axis )
@@ -1394,7 +1392,7 @@ ode_hingeJoint_anchor( self )
  * --
  * Set the joint's anchor point, which can be any object which returns an array
  * with 3 numeric values when <tt>to_ary</tt> is called on it, such as an
- * ODE::Position object, a Math3d::Vector3, or an Array with 3 numeric values.
+ * ODE::Position object, a ODE::Vector, or an Array with 3 numeric values.
  */
 static VALUE
 ode_hingeJoint_anchor_eq( self, position )
@@ -1426,7 +1424,7 @@ ode_hingeJoint_axis( self )
  * Set the first axis of the joint, which must be parallel to the second
  * axis. The <tt>vector</tt> argument can be any object which returns an array
  * of three numeric values when <tt>to_ary</tt> is called on it, such as a
- * Math3d::Vector3, an ODE::Vector, or an Array with three numeric elements.
+ * ODE::Vector, an ODE::Vector, or an Array with three numeric elements.
  */
 static VALUE
 ode_hingeJoint_axis_eq( self, axis )
@@ -1533,7 +1531,7 @@ ode_hinge2Joint_axis1( self )
  * Set the first axis of the joint, which must be parallel to the second
  * axis. The <tt>vector</tt> argument can be any object which returns an array
  * of three numeric values when <tt>to_ary</tt> is called on it, such as a
- * Math3d::Vector3, an ODE::Vector, or an Array with three numeric elements.
+ * ODE::Vector, an ODE::Vector, or an Array with three numeric elements.
  */
 static VALUE
 ode_hinge2Joint_axis1_eq( self, axis )
@@ -1564,7 +1562,7 @@ ode_hinge2Joint_axis2( self )
  * Set the second axis of the joint, which must be parallel to the first
  * axis. The <tt>vector</tt> argument can be any object which returns an array
  * of three numeric values when <tt>to_ary</tt> is called on it, such as a
- * Math3d::Vector3, an ODE::Vector, or an Array with three numeric elements.
+ * ODE::Vector, an ODE::Vector, or an Array with three numeric elements.
  */
 static VALUE
 ode_hinge2Joint_axis2_eq( self, axis )
@@ -1654,7 +1652,7 @@ ode_sliderJoint_axis( self )
  * --
  * Set the axis of the joint. The <tt>vector</tt> argument can be any object
  * which returns an array of three numeric values when <tt>to_ary</tt> is called
- * on it, such as a Math3d::Vector3, an ODE::Vector, or an Array with three
+ * on it, such as a ODE::Vector, an ODE::Vector, or an Array with three
  * numeric elements.
  */
 static VALUE
@@ -1812,8 +1810,7 @@ ode_get_amotor_joint_param3( id, anum, fptr, rklass )
 		axes[i] = rb_float_new( *((pos) + i) );
 
 	/* When/if Math3d supports the new allocation framework, this should be: */
-	/* return rb_class_new_instance( 3, axes, rklass ); */
-	return rb_funcall( rklass, rb_intern("new"), 3, axes );
+	return rb_class_new_instance( 3, axes, rklass );
 }
 
 
@@ -1823,7 +1820,7 @@ ode_get_amotor_joint_param3( id, anum, fptr, rklass )
  * Set the first axis of the joint, which must be parallel to the second
  * axis. The <tt>vector</tt> argument can be any object which returns an array
  * of three numeric values when <tt>to_ary</tt> is called on it, such as a
- * Math3d::Vector3, an ODE::Vector, or an Array with three numeric elements.
+ * ODE::Vector, an ODE::Vector, or an Array with three numeric elements.
  */
 static VALUE
 ode_aMotorJoint_axis1( self )
@@ -1862,7 +1859,7 @@ ode_aMotorJoint_axis1_rel( self )
  * The axis vector, specified in global coordinates regardless of the
  * <tt>mode</tt>, can be any object which returns an array with 3 numeric values
  * when <tt>to_ary</tt> is called on it, such as an ODE::Position object, a
- * Math3d::Vector3, or an Array with 3 numeric values.
+ * ODE::Vector, or an Array with 3 numeric values.
  */
 static VALUE
 ode_aMotorJoint_set_axis1( self, mode, axis )
@@ -1934,7 +1931,7 @@ ode_aMotorJoint_axis2_rel( self )
  * The axis vector, specified in global coordinates regardless of the
  * <tt>mode</tt>, can be any object which returns an array with 3 numeric values
  * when <tt>to_ary</tt> is called on it, such as an ODE::Position object, a
- * Math3d::Vector3, or an Array with 3 numeric values.
+ * ODE::Vector, or an Array with 3 numeric values.
  */
 static VALUE
 ode_aMotorJoint_set_axis2( self, mode, axis )
@@ -2007,7 +2004,7 @@ ode_aMotorJoint_axis3_rel( self )
  * The axis vector, specified in global coordinates regardless of the
  * <tt>mode</tt>, can be any object which returns an array with 3 numeric values
  * when <tt>to_ary</tt> is called on it, such as an ODE::Position object, a
- * Math3d::Vector3, or an Array with 3 numeric values.
+ * ODE::Vector, or an Array with 3 numeric values.
  */
 static VALUE
 ode_aMotorJoint_set_axis3( self, mode, axis )
@@ -2176,8 +2173,8 @@ void
 ode_init_joints( void )
 {
 	static char
-		rcsid[]		= "$Id: joints.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $",
-		revision[]	= "$Revision: 1.5 $";
+		rcsid[]		= "$Id: joints.c,v 1.6 2003/02/08 08:27:54 deveiant Exp $",
+		revision[]	= "$Revision: 1.6 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 
