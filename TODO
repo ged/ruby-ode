@@ -1,25 +1,25 @@
 
 = Ruby-ODE To-do List
-  Time-stamp: <04-Feb-2003 04:20:23 deveiant>
+  Time-stamp: <04-Feb-2003 15:04:48 deveiant>
 
 == Testing
 
-   * The test suite doesn't contain unit tests for the ODE::Contact class. I
-     have to figure out some way to test it without having to set up and tear
-     down a full collision system every time.
+* The test suite doesn't contain unit tests for the ODE::Contact class. I have
+  to figure out some way to test it without having to set up and tear down a
+  full collision system every time.
 
-   * Coverage is only about 75% of the way there for the joint classes.
+* Coverage is only about 75% of the way there for the joint classes.
 
-   * Very little acceptance testing has been done, though the little that has
-     been done is promising. The graphical lib will help with that.
+* Very little acceptance testing has been done, though the little that has been
+  done is promising. The graphical lib will help with that.
 
 
 == Auxilliary Code
 
-   * The wrapper around the "drawstuff" code isn't done. I have to figure out a
-     Ruby-ish idiom for it before proceeding futher.
+* The wrapper around the "drawstuff" code isn't done. I have to figure out a
+  Ruby-ish idiom for it before proceeding futher.
 
 
 == Version
-  $Id: TODO,v 1.2 2003/02/04 11:20:36 deveiant Exp $
+  $Id: TODO,v 1.3 2003/02/04 22:05:06 deveiant Exp $
 
