@@ -49,7 +49,14 @@ class ODETests
 		}
 
 		$stderr.puts "WARNING: No matching testcases found." if classes.empty?
-		classes.each {|klass| @suite << klass.suite }
+		if @suite.respond_to?( :<< )
+			classes.each {|klass| @suite << klass.suite }
+		elsif @suite.respond_to?( :add )
+			classes.each {|klass| @suite.add(klass.suite) }
+		else
+			raise "This test suite requires a Test::Unit >= 1.5"
+		end
+
 	end
 
 	attr_accessor :suite
