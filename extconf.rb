@@ -60,9 +60,7 @@ SUBDIRS = #{subdirs.join(' ')}
 #{rule('site-install')}
 #{rule('unknown')}
 docs:
-	rdoc -S --title 'Ruby ODE Binding' --main README README src ext
-
-html: $(HTML)
+	ruby docs/makedocs.rb -v
 
 test: all
 	ruby test.rb
