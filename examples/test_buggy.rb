@@ -3,8 +3,8 @@
 # test_buggy.rb - A (sort of) port of the test_buggy.cpp test in the ODE
 # distribution
 #
-# $Id: test_buggy.rb,v 1.1 2003/02/04 11:12:40 deveiant Exp $
-# Time-stamp: <04-Feb-2003 03:48:01 deveiant>
+# $Id: test_buggy.rb,v 1.2 2003/02/08 08:24:39 deveiant Exp $
+# Time-stamp: <04-Feb-2003 15:21:35 deveiant>
 #
 # Authors:
 #   # Michael Granger <ged@FaerieMUD.org>
@@ -35,207 +35,207 @@ include ODE
 
 # This is a port of the test_buggy ODE example, just to see how things
 # would/will work.
+module Example
+	class Car
+		include ODE
 
-class Car
-	include ODE
+		RadToDeg = 180.0 / Math::PI
 
-	RadToDeg = 180.0 / Math::PI
+		Chassis = Struct::new( "CarChassis", :body, :geometry )
+		Wheel = Struct::new( "CarWheel", :body, :geometry, :hinge )
+		DefaultPosition = Position::new( 0, 0, 0.5 )
 
-	Chassis = Struct::new( "CarChassis", :body, :geometry )
-	Wheel = Struct::new( "CarWheel", :body, :geometry, :hinge )
-	DefaultPosition = Position::new( 0, 0, 0.5 )
+		def initialize( world, length=0.7, width=0.5, height=0.2, wheelRadius=0.24,
+						chassisMass=1, wheelMass=0.2, position=DefaultPosition )
 
-	def initialize( world, length=0.7, width=0.5, height=0.2, wheelRadius=0.24,
-				    chassisMass=1, wheelMass=0.2, position=DefaultPosition )
+			@space = Space::new
 
-		@space = Space::new
+			@chassis = Chassis::new
+			@chassis.body = world.createBody
+			@chassis.body.position = position
+			@chassis.body.mass = Mass::Box::new( length, width, height, chassisMass )
 
-		@chassis = Chassis::new
-		@chassis.body = world.createBody
-		@chassis.body.position = position
-		@chassis.body.mass = Mass::Box::new( length, width, height, chassisMass )
+			@chassis.geometry = Geometry::Box::new( length, width, height, @space )
+			@chassis.geometry.body = @chassis.body
 
-		@chassis.geometry = Geometry::Box::new( length, width, height, @space )
-		@chassis.geometry.body = @chassis.body
+			@wheels = (0..2).to_a.collect {|i|
+				# Create the wheel body
+				body = world.createBody
+				body.quaternion = 1, 0, 0, (ODE::Pi*1.5)
+				body.mass = Mass::Sphere::new( 1, wheelRadius, wheelMass )
 
-		@wheels = (0..2).to_a.collect {|i|
-			# Create the wheel body
-			body = world.createBody
-			body.quaternion = 1, 0, 0, (ODE::Pi*1.5)
-			body.mass = Mass::Sphere::new( 1, wheelRadius, wheelMass )
+				# Position each wheel appropriately
+				case i
+				when 1
+					body.position = (0.5 * length), 0, (position.z - height * 0.5);
 
-			# Position each wheel appropriately
-			case i
-			when 1
-				body.position = (0.5 * length), 0, (position.z - height * 0.5);
+				when 2
+					body.position = (-0.5 * length), (width * 0.5), (position.z - height * 0.5);
 
-			when 2
-				body.position = (-0.5 * length), (width * 0.5), (position.z - height * 0.5);
+				when 3
+					body.position = (-0.5 * length), (width * -0.5), (position.z - height * 0.5);
+				end
 
-			when 3
-				body.position = (-0.5 * length), (width * -0.5), (position.z - height * 0.5);
+				# Create the wheel's collision geometry
+				geom = Geometry::Sphere::new( wheelRadius, @space )
+				geom.body = body
+
+				# Create and configure a joint, and then use it to connect the wheel
+				# to the chassis
+				hinge = Hinge2Joint::new( world )
+				hinge.attach( @chassis.body, body )
+				hinge.anchor = body.position.x, body.position.y, body.position.z
+				hinge.axis1 = 0, 0, 1
+				hinge.axis2 = 0, 1, 0
+				hinge.suspensionERP = 0.4
+				hinge.suspensionCFM = 0.8
+
+				Wheel::new( body, geom, hinge )
+			}
+
+			# Lock rear wheels along the steering axis
+			@wheels[1..2].each {|wheel|
+				wheel.hinge.loStop = 0
+				wheel.hinge.hiStop = 0
+			}
+
+		end
+
+		######
+		public
+		######
+
+		# The car's top-level geometry space
+		attr_reader :space
+
+		# The car's chassis struct
+		attr_reader :chassis
+
+		# The car's wheel struct array
+		attr_reader :wheels
+
+
+		### Drive the car
+		def drive( steering, speed )
+			self.steer( steering )
+			self.throttle( speed )
+		end
+
+
+		### Steer the car's front wheel
+		def steer( steering )
+			vel = steering - @wheels[0].hinge.angle1
+			if ( vel > 0.1 ) then vel = 0.1 end
+			if ( vel < -0.1 ) then vel = -0.1 end
+
+			vel *= 10
+			@wheels[0].hinge.velocity = vel
+			@wheels[0].hinge.fMax = 0.2
+			@wheels[0].hinge.loStop = -0.75
+			@wheels[0].hinge.hiStop = 0.75
+			@wheels[0].hinge.fudgeFactor = 0.1
+		end		
+
+
+		### Adjust the speed of the car's engine by the car's speed.
+		def throttle( speed )
+			@wheels[0].hinge.vel2 = -speed
+			@wheels[0].hinge.fMax2 = 0.1
+		end
+
+
+		### Add the car to the specified ODE::Space.
+		def >>( space )
+			if space.is_a?( ODE::Space )
+				self.addToSpace( space )
+
+			else
+				raise "Cannot add the car to a %s" % space.class.name
+			end
+		end
+
+		### Add the car to the specified collision space
+		def addToSpace( space )
+			space << @space
+		end
+
+		### Remove the car from the specified collision space
+		def removeFromSpace( space )
+			space.removeGeometry( @space )
+		end
+
+		### Return a string describing the car's location relative to the origin.
+		def location
+			pos = @chassis.body.position
+			return "%d from origin at (%0.1f, %0.1f, %0.1f)" %
+				[ pos.distance(ODE::Position::Origin), pos.x, pos.y, pos.z ]
+		end
+
+
+		### Return a string describing the car's rotation relative to the default
+		### orientation.
+		def rotation
+			quat = @chassis.body.rotation
+			return "R: %0.1f  P: %0.1f  Y: %0.1f" %
+				[ quat.roll * RadToDeg, quat.pitch * RadToDeg, quat.yaw * RadToDeg ]
+		end
+
+	end # class Car
+
+
+	class Ramp
+
+		include ODE
+
+		def initialize( world, length=2, width=1.5, height=1 )
+			@body = world.createBody
+			@geometry = Geometry::Box::new( length, width, height )
+			@geometry.body = @body
+			@geometry.position = 2, 0, -0.34
+			@geometry.rotation = 0, 1, 0, -0.15
+		end
+
+		# The physical body of the ramp
+		attr_reader :body
+
+		# The collision geometry of the ramp
+		attr_reader :geometry
+
+
+		### Add the car to the specified ODE::Space.
+		def >>( space )
+			if space.is_a?( ODE::Space )
+				self.addToSpace( space )
+			else
+				raise "Cannot add the ramp to a %s" % space.class.name
 			end
 
-			# Create the wheel's collision geometry
-			geom = Geometry::Sphere::new( wheelRadius, @space )
-			geom.body = body
-
-			# Create and configure a joint, and then use it to connect the wheel
-			# to the chassis
-			hinge = Hinge2Joint::new( world )
-			hinge.attach( @chassis.body, body )
-			hinge.anchor = body.position.x, body.position.y, body.position.z
-			hinge.axis1 = 0, 0, 1
-			hinge.axis2 = 0, 1, 0
-			hinge.suspensionERP = 0.4
-			hinge.suspensionCFM = 0.8
-			
-			Wheel::new( body, geom, hinge )
-		}
-
-		# Lock rear wheels along the steering axis
-		@wheels[1..2].each {|wheel|
-			wheel.hinge.loStop = 0
-			wheel.hinge.hiStop = 0
-		}
-
-	end
-
-	######
-	public
-	######
-
-	# The car's top-level geometry space
-	attr_reader :space
-
-	# The car's chassis struct
-	attr_reader :chassis
-
-	# The car's wheel struct array
-	attr_reader :wheels
-
-
-	### Drive the car
-	def drive( steering, speed )
-		self.steer( steering )
-		self.throttle( speed )
-	end
-	
-
-	### Steer the car's front wheel
-	def steer( steering )
-		vel = steering - @wheels[0].hinge.angle1
-		if ( vel > 0.1 ) then vel = 0.1 end
-		if ( vel < -0.1 ) then vel = -0.1 end
-
-		vel *= 10
-		@wheels[0].hinge.velocity = vel
-		@wheels[0].hinge.fMax = 0.2
-		@wheels[0].hinge.loStop = -0.75
-		@wheels[0].hinge.hiStop = 0.75
-		@wheels[0].hinge.fudgeFactor = 0.1
-	end		
-
-
-	### Adjust the speed of the car's engine by the car's speed.
-	def throttle( speed )
-		@wheels[0].hinge.vel2 = -speed
-		@wheels[0].hinge.fMax2 = 0.1
-	end
-
-
-	### Add the car to the specified ODE::Space.
-	def >>( space )
-		if space.is_a?( ODE::Space )
-			self.addToSpace( space )
-
-		else
-			raise "Cannot add the car to a %s" % space.class.name
-		end
-	end
-
-	### Add the car to the specified collision space
-	def addToSpace( space )
-		space << @space
-	end
-
-	### Remove the car from the specified collision space
-	def removeFromSpace( space )
-		space.removeGeometry( @space )
-	end
-
-	### Return a string describing the car's location relative to the origin.
-	def location
-		pos = @chassis.body.position
-		return "%d from origin at (%0.1f, %0.1f, %0.1f)" %
-			[ pos.distance(ODE::Position::Origin), pos.x, pos.y, pos.z ]
-	end
-
-
-	### Return a string describing the car's rotation relative to the default
-	### orientation.
-	def rotation
-		quat = @chassis.body.rotation
-		return "R: %0.1f  P: %0.1f  Y: %0.1f" %
-			[ quat.roll * RadToDeg, quat.pitch * RadToDeg, quat.yaw * RadToDeg ]
-	end
-
-end
-
-
-class Ramp
-
-	include ODE
-
-	def initialize( world, length=2, width=1.5, height=1 )
-		@body = world.createBody
-		@geometry = Geometry::Box::new( length, width, height )
-		@geometry.body = @body
-		@geometry.position = 2, 0, -0.34
-		@geometry.rotation = 0, 1, 0, -0.15
-	end
-
-	# The physical body of the ramp
-	attr_reader :body
-
-	# The collision geometry of the ramp
-	attr_reader :geometry
-
-
-	### Add the car to the specified ODE::Space.
-	def >>( space )
-		if space.is_a?( ODE::Space )
-			self.addToSpace( space )
-		else
-			raise "Cannot add the ramp to a %s" % space.class.name
+			return self
 		end
 
-		return self
-	end
+		### Add the car to the specified collision space
+		def addToSpace( space )
+			space << @geometry
+		end
 
-	### Add the car to the specified collision space
-	def addToSpace( space )
-		space << @geometry
-	end
+		### Remove the car from the specified collision space
+		def removeFromSpace( space )
+			space.removeGeometry( @geometry )
+		end
 
-	### Remove the car from the specified collision space
-	def removeFromSpace( space )
-		space.removeGeometry( @geometry )
-	end
-
-end
-
+	end # class Ramp
+end # module Example
 
 
 #####################################################################
 ###	M A I N   P R O G R A M
 #####################################################################
 
+include Example
+
 # Define some categories for culling collisions
-module Category
-	MOVING		= (1 << 0)
-	STATIONARY	= (1 << 1)
-end
+CATEGORY_MOVING		= (1 << 0)
+CATEGORY_STATIONARY	= (1 << 1)
 
 # Create the simulation world
 world = World::new
@@ -248,20 +248,20 @@ contactJoints = JointGroup::new
 space = HashSpace::new
 ground = Geometry::Plane::new( 0, 0, 1, 0 )
 space << ground
-ground.categoryMask = Category::STATIONARY
-ground.collideMask = Category::MOVING
+ground.categoryMask = CATEGORY_STATIONARY
+ground.collideMask = CATEGORY_MOVING
 
 # Create the car and add it to the world and the collision space
 car = Car::new( world )
 car >> space
-car.space.categoryMask = Category::MOVING
-car.space.collideMask = Category::STATIONARY
+car.space.categoryMask = CATEGORY_MOVING
+car.space.collideMask = CATEGORY_STATIONARY
 
 # Create the ramp
 ramp = Ramp::new( world )
 ramp >> space
-ramp.geometry.categoryMask = Category::STATIONARY
-ramp.geometry.collideMask = Category::MOVING
+ramp.geometry.categoryMask = CATEGORY_STATIONARY
+ramp.geometry.collideMask = CATEGORY_MOVING
 
 
 quitFlag = pauseFlag = false
