@@ -1,0 +1,282 @@
+#!/usr/bin/ruby -w
+
+require "pp"
+require "hashslice"
+
+# Usage-description
+Usage = <<"EOF"
+Usage: #{$0} <files>
+
+EOF
+
+Builtins = {
+	'rb_cObject'	=> 'Object',
+	'rb_mModule'	=> 'Module',
+}
+
+TabWidth = 4
+
+# Global parsed namespace
+$modules = {}
+$unhandledRbFunctions = []
+
+
+
+##
+# Abort with the specified _msg_.
+def abortRun( msg = "Aborted." )
+	$stderr.puts msg
+	exit 1
+end
+
+##
+# Abort with the specified _msg_ and a usage description
+def abortWithUsage( msg = "Aborted." )
+	msg = msg + Usage
+	abortRun( msg )
+end
+
+##
+# Print a debugging message to STDERR if $DEBUG is true.
+def debugMsg( msg )
+	return unless $DEBUG
+	$stderr.print "#{msg}\n"
+end
+
+
+##
+# Add a class or module to the list
+def addClassOrModule( type, classvar, classname, container='', superclass=nil )
+	if $modules.has_key? classvar
+		$modules[ classvar ][ 'type' ] = type
+		$modules[ classvar ][ 'name' ] = classname
+		$modules[ classvar ][ 'superclass' ] = superclass
+		$modules[ classvar ][ 'container' ] = container
+	else
+		$modules[ classvar ] = {
+			'type'			=> type,
+			'name'			=> classname,
+			'container'		=> container,
+			'superclass'	=> superclass,
+			'methods'		=> {}
+		}
+	end
+
+	unless $modules.has_key? container || container.empty?
+		$modules[ container ] = {
+			'type'			=> '',
+			'name'			=> '',
+			'container'		=> '',
+			'superclass'	=> '',
+			'methods'		=> {}
+		}
+	end
+end
+
+##
+# Add a method to the class or module specified
+def addMethodTo( classvar, methodname, argc=0, scope='public' )
+	if $modules.has_key? classvar
+		$modules[ classvar ]['methods'] ||= {}
+		$modules[ classvar ]['methods'][methodname] = {
+			'scope'		=> scope,
+			'argc'		=> argc.to_i
+		}
+	else
+		$modules[ classvar ] = {
+			'type'			=> '',
+			'name'			=> '',
+			'container'		=> '',
+			'superclass'	=> '',
+			'methods'		=> {
+				methodname	=> {
+					'scope'		=> scope,
+					'argc'		=> argc.to_i
+				},
+			},
+		}
+	end
+end
+
+### Main body
+def main
+
+	abortWithUsage( "No files specified." ) if ARGV.empty?
+
+	ARGV.each {|file|
+		$stderr.print "Parsing #{file}..."
+
+		File.open( file, File::RDONLY ) {|fh|
+			inMultilineComment = false
+
+			fh.each {|line|
+
+				if inMultilineComment
+					$stderr.print "x" if $DEBUG
+					next unless %r{^.*\*/} =~ line
+					inMultilineComment = false
+
+				else
+
+					case line
+					when %r{^\s*(//|/\*.*\*/)}
+						next
+
+					when %r{^\s*/\*}
+						inMultilineComment = true
+
+						### def addClassOrModule( type, classvar, classname, container='', superclass=nil )
+
+						# <classvar> = rb_define_class( <classname>, <superclass> )
+					when /(\w+)\s*=\s*rb_define_class\(\s*(\w+)\s*,\s*(\w+)\s*\)/
+						$stderr.print "c" if $DEBUG
+						addClassOrModule( "class", $1, $3, $2 )
+
+						# <classvar> =  rb_define_class_under( <container>, <classname>, <superclass> )
+					when /(\w+)\s*=\s*rb_define_class_under\(\s*(\w+)\s*,\W*(\w+)\W*,\s*(\w+)\s*\)/
+						$stderr.print "c" if $DEBUG
+						addClassOrModule( "class", $1, $3, $2, $4 )
+
+						# <classvar> = rb_define_module( <classname> )
+					when /(\w+)\s*=\s*rb_define_module\(\W*(\w+)\W*\)/
+						$stderr.print "c" if $DEBUG
+						addClassOrModule( "module", $1, $2 )
+
+						# <classvar> = rb_define_module_under( <container>, <classname> )
+					when /(\w+)\s*=\s*rb_define_module_under\(\s*(\w+)\s*,\W*(\w+)\W*\)/
+						$stderr.print "c" if $DEBUG
+						addClassOrModule( "module", $1, $3, $2 )
+
+						### def addMethodTo( classvar, methodname, argc=0, scope='public' )
+
+						# rb_define_(method|module_function)( <classvar>, <methodname>, [ignored], <argc> )
+					when /\s*rb_define_(?:method|module_function)\(\s*(\w+)\s*,\W*(\w+)\W*,\s*\w+\s*,\s*(\w+)\s*\)/
+						$stderr.print "m" if $DEBUG
+						addMethodTo( $1, $2, $3 )
+
+						# Any other rb_* we keep track of in case we ever need a list of
+						# things to consider adding...
+					when /\s*rb_([^(]+)\(/
+						$stderr.print "u" if $DEBUG
+						$unhandledRbFunctions |= [ $1 ]
+
+					else
+						$stderr.print "i" if $DEBUG
+					end
+				end
+			}
+		}
+
+		$stderr.print "done.\n"
+	}
+
+	# Now we have to organize the stuff we found heirarchically
+	hierarchy = {}
+	mods = $modules.keys
+
+	# Find the root containers
+	mods.each {|key|
+		if $modules[key]['container'].empty?
+			debugMsg( "Adding '#{key}' to the root namespace." )
+			hierarchy[key] ||= {}
+			mods -= [ key ]
+		end
+	}
+
+	# Iterate over the modules until we've either stuck them all into the hierarchy
+	# or we loop once without doing anything.
+	didSomething = true
+	until mods.empty? || ! didSomething
+		didSomething = false
+
+		mods.each {|key|
+			container = $modules[key]['container']
+			debugMsg( "Trying to find container '#{container}' for '#{key}'." )
+			if hierarchy.has_key? container
+				debugMsg( "Found it. Adding it to the hierarchy." )
+				didSomething = true
+				hierarchy[ container ][key] = {}
+				mods -= [ key ]
+			else
+				debugMsg( "Not found. Will try again next loop." )
+			end
+		}
+	end
+
+	pp hierarchy if $DEBUG
+	pp $modules if $DEBUG
+
+	# Now we can spit out about the stuff we do know about
+	print "\n\n# Autogenerated documentation stubs for #{ARGV.join(', ')}:\n\n"
+
+	# Generate a visitor-like iterator that will traverse the hierarchy
+	visitor = Proc.new {|mod,contents,indentLevel|
+
+		debugMsg( "Printing doc stub for #{mod} at level #{indentLevel}." )
+		indent = ' ' * (TabWidth * indentLevel)
+		nextIndent = ' ' * (TabWidth * ( indentLevel + 1 ))
+
+		unless mod.empty?
+			print "#{indent}##\n#{indent}# \n"
+			superclass = $modules[mod]['superclass']
+
+			if ! ( superclass.nil? || superclass.empty? )
+
+				# :TODO: This won't get superclasses right for classes which are
+				# defined in different namespaces, eg., 
+				#   class MyClass < SomeOther::ClassSomewhere
+				# I need to keep track of the fully-qualified classname when sorting
+				# out the hierarchy, and then use it for the superclass, perhaps
+				# after stripping off any parts the current class and the FQCN have
+				# in common.
+
+				# If we've parsed the superclass, too, print its name
+				if $modules.has_key? superclass
+					print "#{indent}%s %s < %s\n#{nextIndent}\n" % [
+						$modules[mod]['type'], $modules[mod]['name'], $modules[superclass]['name'] 
+					]
+
+					# Or, if it's a builtin we know about, print it
+				elsif Builtins.has_key? superclass
+					print "#{indent}%s %s < %s\n#{nextIndent}\n" % [
+						$modules[mod]['type'], $modules[mod]['name'], Builtins[superclass]
+					]
+
+					# Last resort: Just try chopping any rb_c or rb_m off of the front.
+				else
+					superclass.gsub!( /rb_[cm]/, '' )
+					print "#{indent}%s %s < %s\n#{nextIndent}\n" % [
+						$modules[mod]['type'], $modules[mod]['name'], superclass
+					]
+				end
+			else
+				print "#{indent}%s %s\n#{nextIndent}\n" % [
+					$modules[mod]['type'], $modules[mod]['name']
+				]
+			end
+
+			$modules[mod]['methods'].each {|meth,methdata|
+				if methdata['argc'] > 0
+					print "#{nextIndent}def %s( %s )\n#{nextIndent}end\n\n" % [
+						meth, (1 .. methdata['argc'] ).to_a.collect {|n| "arg#{n}"}.join(', ')
+					]
+				else
+					print "#{nextIndent}def #{meth}\n#{nextIndent}end\n\n"
+				end
+			}
+		end
+
+		# Now recurse depth-first into the contents of this namespace
+		contents.each {|submod,subContents|
+			visitor.call( submod, subContents, indentLevel + 1 )
+		}
+
+		print "#{indent}end\n\n" unless mod.empty?
+	}
+
+	# Walk the hierarchy with the visitor proc
+	hierarchy.each {|basemod,contents| visitor.call( basemod, contents, 0 ) }
+
+end
+
+main
