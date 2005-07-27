@@ -20,7 +20,7 @@
 # 
 # == Version
 #
-#  $Id: Contact.rb,v 1.1 2003/02/04 11:28:21 deveiant Exp $
+#  $Id$
 # 
 
 require 'ode'
@@ -32,7 +32,7 @@ module ODE
 
 		### Class constants
 		Version ||= /([\d\.]+)/.match( %q{$Revision: 1.1 $} )[1]
-		Rcsid ||= %q$Id: Contact.rb,v 1.1 2003/02/04 11:28:21 deveiant Exp $
+		Rcsid ||= %q$Id$
 
 
 		######

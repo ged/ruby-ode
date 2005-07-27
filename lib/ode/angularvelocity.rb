@@ -22,7 +22,7 @@
 # 
 # == Version
 #
-#  $Id: AngularVelocity.rb,v 1.2 2003/02/04 11:28:45 deveiant Exp $
+#  $Id$
 # 
 
 require 'ode/Vector'
@@ -35,7 +35,7 @@ module ODE
 
 		### Class constants
 		Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
-		Rcsid = %q$Id: AngularVelocity.rb,v 1.2 2003/02/04 11:28:45 deveiant Exp $
+		Rcsid = %q$Id$
 
 	end # class AngularVelocity
 end # module ODE

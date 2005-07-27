@@ -47,7 +47,7 @@
 #
 # == Version
 #
-#  $Id: Quaternion.rb,v 1.3 2003/02/11 07:17:11 deveiant Exp $
+#  $Id$
 #
 
 require 'ode/Vector'
@@ -75,7 +75,7 @@ module ODE
 
 		### Class constants
 		Version = /([\d\.]+)/.match( %q{$Revision: 1.3 $} )[1]
-		Rcsid = %q$Id: Quaternion.rb,v 1.3 2003/02/11 07:17:11 deveiant Exp $
+		Rcsid = %q$Id$
 
 		X = 0; Y = 1; Z = 2; W = 3
 

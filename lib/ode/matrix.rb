@@ -23,7 +23,7 @@
 # 
 # == Version
 #
-#  $Id: Matrix.rb,v 1.1 2003/02/04 11:28:21 deveiant Exp $
+#  $Id$
 # 
 
 require 'matrix'
@@ -35,7 +35,7 @@ module ODE
 
 		### Class constants
 		Version = /([\d\.]+)/.match( %q$Revision: 1.1 $ )[1]
-		Rcsid = %q$Id: Matrix.rb,v 1.1 2003/02/04 11:28:21 deveiant Exp $
+		Rcsid = %q$Id$
 
 	end # class Matrix
 

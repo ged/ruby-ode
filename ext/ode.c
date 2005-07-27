@@ -1,12 +1,12 @@
 /*
  *		ode.c - ODE Ruby Binding
- *		$Id: ode.c,v 1.6 2003/02/18 01:38:11 deveiant Exp $
- *		Time-stamp: <17-Feb-2003 17:26:04 deveiant>
+ *		$Id$
+ *		Time-stamp: <27-Jul-2005 19:25:53 ged>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2001, 2002, 2003 The FaerieMUD Consortium.
+ *		Copyright (c) 2001-2005 The FaerieMUD Consortium.
  *
  *		This work is licensed under the Creative Commons Attribution License. To
  *		view a copy of this license, visit
@@ -339,7 +339,7 @@ void
 Init_ode()
 {
 	static char
-		rcsid[]		= "$Id: ode.c,v 1.6 2003/02/18 01:38:11 deveiant Exp $",
+		rcsid[]		= "$Id$",
 		revision[]	= "$Revision: 1.6 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
@@ -393,28 +393,28 @@ Init_ode()
 	ruby_eLocalJumpError = rb_const_get( rb_cObject,	rb_intern("LocalJumpError") );
 
 	/* Load ruby half of the class library and fetch the class objects */
-	rb_require( "ode/Vector" );
+	rb_require( "ode/vector" );
 	ode_cOdeVector			= rb_const_get( ode_mOde, rb_intern("Vector") );
 
-	rb_require( "ode/AngularVelocity" );
+	rb_require( "ode/angularvelocity" );
 	ode_cOdeAngularVelocity	= rb_const_get( ode_mOde, rb_intern("AngularVelocity") );
 
-	rb_require( "ode/Force" );
+	rb_require( "ode/force" );
 	ode_cOdeForce			= rb_const_get( ode_mOde, rb_intern("Force") );
 
-	rb_require( "ode/LinearVelocity" );
+	rb_require( "ode/linearvelocity" );
 	ode_cOdeLinearVelocity	= rb_const_get( ode_mOde, rb_intern("LinearVelocity") );
 
-	rb_require( "ode/Position" );
+	rb_require( "ode/position" );
 	ode_cOdePosition		= rb_const_get( ode_mOde, rb_intern("Position") );
 
-	rb_require( "ode/Quaternion" );
+	rb_require( "ode/quaternion" );
 	ode_cOdeQuaternion		= rb_const_get( ode_mOde, rb_intern("Quaternion") );
 
-	rb_require( "ode/Torque" );
+	rb_require( "ode/torque" );
 	ode_cOdeTorque			= rb_const_get( ode_mOde, rb_intern("Torque") );
 
-	rb_require( "ode/Matrix" );
+	rb_require( "ode/matrix" );
 	ode_cOdeMatrix			= rb_const_get( ode_mOde, rb_intern("Matrix") );
 
 
@@ -480,5 +480,5 @@ Init_ode()
 	ode_init_geometry();
 	ode_init_space();
 /* 	ode_init_geometry_transform(); */
-/* 	ode_init_geometry_transform_group(); */
+ 	ode_init_geometry_transform_group();
 }

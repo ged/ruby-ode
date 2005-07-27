@@ -27,7 +27,7 @@
 # 
 # == Version
 #
-#  $Id: JointGroup.rb,v 1.3 2003/02/04 11:28:45 deveiant Exp $
+#  $Id$
 # 
 
 require 'ode'

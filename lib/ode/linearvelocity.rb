@@ -1,12 +1,12 @@
 #!/usr/bin/ruby
 # 
-# This file contains the ODE::Torque class, instances of which represent
-# 3-dimensional angular force vectors that can be applied to an ODE::Body to
-# rotate it in place.
-# 
+# This file contains the ODE::LinearVelocity class. Instances of this class
+# represent the velocity of a ODE::Body in an ODE::World simulation.
+#
 # == Synopsis
-# 
-#   
+#
+#   # Are the two bodies moving in similar directions?
+#   body1.linearVelocity.almost_equal( body2.linearVelocity, 0.5 )
 # 
 # == Authors
 # 
@@ -21,28 +21,26 @@
 # 
 # == Version
 #
-#  $Id: Torque.rb,v 1.2 2003/02/04 11:28:45 deveiant Exp $
+#  $Id$
 # 
 
 require 'ode/Vector'
 
 module ODE
 
-	### Instance of this class represent 3-dimensional angular force vectors
-	### that can be applied to an ODE::Body to rotate it in place.
-	class Torque < ODE::Vector
+	### Instances of this class represent the linear velocity of a ODE::Body in
+	### an ODE::World simulation.
+	class LinearVelocity < ODE::Vector
 
 		### Class constants
 		Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
-		Rcsid = %q$Id: Torque.rb,v 1.2 2003/02/04 11:28:45 deveiant Exp $
+		Rcsid = %q$Id$
 
-		### Create and return a new Torque object with the specified
+		### Create and return a new LinearVelocity object with the specified
 		### coordinates.
 		def initialize( x=0, y=0, z=0 )
 			super( x, y, z )
 		end
 
-	end # class Torque
-
+	end # class LinearVelocity
 end # module ODE
-
