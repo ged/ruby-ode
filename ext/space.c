@@ -1,12 +1,12 @@
 /*
  *		space.c - ODE Ruby Binding - ODE::Space class
- *		$Id: space.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 15:38:09 deveiant>
+ *		$Id$
+ *		Time-stamp: <27-Jul-2005 22:39:28 ged>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2002, 2003 The FaerieMUD Consortium.
+ *		Copyright (c) 2002-2005 The FaerieMUD Consortium.
  *
  *		This work is licensed under the Creative Commons Attribution License. To
  *		view a copy of this license, visit
@@ -185,7 +185,7 @@ ode_get_space( obj )
  * -------------------------------------------------- */
 
 /*
- * Singleton allocator
+ * ODE::Space Singleton allocator
  */
 static VALUE
 ode_space_s_alloc( klass )
@@ -194,6 +194,7 @@ ode_space_s_alloc( klass )
 	debugMsg(( "Wrapping an uninitialized ODE::Space ptr." ));
 	return Data_Wrap_Struct( klass, ode_space_gc_mark, ode_space_gc_free, 0 );
 }
+
 
 
 /* --------------------------------------------------
@@ -281,6 +282,60 @@ ode_space_geometries( self )
 	}
 
 	return rary;
+}
+
+
+/*
+ * geometries=( geometryArray )
+ * --
+ * Set the geometries in the receiving space to the given Array of geometries
+ * (ODE::Geometry objects).
+ */
+static VALUE
+ode_space_geometries_eq( self, geometryArray )
+	 VALUE self, geometryArray;
+{
+	ode_GEOMETRY	*ptr = get_space( self );
+	dSpaceID		thisSpace = (dSpaceID)( ptr->id );
+	int				i, geomCount = dSpaceGetNumGeoms( (dSpaceID)ptr->id );
+	VALUE			removeGeoms = rb_ary_new(),
+					addGeoms = rb_ary_new();
+
+	Check_Type( geometryArray, T_ARRAY );
+
+	/* First remove any geometries that aren't in the new array -- Build an
+	   array of all geometries that are currently in the space but aren't in the
+	   new array. */
+	for ( i = 0 ; i < geomCount ; i++ ) {
+		dGeomID			geom = dSpaceGetGeom( thisSpace, i );
+		ode_GEOMETRY	*gptr = dGeomGetData( geom );
+
+		if ( !RTEST(rb_ary_includes( geometryArray, gptr->object )) )
+			rb_ary_push( removeGeoms, gptr->object );
+	}
+
+	/* If there are any geometries to remove, remove them via #removeGeometries to give
+	   derivatives a chance to act on the removals. */
+	if ( RARRAY(removeGeoms)->len )
+		rb_funcall( self, rb_intern("removeGeometries"), 1, &removeGeoms );
+
+	/* Now make an array of geometries which are in the new array, but aren't in
+	   the space currently. */
+	for ( i = 0 ; i < RARRAY(geometryArray)->len ; i++ ) {
+		ode_GEOMETRY *geom = ode_get_geom( *(RARRAY(geometryArray)->ptr + i) );
+
+		if ( !dSpaceQuery(thisSpace, geom->id) )
+			rb_ary_push( addGeoms, geom->object );
+	}
+
+	/* If there are any geometries to add, add them via #addGeometries to give
+	   derivatives a chance to act on the additions. */
+	if ( RARRAY(addGeoms)->len )
+		rb_funcall( self, rb_intern("addGeometries"), 1, &addGeoms );
+
+	/* It doesn't really matter what we return here, as Matz decided assignment
+	   methods always return what was assigned, so... */
+	return Qnil;
 }
 
 
@@ -493,6 +548,46 @@ ode_hashspace_set_levels( self, minlevel, maxlevel )
 }
 
 
+/* --- ODE::GeometryTransform ------------------------------ */
+
+/*
+ * ODE::GeometryTransform Singleton allocator
+ */
+static VALUE
+ode_geom_transform_s_alloc( klass )
+	 VALUE klass;
+{
+	debugMsg(( "Wrapping an uninitialized ODE::GeometryTransform ptr." ));
+	return Data_Wrap_Struct( klass, ode_space_gc_mark, ode_space_gc_free, 0 );
+}
+
+
+/*
+ * ODE::GeometryTransform#geometries
+ * --
+ * Return the Array of geometries in the GeometryTransform.
+ */
+static VALUE
+ode_geom_transform_geometries( self )
+	 VALUE self;
+{
+	rb_notimplement();
+	return rb_ary_new();
+}
+
+
+/*
+ * ODE::GeometryTransform#geometries=( *geometries )
+ * --
+ * Set the Array of geometries currently in the GeometryTransform.
+ */
+static VALUE
+ode_geom_transform_geometries_eq( self, geoms )
+	 VALUE self, geoms;
+{
+	rb_notimplement();
+	return rb_ary_new();
+}
 
 
 
@@ -503,18 +598,15 @@ ode_hashspace_set_levels( self, minlevel, maxlevel )
 
 void ode_init_space()
 {
-	static char
-		rcsid[]		= "$Id: space.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $",
-		revision[]	= "$Revision: 1.3 $";
-
-	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
-
 	/* Kluge to make Rdoc see the class in this file */
 #if FOR_RDOC_PARSER
 	ode_mOde = rb_define_module( "ODE" );
 	ode_cOdeSpace			= rb_define_class_under( ode_mOde, "Space", ode_cOdeGeometry );
 	ode_cOdeHashSpace		= rb_define_class_under( ode_mOde, "HashSpace", ode_cOdeSpace );
+	ode_cOdeGeometryTransform = rb_define_class_under( ode_cOdeGeometry, "Transform", ode_cOdeSpace );
+	ode_cOdeGeometryTransformGroup = rb_define_class_under( ode_cOdeGeometry, "TransformGroup", ode_cOdeSpace );
 #endif
+
 
 	/* --- ODE::Space ------------------------------ */
 	/* Constants */
@@ -533,6 +625,7 @@ void ode_init_space()
 	rb_enable_super( ode_cOdeSpace, "initialize" );
 
 	rb_define_method( ode_cOdeSpace, "geometries", ode_space_geometries, 0 );
+	rb_define_method( ode_cOdeSpace, "geometries=", ode_space_geometries_eq, 1 );
 
 	rb_define_method( ode_cOdeSpace, "addGeometries", ode_space_insert, -2 );
 	rb_define_alias ( ode_cOdeSpace, "add_geometries", "addGeometries" );
@@ -553,6 +646,7 @@ void ode_init_space()
 	rb_define_alias ( ode_cOdeSpace, "eachNearPair", "eachAdjacentPair" );
 	rb_define_alias ( ode_cOdeSpace, "each_near_pair", "eachAdjacentPair" );
 
+
 	/* --- ODE::HashSpace ------------------------------ */
 #ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeHashSpace, ode_space_s_alloc );
@@ -562,6 +656,17 @@ void ode_init_space()
 
 	rb_define_method( ode_cOdeHashSpace, "setLevels", ode_hashspace_set_levels, 2 );
 	rb_define_alias ( ode_cOdeHashSpace, "set_levels", "setLevels" );
+
+
+	/* --- ODE::GeometryTransform ------------------------------ */
+#ifdef NEW_ALLOC
+	rb_define_alloc_func( ode_cOdeGeometryTransform, ode_geom_transform_s_alloc );
+#else
+	rb_define_singleton_method( ode_cOdeGeometryTransform, "allocate", ode_geom_transform_s_alloc, 0 );
+#endif
+
+	rb_define_method( ode_cOdeGeometryTransform, "geometry", ode_geom_transform_geometries, 0 );
+	rb_define_method( ode_cOdeGeometryTransform, "geometry=", ode_geom_transform_geometries_eq, 1 );
 
 	rb_require( "ode/Space" );
 }

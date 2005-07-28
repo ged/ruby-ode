@@ -3,7 +3,7 @@
 # test_buggy.rb - A (sort of) port of the test_buggy.cpp test in the ODE
 # distribution
 #
-# $Id: test_buggy.rb,v 1.2 2003/02/08 08:24:39 deveiant Exp $
+# $Id$
 # Time-stamp: <04-Feb-2003 15:21:35 deveiant>
 #
 # Authors:

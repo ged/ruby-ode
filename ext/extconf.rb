@@ -1,12 +1,12 @@
 #!/usr/bin/ruby
 #
-# $Id: extconf.rb,v 1.6 2003/02/14 18:29:47 deveiant Exp $
-# Time-stamp: <14-Feb-2003 11:29:29 deveiant>
+# $Id$
+# Time-stamp: <28-Nov-2004 00:30:32 ged>
 #
 # Authors:
 #   # Michael Granger <ged@FaerieMUD.org>
 #
-# Copyright (c) 2002, 2003 The FaerieMUD Consortium.
+# Copyright (c) 2002, 2003, 2004 The FaerieMUD Consortium.
 #
 # This work is licensed under the Creative Commons Attribution License. To
 # view a copy of this license, visit
@@ -25,6 +25,10 @@ def abort( msg )
 	$stderr.puts( msg )
 	exit 1
 end
+
+### There has to be a better way to do this.
+
+
 
 ### Version of have_library() that doesn't append (for checking a library that
 ### we already found, but may not be recent enough)
@@ -71,18 +75,19 @@ end
 # Add necessary flags for compiling with ODE headers 
 $CFLAGS << ' -DdDOUBLE'
 $CFLAGS << ' -Wall'
+# Add C++ libraries.
+$libs = append_library($libs, "stdc++")
 
 # Make sure we have the ODE library and header available
-have_library( "ode", "dWorldCreate" ) or
+have_header( "ode/ode.h" ) or
+	abort( "Can't find the ode/ode.h header." )
+have_library( "ode", "dWorldCreate", "ode/ode.h") or
 	abort( "Can't find the ODE library." )
-have_library_no_append( "ode", "dBodyGetForce" ) or
+have_library_no_append( "ode", "dBodyGetForce") or
 	abort( "Can't find a recent enough version of the ODE library." )
 have_library_no_append( "ode", "dSpaceCollide2" ) or
 	abort( "This library uses the new collision system, which your "\
 		   "ODE library doesn't support." )
-have_header( "ode/ode.h" ) or
-	abort( "Can't find the ode/ode.h header." )
-
 # Test for dGeomEnable (which hasn't as of this writing, been implemented yet,
 # AFAICT).
 if have_library_no_append( "ode", "dGeomEnable" )
@@ -97,22 +102,14 @@ if have_library_no_append( "ode", "dCreateGeomTransformGroup" )
 	$CFLAGS << " -DHAVE_GEOM_TRANSFORM_GROUP"
 end
 
-if have_library_no_append( "ode", "dCreateCylinder" )
+if have_library_no_append( "ode", "dCreateCylinder")
 	puts "  Enabling optional Cylinder geometry class extension"
 	$CFLAGS << " -DHAVE_CYLINDER_GEOM"
 end
 
-# Test for which allocation model to use
-if have_library_no_append( "ruby", "rb_define_alloc_func" )
-	puts "  Ruby 1.8.x allocation framework"
-	$CFLAGS << " -DNEW_ALLOC"
-
-# :TODO: There must be a better way of testing this...
-elsif String::respond_to?( :allocate )
-	puts "  Ruby 1.7.x allocation framework"
-else
+puts "  Ruby 1.8.x allocation framework"
+$CFLAGS << " -DNEW_ALLOC"
 	
-end
 
 # Write the Makefile
 create_makefile( "ode" )
@@ -126,5 +123,3 @@ depend:
 
 EOF
 }
-
-

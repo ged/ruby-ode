@@ -1,7 +1,7 @@
 #!/usr/bin/ruby
 #
 #	MUES Distribution Maker Script
-#	$Id: makedist.rb,v 1.1 2003/02/08 08:22:40 deveiant Exp $
+#	$Id$
 #
 #	Copyright (c) 2001, 2002, The FaerieMUD Consortium.
 #
@@ -29,7 +29,7 @@ Options = [
 
 # Version information
 Version = /([\d\.]+)/.match( %q$Revision: 1.1 $ )[1]
-Rcsid = %q$Id: makedist.rb,v 1.1 2003/02/08 08:22:40 deveiant Exp $
+Rcsid = %q$Id$
 
 $Programs = {
 	'tar'	=> nil,

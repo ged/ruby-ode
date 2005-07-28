@@ -1,6 +1,6 @@
 /*
  *		surface.c - ODE Ruby Binding - ODE::Surface class
- *		$Id: surface.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $
+ *		$Id$
  *		Time-stamp: <04-Feb-2003 15:33:25 deveiant>
  *
  *		Authors:
@@ -1060,7 +1060,7 @@ ode_surface_friction_model2_p( self )
 void ode_init_surface()
 {
 	static char
-		rcsid[]		= "$Id: surface.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $",
+		rcsid[]		= "$Id$",
 		revision[]	= "$Revision: 1.3 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );

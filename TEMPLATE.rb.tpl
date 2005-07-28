@@ -19,36 +19,28 @@
 # 
 # == Version
 #
-#  $Id: TEMPLATE.rb.tpl,v 1.1 2002/11/23 21:43:05 deveiant Exp $
+#  $Id$
 # 
 
 (>>>MARK<<<)
 
-module ODE
+### Instance of this class (>>>description<<<).
+class ODE::(>>>FILE_SANS<<<) < (>>>superclass<<<)
 
-	### Instance of this class (>>>description<<<).
-	class (>>>FILE_SANS<<<) < (>>>superclass<<<)
-
-		### Class constants
-		Version = /([\d\.]+)/.match( %q$Revision: 1.1 $ )[1]
-		Rcsid = %q$Id: TEMPLATE.rb.tpl,v 1.1 2002/11/23 21:43:05 deveiant Exp $
-
-		### Create a new ODE::(>>>FILE_SANS<<<) object.
-		def initialize
-		end
+	### Create a new ODE::(>>>FILE_SANS<<<) object.
+	def initialize
+	end
 
 
-		######
-		public
-		######
+	######
+	public
+	######
 
 
-		#########
-		protected
-		#########
+	#########
+	protected
+	#########
 
 
-	end # class (>>>FILE_SANS<<<)
-
-end # module ODE
+end # class ODE::(>>>FILE_SANS<<<)
 

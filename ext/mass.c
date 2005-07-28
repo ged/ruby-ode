@@ -1,6 +1,6 @@
 /*
  *		mass.c - ODE Ruby Binding - Mass object class
- *		$Id: mass.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $
+ *		$Id$
  *		Time-stamp: <04-Feb-2003 15:32:18 deveiant>
  *
  *		Authors:

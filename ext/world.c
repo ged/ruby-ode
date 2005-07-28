@@ -1,6 +1,6 @@
 /*
  *		world.c - ODE Ruby Binding - World Class
- *		$Id: world.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $
+ *		$Id$
  *		Time-stamp: <04-Feb-2003 15:33:52 deveiant>
  *
  *		Authors:

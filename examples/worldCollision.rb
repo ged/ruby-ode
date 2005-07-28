@@ -2,7 +2,7 @@
 #
 # worldCollision.rb
 #
-# $Id: worldCollision.rb,v 1.1 2003/02/04 11:12:40 deveiant Exp $
+# $Id$
 # Time-stamp: <04-Feb-2003 03:59:18 deveiant>
 #
 # This is a little experiment to work out Ruby-idiomish names for the collision

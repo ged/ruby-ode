@@ -1,12 +1,12 @@
 /*
  *		joints.c - ODE Ruby Binding - Joint Classes
- *		$Id: joints.c,v 1.7 2003/02/08 08:33:22 deveiant Exp $
- *		Time-stamp: <08-Feb-2003 01:32:54 deveiant>
+ *		$Id$
+ *		Time-stamp: <27-Jul-2005 22:38:43 ged>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2001, 2002, 2003 The FaerieMUD Consortium.
+ *		Copyright (c) 2001-2005 The FaerieMUD Consortium.
  *
  *		This work is licensed under the Creative Commons Attribution License. To
  *		view a copy of this license, visit
@@ -2170,12 +2170,6 @@ ode_aMotorJoint_motor3_angle_eq( self, angle )
 void
 ode_init_joints( void )
 {
-	static char
-		rcsid[]		= "$Id: joints.c,v 1.7 2003/02/08 08:33:22 deveiant Exp $",
-		revision[]	= "$Revision: 1.7 $";
-
-	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
-
 	/* Kluge to make Rdoc see the class in this file */
 #if FOR_RDOC_PARSER
 	ode_mOde = rb_define_module( "ODE" );
@@ -2190,13 +2184,6 @@ ode_init_joints( void )
 	ode_cOdeSliderJoint		= rb_define_class_under( ode_mOde, "SliderJoint", ode_cOdeParamJoint );
 	ode_cOdeAMotorJoint		= rb_define_class_under( ode_mOde, "AngularMotorJoint", ode_cOdeParamJoint );
 #endif
-
-	/* Constants */
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeJoint, "Version", vstr );
-	vstr = rb_str_new2( rcsid );
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeJoint, "Rcsid", vstr );
 
 	/* Define the symbol constants for the keys of the feedback hash */
 	body1Sym	= ID2SYM(rb_intern("body1"));

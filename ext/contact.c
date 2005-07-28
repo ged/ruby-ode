@@ -1,12 +1,12 @@
 /*
  *		contact.c - ODE Ruby Binding - ODE::Contact class
- *		$Id: contact.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 15:09:29 deveiant>
+ *		$Id$
+ *		Time-stamp: <27-Jul-2005 20:12:27 ged>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2002, 2003 The FaerieMUD Consortium.
+ *		Copyright (c) 2002-2005 The FaerieMUD Consortium.
  *
  *		This work is licensed under the Creative Commons Attribution License. To
  *		view a copy of this license, visit
@@ -609,23 +609,10 @@ ode_contact_fdir1_eq( self, direction )
 
 void ode_init_contact()
 {
-	static char
-		rcsid[]		= "$Id: contact.c,v 1.3 2003/02/08 08:25:46 deveiant Exp $",
-		revision[]	= "$Revision: 1.3 $";
-
-	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
-
 #if FOR_RDOC_PARSER
 	ode_mOde = rb_define_module( "ODE" );
 	ode_cOdeContact = rb_define_class_under( ode_mOde, "Contact", rb_cObject );
 #endif
-
-	/* Constants */
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeContact, "Version", vstr );
-	vstr = rb_str_new2( rcsid );
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeContact, "Rcsid", vstr );
 
 	/* Surface mode flag constants */
 	rb_define_const( ode_cOdeContact, "Mu2",					INT2FIX(0x001) );
@@ -649,7 +636,7 @@ void ode_init_contact()
 	rb_define_const( ode_cOdeContact, "PyramidFrictionBoth",	INT2FIX(0x3000) );
 
 	/* Allocator */
-#ifdef NEW_ALLOC
+#ifdef HAVE_RB_DEFINE_ALLOC_FUNC
 	rb_define_alloc_func( ode_cOdeContact, ode_contact_s_alloc );
 #else
 	rb_define_singleton_method( ode_cOdeContact, "allocate", ode_contact_s_alloc, 0 );

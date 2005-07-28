@@ -1,12 +1,12 @@
 /*
  *		body.c - ODE Ruby Binding - Body Class
- *		$Id: body.c,v 1.5 2003/02/08 08:26:01 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 15:15:55 deveiant>
+ *		$Id$
+ *		Time-stamp: <27-Jul-2005 20:12:56 ged>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2001, 2002, 2003 The FaerieMUD Consortium.
+ *		Copyright (c) 2001-2005 The FaerieMUD Consortium.
  *
  *		This work is licensed under the Creative Commons Attribution License. To
  *		view a copy of this license, visit
@@ -193,6 +193,7 @@ ode_get_body( self )
  */
 static VALUE
 ode_body_s_alloc( klass )
+	 VALUE klass;
 {
 	debugMsg(( "Wrapping an uninitialized ODE::Body pointer." ));
 	return Data_Wrap_Struct( klass, ode_body_gc_mark, ode_body_gc_free, 0 );
@@ -1452,10 +1453,6 @@ ode_body_gravity_mode_eq( self, flag )
 void
 ode_init_body(void)
 {
-	static char
-		rcsid[]		= "$Id: body.c,v 1.5 2003/02/08 08:26:01 deveiant Exp $",
-		revision[]	= "$Revision: 1.5 $";
-
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
 
 	/* Kluge to make Rdoc see the class in this file */
@@ -1463,13 +1460,6 @@ ode_init_body(void)
 	ode_mOde = rb_define_module( "ODE" );
 	ode_cOdeBody = rb_define_class_under( ode_mOde, "Body", rb_cObject );
 #endif
-
-	/* Constants */
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeBody, "Version", vstr );
-	vstr = rb_str_new2( rcsid );
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeBody, "Rcsid", vstr );
 
 	/* Allocator */
 #ifdef NEW_ALLOC

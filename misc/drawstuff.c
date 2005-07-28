@@ -1,13 +1,13 @@
 /*
  *		simulation.c - ODE Ruby Binding - ODE::Simulation class (a wrapper
  *						around ODE's drawstuff library)
- *		$Id: drawstuff.c,v 1.1 2003/02/04 11:32:11 deveiant Exp $
- *		Time-stamp: <04-Feb-2003 03:30:37 deveiant>
+ *		$Id$
+ *		Time-stamp: <27-Jul-2005 22:41:49 ged>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2002, 2003 The FaerieMUD Consortium. All rights reserved.
+ *		Copyright (c) 2002-2005 The FaerieMUD Consortium. All rights reserved.
  *
  *		This library is free software; you can redistribute it and/or modify it
  *		under the terms of the GNU Lesser General Public License as published by
@@ -306,16 +306,6 @@ void dsSetCappedCylinderQuality (int n);	/* default = 3 */
 
 void ode_init_DrawStuff()
 {
-	static char
-		rcsid[]		= "$Id: drawstuff.c,v 1.1 2003/02/04 11:32:11 deveiant Exp $",
-		revision[]	= "$Revision: 1.1 $";
-
-	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
-
-	/* Constants */
-	rb_define_const( ode_cSimulation, "Version", vstr );
-	rb_define_const( ode_cSimulation, "Rcsid", rb_str_new2(rcsid) );
-
 	
 }
 

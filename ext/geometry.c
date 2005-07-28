@@ -1,12 +1,12 @@
 /*
  *		geometry.c - ODE Ruby Binding - ODE::Geometry class
- *		$Id: geometry.c,v 1.4 2003/02/18 01:38:00 deveiant Exp $
- *		Time-stamp: <17-Feb-2003 17:36:39 deveiant>
+ *		$Id$
+ *		Time-stamp: <27-Jul-2005 22:38:14 ged>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>
  *
- *		Copyright (c) 2002, 2003 The FaerieMUD Consortium.
+ *		Copyright (c) 2002-2005 The FaerieMUD Consortium.
  *
  *		This work is licensed under the Creative Commons Attribution License. To
  *		view a copy of this license, visit
@@ -1829,12 +1829,6 @@ ode_geometry_ray_direction_point_eq( self, point )
 
 void ode_init_geometry()
 {
-	static char
-		rcsid[]		= "$Id: geometry.c,v 1.4 2003/02/18 01:38:00 deveiant Exp $",
-		revision[]	= "$Revision: 1.4 $";
-
-	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
-
 	/* Kluge to make Rdoc see the class in this file */
 #if FOR_RDOC_PARSER
 	ode_mOde = rb_define_module( "ODE" );
@@ -1854,13 +1848,6 @@ void ode_init_geometry()
 	ode_cOdeSpace			= rb_define_class_under( ode_mOde, "Space", ode_cOdeGeometry );
 	ode_cOdeHashSpace		= rb_define_class_under( ode_mOde, "HashSpace", ode_cOdeSpace );
 #endif
-
-	/* Constants */
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeGeometry, "Version", vstr );
-	vstr = rb_str_new2( rcsid );
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeGeometry, "Rcsid", rb_str_new2(rcsid) );
 
 	/* Constructor */
 #ifdef NEW_ALLOC

@@ -1,7 +1,7 @@
 /*
  *		ode.h - ODE Ruby Binding - Header file
- *		$Id: ode.h,v 1.6 2003/02/18 01:38:20 deveiant Exp $
- *		Time-stamp: <17-Feb-2003 17:25:24 deveiant>
+ *		$Id$
+ *		Time-stamp: <18-Feb-2003 09:56:41 deveiant>
  *
  *		Authors:
  *		  * Michael Granger <ged@FaerieMUD.org>

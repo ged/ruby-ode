@@ -1,16 +1,27 @@
 #
 #	Install/distribution utility functions
-#	$Id: utils.rb,v 1.2 2003/02/08 08:23:58 deveiant Exp $
+#	$Id$
 #
-#	Copyright (c) 2001, 2002, The FaerieMUD Consortium.
+#	Copyright (c) 2001-2003, The FaerieMUD Consortium.
 #
 #	This is free software. You may use, modify, and/or redistribute this
 #	software under the terms of the Perl Artistic License. (See
 #	http://language.perl.com/misc/Artistic.html)
 #
 
-require "readline"
-include Readline
+
+BEGIN {
+	begin
+		require 'readline'
+		include Readline
+	rescue LoadError => e
+		$stderr.puts "Faking readline..."
+		def readline( prompt )
+			$stderr.print prompt.chomp
+			return $stdin.gets.chomp
+		end
+	end
+}
 
 module UtilityFunctions
 

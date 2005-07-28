@@ -1,6 +1,6 @@
 /*
  *		jointGroup.c - ODE Ruby Binding - JointGroup Class
- *		$Id: jointGroup.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $
+ *		$Id$
  *		Time-stamp: <04-Feb-2003 15:13:02 deveiant>
  *
  *		Authors:
@@ -388,7 +388,7 @@ void
 ode_init_jointGroup(void)
 {
 	static char
-		rcsid[]		= "$Id: jointGroup.c,v 1.5 2003/02/08 08:25:46 deveiant Exp $",
+		rcsid[]		= "$Id$",
 		revision[]	= "$Revision: 1.5 $";
 
 	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );

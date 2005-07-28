@@ -19,7 +19,7 @@
 # 
 # == Version
 #
-#  $Id: odeunittest.rb,v 1.5 2003/06/27 13:37:59 deveiant Exp $
+#  $Id$
 # 
 
 basedir = File::dirname(File::dirname( __FILE__ ))
