@@ -1451,10 +1451,7 @@ ode_body_gravity_mode_eq( self, flag )
 
 /* Body initializer */
 void
-ode_init_body(void)
-{
-	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
-
+ode_init_body( void ) {
 	/* Kluge to make Rdoc see the class in this file */
 #if FOR_RDOC_PARSER
 	ode_mOde = rb_define_module( "ODE" );
@@ -1462,11 +1459,7 @@ ode_init_body(void)
 #endif
 
 	/* Allocator */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeBody, ode_body_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeBody, "allocate", ode_body_s_alloc, 0 );
-#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeBody, "initialize", ode_body_init, 1 );

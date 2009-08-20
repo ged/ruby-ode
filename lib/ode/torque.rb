@@ -24,17 +24,13 @@
 #  $Id$
 # 
 
-require 'ode/Vector'
+require 'ode/vector'
 
 module ODE
 
 	### Instance of this class represent 3-dimensional angular force vectors
 	### that can be applied to an ODE::Body to rotate it in place.
 	class Torque < ODE::Vector
-
-		### Class constants
-		Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
-		Rcsid = %q$Id$
 
 		### Create and return a new Torque object with the specified
 		### coordinates.

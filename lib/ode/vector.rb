@@ -33,19 +33,14 @@
 #  $Id$
 # 
 
-require 'ode/Quaternion'
+require 'ode/quaternion'
 
 module ODE
 
 	### Instance of this class represent a quantity that has a magnitude and a
 	### direction.
 	class Vector
-
 		include Enumerable
-
-		### Class constants
-		Version = /([\d\.]+)/.match( %q{$Revision: 1.3 $} )[1]
-		Rcsid = %q$Id$
 
 		X = 0; Y = 1; Z = 2
 
@@ -144,18 +139,11 @@ module ODE
 		alias_method :abs2, :sqr
 
 
-		### Return a distinct copy of the vector (as opposed to #dup, which only
-		### returns a shallow copy).
-		def copy
-			return self.dup.copy_object( self )
-		end
-
-
 		### Return a vector collinear to the given vector and having a length of
 		### 1.0, measured in the Euclidean norm. This will fail if the receiver
 		### vector is the zero vector.
 		def normalize
-			self.copy.normalize!
+			self.dup.normalize!
 		end
 		alias_method :normalized, :normalize
 
@@ -234,7 +222,7 @@ module ODE
 			raise ArgumentError, "Cannot add vectors of different dimensions" unless
 				self.size == otherVector.size
 
-			rvec = self.copy
+			rvec = self.dup
 			rvec.each_index {|i| rvec[i] += otherVector[i] }
 			return rvec
 		end
@@ -247,7 +235,7 @@ module ODE
 			raise ArgumentError, "Cannot add vectors of different dimensions" unless
 				self.size == otherVector.size
 
-			rvec = self.copy
+			rvec = self.dup
 			rvec.each_index {|i| rvec[i] -= otherVector[i] }
 			return rvec
 		end

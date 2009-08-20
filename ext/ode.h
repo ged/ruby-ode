@@ -24,9 +24,9 @@
 
 #include <ruby.h>
 #include <intern.h>				/* For rb_dbl2big() */
-#include <version.h>			/* Check version for alloc framework */
+// #include <version.h>			/* Check version for alloc framework */
 
-#include <ode/ode.h>
+#include "ode/ode.h"
 
 /* Debugging functions/macros */
 #ifdef HAVE_STDARG_PROTOTYPES
@@ -96,7 +96,7 @@ extern VALUE ode_cOdeAMotorJoint;
 extern VALUE ode_cOdeMass;
 extern VALUE ode_cOdeMassBox;
 extern VALUE ode_cOdeMassSphere;
-extern VALUE ode_cOdeMassCapCyl;
+extern VALUE ode_cOdeMassCapsule;
 
 extern VALUE ode_cOdeContact;
 
@@ -242,6 +242,7 @@ typedef struct {
 #define IsJointGroup( obj ) rb_obj_is_kind_of( (obj), ode_cOdeJointGroup )
 #define IsSurface( obj ) rb_obj_is_kind_of( (obj), ode_cOdeSurface )
 #define IsMass( obj ) rb_obj_is_kind_of( (obj), ode_cOdeMass )
+#define IsGeomTg( obj ) rb_obj_is_kind_of( (obj), ode_cOdeGeometryTransformGroup )
 
 
 /* Test that obj is .kind_of?( klass ) and raise a TypeError if not. */

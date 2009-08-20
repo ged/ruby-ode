@@ -33,19 +33,13 @@
 #  $Id$
 # 
 
-require 'ode/Vector'
+require 'ode/vector'
 
 module ODE
 
 	### Instances of this class represent the position of a point in an
 	### ODE::World simulation.
 	class Position < ODE::Vector
-
-		### Class constants
-		Version = /([\d\.]+)/.match( %q{$Revision: 1.2 $} )[1]
-		Rcsid = %q$Id$
-
-		Origin = new(0,0,0)
 
 		### Create and return a new Position object with the specified
 		### coordinates.

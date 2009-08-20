@@ -250,7 +250,7 @@ void dsDrawTriangle (const float pos[3], const float R[12],
 		     const float *v0, const float *v1, const float *v2);
 void dsDrawCylinder (const float pos[3], const float R[12],
 		     float length, float radius);
-void dsDrawCappedCylinder (const float pos[3], const float R[12],
+void dsDrawCapsule (const float pos[3], const float R[12],
 			   float length, float radius);
 void dsDrawLine (const float pos1[3], const float pos2[3]);
 
@@ -263,7 +263,7 @@ void dsDrawSphereD (const double pos[3], const double R[12],
 		    const float radius);
 void dsDrawCylinderD (const double pos[3], const double R[12],
 		      float length, float radius);
-void dsDrawCappedCylinderD (const double pos[3], const double R[12],
+void dsDrawCapsuleD (const double pos[3], const double R[12],
 			    float length, float radius);
 void dsDrawLineD (const double pos1[3], const double pos2[3]);
 
@@ -272,7 +272,7 @@ void dsDrawLineD (const double pos1[3], const double pos2[3]);
  * be effective.
  */
 void dsSetSphereQuality (int n);		/* default = 1 */
-void dsSetCappedCylinderQuality (int n);	/* default = 3 */
+void dsSetCapsuleQuality (int n);	/* default = 3 */
 
 
 

@@ -609,16 +609,9 @@ void ode_init_space()
 
 
 	/* --- ODE::Space ------------------------------ */
-	/* Constants */
-	rb_define_const( ode_cOdeSpace, "Version", vstr );
-	rb_define_const( ode_cOdeSpace, "Rcsid", rb_str_new2(rcsid) );
 
 	/* Constructor */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeSpace, ode_space_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeSpace, "allocate", ode_space_s_alloc, 0 );
-#endif
 
 	/* Instance methods */
 	rb_define_method( ode_cOdeSpace, "initialize", ode_space_init, -1 );
@@ -648,26 +641,18 @@ void ode_init_space()
 
 
 	/* --- ODE::HashSpace ------------------------------ */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeHashSpace, ode_space_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeHashSpace, "allocate", ode_space_s_alloc, 0 );
-#endif
 
 	rb_define_method( ode_cOdeHashSpace, "setLevels", ode_hashspace_set_levels, 2 );
 	rb_define_alias ( ode_cOdeHashSpace, "set_levels", "setLevels" );
 
 
 	/* --- ODE::GeometryTransform ------------------------------ */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeGeometryTransform, ode_geom_transform_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeGeometryTransform, "allocate", ode_geom_transform_s_alloc, 0 );
-#endif
 
 	rb_define_method( ode_cOdeGeometryTransform, "geometry", ode_geom_transform_geometries, 0 );
 	rb_define_method( ode_cOdeGeometryTransform, "geometry=", ode_geom_transform_geometries_eq, 1 );
 
-	rb_require( "ode/Space" );
+	rb_require( "ode/space" );
 }
 

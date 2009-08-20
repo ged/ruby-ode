@@ -1,0 +1,4 @@
+\.o$
+\.log$
+\.(bundle|so|dll)$
+^ext/Makefile$

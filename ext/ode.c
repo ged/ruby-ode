@@ -53,7 +53,7 @@ VALUE ode_cOdeAMotorJoint;
 VALUE ode_cOdeMass;
 VALUE ode_cOdeMassBox;
 VALUE ode_cOdeMassSphere;
-VALUE ode_cOdeMassCapCyl;
+VALUE ode_cOdeMassCapsule;
 
 VALUE ode_cOdeContact;
 VALUE ode_cOdePlaceable;
@@ -338,40 +338,27 @@ ode_near_callback( callback, o1, o2 )
 void
 Init_ode()
 {
-	static char
-		rcsid[]		= "$Id$",
-		revision[]	= "$Revision: 1.6 $";
-
-	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
+	VALUE precision = Qnil;
 	VALUE features	= rb_hash_new();
 
-	if ( RUBY_VERSION_CODE < 173 )
-		fprintf( stderr, "Warning: Ruby version (%s) too small.", RUBY_VERSION );
-
-	ode_debug( "Loading Ruby ODE binding v%s", STR2CSTR(vstr) );
+	ode_debug( "Loading Ruby ODE binding" );
 
 	/* Modules */
 	ode_mOde = rb_define_module( "ODE" );
 
 	/* Module constants */
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_mOde, "Version", vstr );
-	vstr = rb_str_new2( rcsid );
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_mOde, "Rcsid", vstr );
-
 	rb_define_const( ode_mOde, "Pi", rb_float_new(M_PI) );
 	rb_define_const( ode_mOde, "Infinity", rb_float_new(dInfinity) );
 	rb_define_const( ode_mOde, "ROTATION_INFINITESIMAL", INT2FIX(0) );
 	rb_define_const( ode_mOde, "ROTATION_FINITE", INT2FIX(1) );
 
 #ifdef dDOUBLE
-	vstr = rb_str_new2("dDOUBLE");
+	precision = rb_str_new2("dDOUBLE");
 #else
-	vstr = rb_str_new2("dSINGLE");
+	precision = rb_str_new2("dSINGLE");
 #endif	
-	rb_obj_freeze( vstr );
-	rb_const_set( ode_mOde, rb_intern("Precision"), vstr );
+	rb_obj_freeze( precision );
+	rb_const_set( ode_mOde, rb_intern("Precision"), precision );
 
 #ifdef HAVE_ODE_DCYLINDER_H
 	rb_hash_aset( features, ID2SYM(rb_intern("dCylinder")), Qtrue );
@@ -444,7 +431,7 @@ Init_ode()
 	ode_cOdeMass			= rb_define_class_under( ode_mOde, "Mass", rb_cObject );
 	ode_cOdeMassBox			= rb_define_class_under( ode_cOdeMass, "Box", ode_cOdeMass );
 	ode_cOdeMassSphere		= rb_define_class_under( ode_cOdeMass, "Sphere", ode_cOdeMass );
-	ode_cOdeMassCapCyl		= rb_define_class_under( ode_cOdeMass, "CappedCylinder", ode_cOdeMass );
+	ode_cOdeMassCapsule		= rb_define_class_under( ode_cOdeMass, "Capsule", ode_cOdeMass );
 
 	/* ODE Collision classes */
 	ode_cOdeContact			= rb_define_class_under( ode_mOde, "Contact", rb_cObject );
@@ -455,7 +442,7 @@ Init_ode()
 	ode_cOdePlaceable		= rb_define_class_under( ode_cOdeGeometry, "Placeable", ode_cOdeGeometry );
 	ode_cOdeGeometrySphere	= rb_define_class_under( ode_cOdeGeometry, "Sphere", ode_cOdePlaceable );
 	ode_cOdeGeometryBox		= rb_define_class_under( ode_cOdeGeometry, "Box", ode_cOdePlaceable );
-	ode_cOdeGeometryCapCyl	= rb_define_class_under( ode_cOdeGeometry, "CappedCylinder", ode_cOdePlaceable );
+	ode_cOdeGeometryCapCyl	= rb_define_class_under( ode_cOdeGeometry, "Capsule", ode_cOdePlaceable );
 	ode_cOdeGeometryCylinder = rb_define_class_under( ode_cOdeGeometry, "Cylinder", ode_cOdePlaceable );
 	ode_cOdeGeometryRay		= rb_define_class_under( ode_cOdeGeometry, "Ray", ode_cOdePlaceable );
 

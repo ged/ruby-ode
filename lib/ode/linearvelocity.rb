@@ -24,17 +24,13 @@
 #  $Id$
 # 
 
-require 'ode/Vector'
+require 'ode/vector'
 
 module ODE
 
 	### Instances of this class represent the linear velocity of a ODE::Body in
 	### an ODE::World simulation.
 	class LinearVelocity < ODE::Vector
-
-		### Class constants
-		Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
-		Rcsid = %q$Id$
 
 		### Create and return a new LinearVelocity object with the specified
 		### coordinates.

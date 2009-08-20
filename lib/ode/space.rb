@@ -30,11 +30,6 @@ module ODE
 	### Instance of this class are collision spaces..
 	class Space
 
-		### Class constants
-		Version ||= /([\d\.]+)/.match( %q{$Revision: 1.2 $} )[1]
-		Rcsid ||= %q$Id$
-
-
 		######
 		public
 		######

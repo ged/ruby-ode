@@ -32,24 +32,24 @@ class Mass_test < ODE::TestCase
 		assert_instance_of( ODE::Mass::Sphere, mass )
 	end
 
-	def test_03_new_cappedcylinder
+	def test_03_new_capsule
 		mass = nil
 		assert_raises( ArgumentError ) {
-			mass = ODE::Mass::CappedCylinder::new( 2, 4, 1, 2 )
+			mass = ODE::Mass::Capsule::new( 2, 4, 1, 2 )
 		}
 		assert_raises( TypeError ) {
-			mass = ODE::Mass::CappedCylinder::new( 1, "that", 1, 2 )
+			mass = ODE::Mass::Capsule::new( 1, "that", 1, 2 )
 		}
 		assert_nothing_raised {
-			mass = ODE::Mass::CappedCylinder::new( 1.0, Y, 2, 4 )
+			mass = ODE::Mass::Capsule::new( 1.0, Y, 2, 4 )
 		}
 		assert_kind_of( ODE::Mass, mass )
-		assert_instance_of( ODE::Mass::CappedCylinder, mass )
+		assert_instance_of( ODE::Mass::Capsule, mass )
 		assert_nothing_raised {
-			mass = ODE::Mass::CappedCylinder::new( 2, Z, 1, 2 )
+			mass = ODE::Mass::Capsule::new( 2, Z, 1, 2 )
 		}
 		assert_kind_of( ODE::Mass, mass )
-		assert_instance_of( ODE::Mass::CappedCylinder, mass )
+		assert_instance_of( ODE::Mass::Capsule, mass )
 	end
 
 	def test_04_new_box

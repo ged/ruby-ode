@@ -112,8 +112,7 @@ ode_geomtg_gc_free( ptr )
  * Alloc a new GeometryTransformGroup.
 */
 static ode_GEOMETRY *
-ode_geomtg_alloc()
-{
+ode_geomtg_alloc() {
 	ode_GEOMETRY *ptr = ALLOC( ode_GEOMETRY );
 
 	/* Fill in the struct with reasonable defaults */
@@ -139,7 +138,7 @@ check_geomtg( self )
 	debugMsg(( "Checking a ODE::GeometryTransformGroup object (%d).", self ));
 	Check_Type( self, T_DATA );
 
-    if ( !IsGeomtg(self) ) {
+    if ( !IsGeomTg(self) ) {
 		rb_raise( rb_eTypeError, "wrong argument type %s (expected ODE::GeometryTransformGroup)",
 				  rb_class2name(CLASS_OF( self )) );
     }
@@ -286,13 +285,8 @@ ode_geomtg_geometries_eq( self, geoms )
 
 void ode_init_geometry_transform_group()
 {
-
 	/* Constructor */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeGeometryTransformGroup, ode_geomtg_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeGeometryTransformGroup, "allocate", ode_geomtg_s_alloc, 0 );
-#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeGeometryTransformGroup, "initialize", ode_geomtg_init, -1 );

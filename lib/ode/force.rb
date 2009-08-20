@@ -32,10 +32,6 @@ module ODE
 	### that can be applied to an ODE::Body to move it around.
 	class Force < ODE::Vector
 
-		### Class constants
-		Version = /([\d\.]+)/.match( %q$Revision: 1.2 $ )[1]
-		Rcsid = %q$Id$
-
 		### Create and return a new Force object with the specified
 		### coordinates.
 		def initialize( x=0, y=0, z=0 )

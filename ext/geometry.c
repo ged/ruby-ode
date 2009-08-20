@@ -536,7 +536,7 @@ ode_geometry_collide( argc, argv, self )
 	rb_scan_args( argc, argv, "11", &otherGeom, &maxContacts );
 
 	CheckKindOf( otherGeom, ode_cOdeGeometry );
-	if ( !rb_block_given_p )
+	if ( !rb_block_given_p() )
 		rb_raise( ruby_eLocalJumpError, "no block given" );
 	
 	/* Fetch or default the contact count */
@@ -1244,22 +1244,22 @@ ode_geometry_plane_params_eq( self, params )
 }
 
 
-/* --- ODE::Geometry::CappedCylinder ------------------------------ */
+/* --- ODE::Geometry::Capsule ------------------------------ */
 
 /*
- * ODE::Geometry::CappedCylinder::new( radius, length, space=nil )
+ * ODE::Geometry::Capsule::new( radius, length, space=nil )
  * --
- * Create a new capped-cylinder collision geometry with the specified
+ * Create a new capsule collision geometry with the specified
  * parameters, and insert it into the specified space, if given.
  *
- * A capped cylinder is like a normal cylinder except it has half-sphere caps at
+ * A capsule is like a normal cylinder except it has half-sphere caps at
  * its ends. This feature makes the internal collision detection code
  * particularly fast and accurate. The cylinder's length, not counting the caps,
  * is given by length. The cylinder is aligned along the geom's local Z
  * axis. The radius of the caps, and of the cylinder itself, is given by radius.
  */
 static VALUE
-ode_geometry_capcyl_init( argc, argv, self )
+ode_geometry_capsule_init( argc, argv, self )
 	 int	argc;
 	 VALUE	*argv, self;
 {
@@ -1274,9 +1274,9 @@ ode_geometry_capcyl_init( argc, argv, self )
 	/* Fetch the ode_GEOMETRY pointer */
 	geometry = get_geom(self);
 	if ( !geometry ) rb_bug( "Superclass's initialize didn't return a valid Geometry." );
-	debugMsg(( "CappedCylinder::initialize: Geometry is <%p>", geometry ));
+	debugMsg(( "Capsule::initialize: Geometry is <%p>", geometry ));
 	
-	debugMsg(( "CappedCylinder::initialize: Scanning arguments." ));
+	debugMsg(( "Capsule::initialize: Scanning arguments." ));
 	if ( rb_scan_args(argc, argv, "21", &radius, &length, &spaceObj) == 3 ) {
 		SetContainer( spaceObj, space, geometry );
 	}
@@ -1284,7 +1284,7 @@ ode_geometry_capcyl_init( argc, argv, self )
 	CheckPositiveNonZeroNumber( NUM2DBL(radius), "radius" );
 	CheckPositiveNonZeroNumber( NUM2DBL(length), "length" );
 
-	debugMsg(( "Creating new CappedCylinder geometry." ));
+	debugMsg(( "Creating new Capsule geometry." ));
 	geometry->id = (dGeomID)dCreateCCylinder( space,
 											  (dReal)NUM2DBL(radius),
 											  (dReal)NUM2DBL(length) );
@@ -1297,12 +1297,12 @@ ode_geometry_capcyl_init( argc, argv, self )
 
 
 /*
- * ODE::Geometry::CappedCylinder#params
+ * ODE::Geometry::Capsule#params
  * --
- * Returns the capped cylinder's params as a 2-element array (radius,length).
+ * Returns the capsule's params as a 2-element array (radius,length).
  */
 static VALUE
-ode_geometry_capcyl_params( self )
+ode_geometry_capsule_params( self )
 	 VALUE self;
 {
 	ode_GEOMETRY	*geometry = get_geom( self );
@@ -1317,13 +1317,13 @@ ode_geometry_capcyl_params( self )
 
 
 /*
- * ODE::Geometry::CappedCylinder#params=( radius, length )
+ * ODE::Geometry::Capsule#params=( radius, length )
  * --
- * Set the capped cylinder's <tt>radius</tt> and <tt>length</tt> to the
+ * Set the capsule's <tt>radius</tt> and <tt>length</tt> to the
  * specified values.
  */
 static VALUE
-ode_geometry_capcyl_params_eq( self, args )
+ode_geometry_capsule_params_eq( self, args )
 	 VALUE self, args;
 {
 	ode_GEOMETRY	*geometry = get_geom( self );
@@ -1355,12 +1355,12 @@ ode_geometry_capcyl_params_eq( self, args )
 
 
 /*
- * ODE::Geometry::CappedCylinder#radius
+ * ODE::Geometry::Capsule#radius
  * --
  * Get the cylinder's radius.
  */
 static VALUE
-ode_geometry_capcyl_radius( self )
+ode_geometry_capsule_radius( self )
 	 VALUE self;
 {
 	ode_GEOMETRY	*geometry = get_geom( self );
@@ -1375,10 +1375,10 @@ ode_geometry_capcyl_radius( self )
 /*
  * ODE::Geometry::Capcyl#radius=( newValue )
  * --
- * Set the capcyl's radius.
+ * Set the capsule's radius.
  */
 static VALUE
-ode_geometry_capcyl_radius_eq( self, newRadius )
+ode_geometry_capsule_radius_eq( self, newRadius )
 	 VALUE self, newRadius;
 {
 	ode_GEOMETRY	*geometry = get_geom( self );
@@ -1395,12 +1395,12 @@ ode_geometry_capcyl_radius_eq( self, newRadius )
 
 
 /*
- * ODE::Geometry::CappedCylinder#length
+ * ODE::Geometry::Capsule#length
  * --
  * Get the cylinder's length.
  */
 static VALUE
-ode_geometry_capcyl_length( self )
+ode_geometry_capsule_length( self )
 	 VALUE self;
 {
 	ode_GEOMETRY	*geometry = get_geom( self );
@@ -1415,10 +1415,10 @@ ode_geometry_capcyl_length( self )
 /*
  * ODE::Geometry::Capcyl#length=( newValue )
  * --
- * Set the capcyl's length.
+ * Set the capsule's length.
  */
 static VALUE
-ode_geometry_capcyl_length_eq( self, newLength )
+ode_geometry_capsule_length_eq( self, newLength )
 	 VALUE self, newLength;
 {
 	ode_GEOMETRY	*geometry = get_geom( self );
@@ -1442,7 +1442,7 @@ ode_geometry_capcyl_length_eq( self, newLength )
  * Create a new regular cylinder collision geometry with the specified
  * parameters, and insert it into the specified space, if given. This requires
  * the 'dCylinder' extension to ODE. Note that this type of cylinder is aligned
- * along the geom's local *Y* axis, instead of the Z axis as CappedCylinder is.
+ * along the geom's local *Y* axis, instead of the Z axis as Capsule is.
  */
 static VALUE
 ode_geometry_cylinder_init( argc, argv, self )
@@ -1827,8 +1827,7 @@ ode_geometry_ray_direction_point_eq( self, point )
  * Initialize
  * -------------------------------------------------- */
 
-void ode_init_geometry()
-{
+void ode_init_geometry() {
 	/* Kluge to make Rdoc see the class in this file */
 #if FOR_RDOC_PARSER
 	ode_mOde = rb_define_module( "ODE" );
@@ -1838,7 +1837,7 @@ void ode_init_geometry()
 	ode_cOdePlaceable		= rb_define_class_under( ode_cOdeGeometry, "Placeable", ode_cOdeGeometry );
 	ode_cOdeGeometrySphere	= rb_define_class_under( ode_cOdeGeometry, "Sphere", ode_cOdePlaceable );
 	ode_cOdeGeometryBox		= rb_define_class_under( ode_cOdeGeometry, "Box", ode_cOdePlaceable );
-	ode_cOdeGeometryCapCyl	= rb_define_class_under( ode_cOdeGeometry, "CappedCylinder", ode_cOdePlaceable );
+	ode_cOdeGeometryCapCyl	= rb_define_class_under( ode_cOdeGeometry, "Capsule", ode_cOdePlaceable );
 	ode_cOdeGeometryRay		= rb_define_class_under( ode_cOdeGeometry, "Ray", ode_cOdeRay );
 	ode_cOdeGeometryCylinder = rb_define_class_under( ode_cOdeGeometry, "Cylinder", ode_cOdePlaceable );
 
@@ -1850,11 +1849,7 @@ void ode_init_geometry()
 #endif
 
 	/* Constructor */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeGeometry, ode_geometry_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeGeometry, "allocate", ode_geometry_s_alloc, 0 );
-#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeGeometry, "initialize", ode_geometry_init, -1 );
@@ -1938,16 +1933,16 @@ void ode_init_geometry()
 	rb_define_method( ode_cOdeGeometryPlane, "params=", ode_geometry_plane_params_eq, -2 );
 	/* :TODO: Other convenience accessors? normalVector(=)? */
 
-	/* ODE::Geometry::CappedCylinder */
-	rb_define_method( ode_cOdeGeometryCapCyl, "initialize", ode_geometry_capcyl_init, -1 );
+	/* ODE::Geometry::Capsule */
+	rb_define_method( ode_cOdeGeometryCapCyl, "initialize", ode_geometry_capsule_init, -1 );
 	rb_enable_super ( ode_cOdeGeometryCapCyl, "initialize" );
 
-	rb_define_method( ode_cOdeGeometryCapCyl, "params", ode_geometry_capcyl_params, 0 );
-	rb_define_method( ode_cOdeGeometryCapCyl, "params=", ode_geometry_capcyl_params_eq, -2 );
-	rb_define_method( ode_cOdeGeometryCapCyl, "radius", ode_geometry_capcyl_radius, 0 );
-	rb_define_method( ode_cOdeGeometryCapCyl, "radius=", ode_geometry_capcyl_radius_eq, 1 );
-	rb_define_method( ode_cOdeGeometryCapCyl, "length", ode_geometry_capcyl_length, 0 );
-	rb_define_method( ode_cOdeGeometryCapCyl, "length=", ode_geometry_capcyl_length_eq, 1 );
+	rb_define_method( ode_cOdeGeometryCapCyl, "params", ode_geometry_capsule_params, 0 );
+	rb_define_method( ode_cOdeGeometryCapCyl, "params=", ode_geometry_capsule_params_eq, -2 );
+	rb_define_method( ode_cOdeGeometryCapCyl, "radius", ode_geometry_capsule_radius, 0 );
+	rb_define_method( ode_cOdeGeometryCapCyl, "radius=", ode_geometry_capsule_radius_eq, 1 );
+	rb_define_method( ode_cOdeGeometryCapCyl, "length", ode_geometry_capsule_length, 0 );
+	rb_define_method( ode_cOdeGeometryCapCyl, "length=", ode_geometry_capsule_length_eq, 1 );
 
 	/* ODE::Geometry::Cylinder */
 	rb_define_method( ode_cOdeGeometryCylinder, "initialize", ode_geometry_cylinder_init, -1 );

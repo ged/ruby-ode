@@ -2192,11 +2192,7 @@ ode_init_joints( void )
 	forceSym	= ID2SYM(rb_intern("force"));
 
 	/* Allocator - ODE::Joint class (abstract) */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeJoint, ode_joint_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeJoint, "allocate", ode_joint_s_alloc, 0 );
-#endif
 
 	/* Instance methods */
 	rb_define_method( ode_cOdeJoint, "attach", ode_joint_attach, 2 );

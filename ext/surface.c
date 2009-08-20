@@ -1057,18 +1057,7 @@ ode_surface_friction_model2_p( self )
  * Initializer
  * -------------------------------------------------- */
 
-void ode_init_surface()
-{
-	static char
-		rcsid[]		= "$Id$",
-		revision[]	= "$Revision: 1.3 $";
-
-	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
-
-	/* Constants */
-	rb_define_const( ode_cOdeSurface, "Version", vstr );
-	rb_define_const( ode_cOdeSurface, "Rcsid", rb_str_new2(rcsid) );
-
+void ode_init_surface() {
 	/* Kluge to make Rdoc see the class in this file */
 #if FOR_RDOC_PARSER
 	ode_mOde = rb_define_module( "ODE" );
@@ -1076,11 +1065,7 @@ void ode_init_surface()
 #endif
 
 	/* Constructor */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeSurface, ode_surface_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeSurface, "allocate", ode_surface_s_alloc, 0 );
-#endif
 
 	/* Initializers */
 	rb_define_method( ode_cOdeSurface, "initialize", ode_surface_init, -1 );

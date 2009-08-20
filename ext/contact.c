@@ -636,11 +636,7 @@ void ode_init_contact()
 	rb_define_const( ode_cOdeContact, "PyramidFrictionBoth",	INT2FIX(0x3000) );
 
 	/* Allocator */
-#ifdef HAVE_RB_DEFINE_ALLOC_FUNC
 	rb_define_alloc_func( ode_cOdeContact, ode_contact_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeContact, "allocate", ode_contact_s_alloc, 0 );
-#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeContact, "initialize", ode_contact_init, -1 );
@@ -683,6 +679,6 @@ void ode_init_contact()
 	rb_define_alias ( ode_cOdeContact, "friction_direction=", "fdir1=" );
 
 	/* Load the ruby half of the class */
-	rb_require( "ode/Contact.rb" );
+	rb_require( "ode/contact" );
 }
 

@@ -385,33 +385,15 @@ ode_jointGroup_register_joint( self, joint )
 
 /* JointGroup initializer */
 void
-ode_init_jointGroup(void)
-{
-	static char
-		rcsid[]		= "$Id$",
-		revision[]	= "$Revision: 1.5 $";
-
-	VALUE vstr		= rb_str_new( (revision+11), strlen(revision) - 11 - 2 );
-
+ode_init_jointGroup( void ) {
 	/* Kluge to make Rdoc see the class in this file */
 #if FOR_RDOC_PARSER
 	ode_mOde = rb_define_module( "ODE" );
 	ode_cOdeJointGroup		= rb_define_class_under( ode_mOde, "JointGroup", rb_cObject );
 #endif
 
-	/* Constants */
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeJointGroup, "Version", vstr );
-	vstr = rb_str_new2( rcsid );
-	rb_obj_freeze( vstr );
-	rb_define_const( ode_cOdeJointGroup, "Rcsid", vstr );
-
 	/* Allocator */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeJointGroup, ode_jointGroup_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeJointGroup, "allocate", ode_jointGroup_s_alloc, 0 );
-#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeJointGroup, "initialize", ode_jointGroup_init, -1 );
@@ -421,6 +403,6 @@ ode_init_jointGroup(void)
 	rb_define_method( ode_cOdeJointGroup, "empty?", ode_jointGroup_empty_p, 0 );
 
 	/* Load the Ruby half of the class */
-	rb_require( "ode/JointGroup" );
+	rb_require( "ode/jointgroup" );
 }
 

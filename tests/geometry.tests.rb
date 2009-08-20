@@ -130,11 +130,11 @@ class GeometryTestCase < ODE::TestCase
 			},
 		},
 
-		ODE::Geometry::CappedCylinder => {
+		ODE::Geometry::Capsule => {
 			:__proto_args__	=> [1,1],
 
 			:new	=> {
-				[1,1]		=> ODE::Geometry::CappedCylinder,
+				[1,1]		=> ODE::Geometry::Capsule,
 				[0,1]		=> RangeError,
 				[1,0]		=> RangeError,
 				[-1,0]		=> RangeError,

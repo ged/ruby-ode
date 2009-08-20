@@ -1,0 +1,23 @@
+--- 
+excluded_pkgfiles: []
+
+rubyforge_project: ode
+project_requirements: 
+  ODE 0.11.1: ">=0"
+project_pubdir: /usr/local/www/public/code/
+project_description: Ruby-ODE is a Ruby binding for the Open Dynamics Engine, written in C.
+rubyforge_group: deveiate
+project_pubhost: deveiate
+project_homepage: http://deveiate.org/projects/Ruby-ODE
+project_dependencies: {}
+
+project_summary: a Ruby binding for the Open Dynamics Engine.
+project_name: Ruby-ODE
+version_file: ode.rb
+additional_pkgfiles: []
+
+dev_dependencies: {}
+
+authors: 
+  Michael Granger: ged@FaerieMUD.org
+post_install_message: ""

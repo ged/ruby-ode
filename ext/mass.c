@@ -343,12 +343,12 @@ ode_mass_sphere_init( argc, argv, self )
 }
 
 
-/* --- ODE::Mass::CappedCylinder ------------------------------ */
+/* --- ODE::Mass::Capsule ------------------------------ */
 
 /*
- * ODE::Mass::CappedCylinder#initialize( density, direction, radius, length[, totalmass] )
+ * ODE::Mass::Capsule#initialize( density, direction, radius, length[, totalmass] )
  * --
- * Create and return a capped cylinder Mass object of the given <tt>radius</tt>
+ * Create and return a capsule Mass object of the given <tt>radius</tt>
  * and <tt>length</tt> with the specified density, with the center of mass at
  * (0,0,0) relative to the body. The cylinder's long axis is oriented along the
  * body's x, y or z axis according to the value of <tt>direction</tt> (1=x, 2=y,
@@ -356,7 +356,7 @@ ode_mass_sphere_init( argc, argv, self )
  * values so the total mass is <tt>totalmass</tt> before returning.
  */
 static VALUE
-ode_mass_ccyl_init( argc, argv, self )
+ode_mass_capsule_init( argc, argv, self )
 	 int	argc;
 	 VALUE	*argv, self;
 {
@@ -377,11 +377,11 @@ ode_mass_ccyl_init( argc, argv, self )
 	rb_call_super( 0, 0 );
 	ptr = get_mass( self );
 
-	dMassSetCappedCylinder( ptr->massptr,
-							(dReal)NUM2DBL(density),
-							NUM2INT(direction),
-							(dReal)NUM2DBL(radius),
-							(dReal)NUM2DBL(length) );
+	dMassSetCapsule( ptr->massptr,
+	                 (dReal)NUM2DBL(density),
+	                 NUM2INT(direction),
+	                 (dReal)NUM2DBL(radius),
+	                 (dReal)NUM2DBL(length) );
 
 	/* If a totalmass argument was given, check and set it */
 	if ( RTEST(totalmass) ) {
@@ -446,19 +446,15 @@ ode_init_mass(void)
 
 	/* Kluge to make Rdoc see the class in this file */
 #if FOR_RDOC_PARSER
-	ode_mOde = rb_define_module( "ODE" );
-	ode_cOdeMass			= rb_define_class_under( ode_mOde, "Mass", rb_cObject );
-	ode_cOdeMassBox			= rb_define_class_under( ode_cOdeMass, "Box", ode_cOdeMass );
-	ode_cOdeMassSphere		= rb_define_class_under( ode_cOdeMass, "Sphere", ode_cOdeMass );
-	ode_cOdeMassCapCyl		= rb_define_class_under( ode_cOdeMass, "CappedCylinder", ode_cOdeMass );
+	ode_mOde            = rb_define_module( "ODE" );
+	ode_cOdeMass        = rb_define_class_under( ode_mOde, "Mass", rb_cObject );
+	ode_cOdeMassBox     = rb_define_class_under( ode_cOdeMass, "Box", ode_cOdeMass );
+	ode_cOdeMassSphere  = rb_define_class_under( ode_cOdeMass, "Sphere", ode_cOdeMass );
+	ode_cOdeMassCapsule = rb_define_class_under( ode_cOdeMass, "Capsule", ode_cOdeMass );
 #endif
 
 	/* Allocator */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeMass, ode_mass_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeMass, "allocate", ode_mass_s_alloc, 0 );
-#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeMass, "initialize", ode_mass_init, -1 );
@@ -481,9 +477,9 @@ ode_init_mass(void)
 	rb_define_method( ode_cOdeMassSphere, "initialize", ode_mass_sphere_init, -1 );
 	rb_enable_super( ode_cOdeMassSphere, "initialize" );
 
-	/* ODE::Mass::CappedCylinder */
-	rb_define_method( ode_cOdeMassCapCyl, "initialize", ode_mass_ccyl_init, -1 );
-	rb_enable_super( ode_cOdeMassCapCyl, "initialize" );
+	/* ODE::Mass::Capsule */
+	rb_define_method( ode_cOdeMassCapsule, "initialize", ode_mass_capsule_init, -1 );
+	rb_enable_super( ode_cOdeMassCapsule, "initialize" );
 
 	/* ODE::Mass::Box */
 	rb_define_method( ode_cOdeMassBox, "initialize", ode_mass_box_init, -1 );

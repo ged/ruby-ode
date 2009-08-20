@@ -50,22 +50,7 @@
 #  $Id$
 #
 
-require 'ode/Vector'
-require 'ode/Matrix'
-
-# Workaround for Ruby versions without copy_object:
-unless Module::methods.include? "copy_object"
-	Object.module_eval <<-EOF
-		def copy_object( other )
-			self.instance_variables.each {|ivar|
-				val = eval(ivar)
-				other.instance_eval("\#{ivar} = val")
-			}
-			return self
-		end
-		public :copy_object
-	EOF
-end
+require 'ode/vector'
 
 module ODE
 
@@ -73,58 +58,60 @@ module ODE
 
 		include Math
 
-		### Class constants
-		Version = /([\d\.]+)/.match( %q{$Revision: 1.3 $} )[1]
-		Rcsid = %q$Id$
-
 		X = 0; Y = 1; Z = 2; W = 3
 
-		### Class methods
-		class << self
-
-			### Return the identity quaternion (multiplicative)
-			def identity
-				new( 0,0,0,1 )
-			end
+		#############################################################
+		###	C L A S S   M E T H O D S
+		#############################################################
 
 
-			### Construct a new Quaternion by rotating ODE::Vector <tt>f</tt> to
-			### ODE::Vector <tt>t</tt> (up to scale)
-			def vv2q( f, t ) 
-				raise TypeError, "no implicit conversion to ODE::Vector for %s" %
-					f.class.name unless f.is_a?( ODE::Vector )
-				raise IndexError, "Vector must be a 3rd-order vector" unless
-					f.size == 3
-				raise TypeError, "no implicit conversion to ODE::Vector for %s" %
-					t.class.name unless t.is_a?( ODE::Vector )
-				raise IndexError, "Vector must be a 3rd-order vector" unless
-					t.size == 3
-
-				f.normalize!
-				t.normalize!
-
-				ft = f.gp( t )
-				sv2q( 1.0 + ft[3], ft[0..2] ) / (f + t).mag
-			end
-			alias_method :rotation, :vv2q
-
-
-			### Construct a new Quaternion from a scalar <tt>scalar</tt> and an
-			### ODE::Vector <tt>vector</tt>.
-			def sv2q( scalar, vector )
-				new( vector, scalar ) # array-concatenation, not vec addition
-			end
-
-
-			### Construct a new Quaternion from the given <tt>roll</tt>,
-			### <tt>pitch</tt>, and <tt>yaw</tt>.
-			def rpy2q( roll, pitch, yaw )
-				new( roll, pitch, yaw )
-			end
-
+		### Return the identity quaternion (multiplicative)
+		def self::identity
+			new( 0,0,0,1 )
 		end
 
 
+		### Construct a new Quaternion by rotating ODE::Vector <tt>f</tt> to
+		### ODE::Vector <tt>t</tt> (up to scale)
+		def self::vv2q( f, t ) 
+			raise TypeError, "no implicit conversion to ODE::Vector for %s" %
+				f.class.name unless f.is_a?( ODE::Vector )
+			raise IndexError, "Vector must be a 3rd-order vector" unless
+				f.size == 3
+			raise TypeError, "no implicit conversion to ODE::Vector for %s" %
+				t.class.name unless t.is_a?( ODE::Vector )
+			raise IndexError, "Vector must be a 3rd-order vector" unless
+				t.size == 3
+
+			f.normalize!
+			t.normalize!
+
+			ft = f.gp( t )
+			sv2q( 1.0 + ft[3], ft[0..2] ) / (f + t).mag
+		end
+
+		class << self
+			alias_method :rotation, :vv2q
+		end
+
+
+		### Construct a new Quaternion from a scalar <tt>scalar</tt> and an
+		### ODE::Vector <tt>vector</tt>.
+		def self::sv2q( scalar, vector )
+			new( vector, scalar ) # array-concatenation, not vec addition
+		end
+
+
+		### Construct a new Quaternion from the given <tt>roll</tt>,
+		### <tt>pitch</tt>, and <tt>yaw</tt>.
+		def self::rpy2q( roll, pitch, yaw )
+			new( roll, pitch, yaw )
+		end
+
+
+		#############################################################
+		###	I N S T A N C E   M E T H O D S
+		#############################################################
 
 		### Create and return a new ODE:Quaternion object from the arguments
 		### given. The arguments can be in the following forms:
@@ -155,83 +142,12 @@ module ODE
 					args.length
 			end
 		end
-		
-
-		#########
-		protected
-		#########
-
-		### Initialize the quaternion from one argument (angle or vector)
-		def oneArgInit( arg )
-			case arg
-
-			# Angle
-			when Numeric
-				@elem = [0.0, 0.0, 0.0, Float(arg)]
-
-			# 3rd- or 4th-order vector
-			when ODE::Vector
-				case arg.size
-				when 3
-					@elem = [ arg.elements.collect {|i| Float(i)}, 0.0 ].flatten
-
-				when 4
-					@elem = arg.elements.collect {|i| Float(i)}
-
-				else
-					raise ArgumentError,
-						"Cannot create a %s from a %d-dimensional %s" %
-						[ self.class.name, arg.size, arg.class.name ]
-				end
-
-			else
-				raise TypeError, "wrong type of argument '%s': Expected a %s" %
-					[ arg.class.name, "Numeric or ODE::Vector" ]
-			end
-		end
 
 
-		### Initialize the quaternion from two arguments (axis + angle or two
-		### vectors).
-		def twoArgInit( arg1, arg2 )
-
-			# Axis + angle
-			if arg2.kind_of?( Numeric ) && arg1.respond_to?( :to_ary )
-				args = [ arg1.to_ary, arg2 ].flatten
-
-			# Two vectors
-			else
-				args.each {|v|
-					raise "No implicit conversion to ODE::Vector for #{v.class.name}" unless
-						v.respond_to?( :to_ary )
-				}
-
-				v1 = ODE::Vector::new( arg1 ).normalize
-				v2 = ODE::Vector::new( arg2 ).normalize
-
-				args = [ v1.cross(v2).to_ary, v1.dot(v2) ].flatten
-			end
-
-		end
-
-
-		### Initialize the quaternion from the given <tt>roll</tt>,
-		### <tt>pitch</tt>, and <tt>yaw</tt>.
-		def threeArgInit( roll, pitch, yaw )
-			roll  = Float(roll) / 2
-			pitch = Float(pitch) / 2
-			yaw   = Float(yaw) / 2
-
-			sr = sin( roll );  cr = cos( roll );
-			sp = sin( pitch ); cp = cos( pitch );
-			sy = sin( yaw );   cy = cos( yaw );
-
-			return [
-				sr * cp * cy - cr * sp * sy,
-				cr * sp * cy + sr * cp * sy,
-				cr * cp * sy - sr * sp * cy,
-				cr * cp * cy + sr * sp * sy
-			]
+		### Copy constructor -- make sure duplicated quaternions have unique internal values
+		def initialize_copy( other )
+			@elem = other.elem.dup
+			super
 		end
 
 
@@ -244,7 +160,6 @@ module ODE
 		attr_accessor :elem
 
 
-		
 		### Element reference operator -- returns the <tt>i</tt>th element of
 		### the quaternion.
         def [](i)
@@ -324,7 +239,7 @@ module ODE
 
 		### Return a new quaternion normalized to unit length
 		def unit 
-			unitq = self.copy
+			unitq = self.dup
 			magnitude = self.abs
 			unitq[0] /= magnitude
 			unitq[1] /= magnitude
@@ -381,7 +296,7 @@ module ODE
 		### Return a distinct copy of the receiver (as opposed to #dup, which
 		### only returns a shallow copy).
 		def copy
-			return self.dup.copy_object( self )
+			return self.dup
 		end
 
 
@@ -434,14 +349,14 @@ module ODE
 
 		### Return a normalized copy of the receiver.
 		def normalize
-			return self.copy.normalize!
+			return self.dup.normalize!
 		end
 		
 
 		### Return the inverse of the quaternion as new instance of the
 		### receiver.
 		def inverse
-			return self.copy.inverse!
+			return self.dup.inverse!
 		end
 
 
@@ -553,6 +468,85 @@ module ODE
 						    @elem[2] - otherQuat[2],
 						    @elem[3] - otherQuat[3] )
 		end
+
+
+		#########
+		protected
+		#########
+
+		### Initialize the quaternion from one argument (angle or vector)
+		def oneArgInit( arg )
+			case arg
+
+			# Angle
+			when Numeric
+				@elem = [0.0, 0.0, 0.0, Float(arg)]
+
+			# 3rd- or 4th-order vector
+			when ODE::Vector
+				case arg.size
+				when 3
+					@elem = [ arg.elements.collect {|i| Float(i)}, 0.0 ].flatten
+
+				when 4
+					@elem = arg.elements.collect {|i| Float(i)}
+
+				else
+					raise ArgumentError,
+						"Cannot create a %s from a %d-dimensional %s" %
+						[ self.class.name, arg.size, arg.class.name ]
+				end
+
+			else
+				raise TypeError, "wrong type of argument '%s': Expected a %s" %
+					[ arg.class.name, "Numeric or ODE::Vector" ]
+			end
+		end
+
+
+		### Initialize the quaternion from two arguments (axis + angle or two
+		### vectors).
+		def twoArgInit( arg1, arg2 )
+
+			# Axis + angle
+			if arg2.kind_of?( Numeric ) && arg1.respond_to?( :to_ary )
+				args = [ arg1.to_ary, arg2 ].flatten
+
+			# Two vectors
+			else
+				args.each {|v|
+					raise "No implicit conversion to ODE::Vector for #{v.class.name}" unless
+						v.respond_to?( :to_ary )
+				}
+
+				v1 = ODE::Vector::new( arg1 ).normalize
+				v2 = ODE::Vector::new( arg2 ).normalize
+
+				args = [ v1.cross(v2).to_ary, v1.dot(v2) ].flatten
+			end
+
+		end
+
+
+		### Initialize the quaternion from the given <tt>roll</tt>,
+		### <tt>pitch</tt>, and <tt>yaw</tt>.
+		def threeArgInit( roll, pitch, yaw )
+			roll  = Float(roll) / 2
+			pitch = Float(pitch) / 2
+			yaw   = Float(yaw) / 2
+
+			sr = sin( roll );  cr = cos( roll );
+			sp = sin( pitch ); cp = cos( pitch );
+			sy = sin( yaw );   cy = cos( yaw );
+
+			return [
+				sr * cp * cy - cr * sp * sy,
+				cr * sp * cy + sr * cp * sy,
+				cr * cp * sy - sr * sp * cy,
+				cr * cp * cy + sr * sp * sy
+			]
+		end
+
 	end # class Quaternion
 
 

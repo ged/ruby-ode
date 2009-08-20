@@ -349,8 +349,7 @@ ode_world_imp2force( self, stepsize, ix, iy, iz )
 
 /* World initializer */
 void
-ode_init_world()
-{
+ode_init_world() {
 
 	/* Kluge to make Rdoc see the class in this file */
 #if FOR_RDOC_PARSER
@@ -360,11 +359,7 @@ ode_init_world()
 
 
 	/* Allocator */
-#ifdef NEW_ALLOC
 	rb_define_alloc_func( ode_cOdeWorld, ode_world_s_alloc );
-#else
-	rb_define_singleton_method( ode_cOdeWorld, "allocate", ode_world_s_alloc, 0 );
-#endif
 
 	/* Initializer */
 	rb_define_method( ode_cOdeWorld, "initialize", ode_world_init, -1 );

@@ -30,11 +30,6 @@ module ODE
 	### The contact class.
 	class Contact
 
-		### Class constants
-		Version ||= /([\d\.]+)/.match( %q{$Revision: 1.1 $} )[1]
-		Rcsid ||= %q$Id$
-
-
 		######
 		public
 		######
